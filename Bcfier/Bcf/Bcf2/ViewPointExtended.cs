@@ -25,6 +25,8 @@ namespace Bcfier.Bcf.Bcf2
       set
       {
         this._visInfoField = value;
+        NotifyPropertyChanged("VisInfo");
+        NotifyPropertyChanged("OriginatingSystemDisplay");
       }
     }
 
@@ -43,6 +45,41 @@ namespace Bcfier.Bcf.Bcf2
         this._snapshotPath = value;
         NotifyPropertyChanged("SnapshotPath");
       }
+    }
+
+    /// <summary>True, если у этого viewpoint есть существующий файл снимка (для галереи в табличном режиме).</summary>
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public bool HasSnapshot =>
+      !string.IsNullOrWhiteSpace(SnapshotPath) && System.IO.File.Exists(SnapshotPath);
+
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public string OriginatingSystemDisplay
+    {
+      get
+      {
+        try
+        {
+          IEnumerable<Component> components =
+            VisInfo?.Components?.DisplayComponents
+            ?? VisInfo?.Components?.Selection
+            ?? VisInfo?.Components?.Visibility?.Exceptions
+            ?? Array.Empty<Component>();
+
+          string originatingSystem = components
+            .Select(component => component?.OriginatingSystem)
+            .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
+          return string.IsNullOrWhiteSpace(originatingSystem)
+            ? string.Empty
+            : originatingSystem.Trim();
+        }
+        catch
+        {
+          return string.Empty;
+        }
+      }
+      // WPF Run.Text по умолчанию TwoWay — пустой set, чтобы не ронять хост.
+      set { }
     }
   }
 }

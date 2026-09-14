@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Globalization;
 
 namespace Bcfier.Data.Utils
 {
@@ -152,26 +151,5 @@ namespace Bcfier.Data.Utils
       return new String( str );
     }
     #endregion // Conversion Methods
-
-    
-    #region Extension Methods
-
-     //<summary>
-     //Get the Unique ID in encoded on IFC Format (base 64)
-     //</summary>
-     //<param name="element"></param>
-     //<returns></returns>
-    public static string IfcGUID(string UniqueId)
-    {
-      Guid episodeId = new Guid(UniqueId.Substring(0, 36));
-      int elementId = int.Parse(UniqueId.Substring(37), NumberStyles.AllowHexSpecifier);
-      int last_32_bits = int.Parse(UniqueId.Substring(28, 8), NumberStyles.AllowHexSpecifier);
-      int xor = last_32_bits ^ elementId;
-      UniqueId = UniqueId.Substring(0, 28) + xor.ToString("x8");
-      Guid guid = new Guid(UniqueId);
-      return ToIfcGuid(guid);
-    }
-    #endregion
-
   }
 }

@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Serialization;
 
 namespace Bcfier.Bcf.Bcf2
@@ -105,6 +107,8 @@ namespace Bcfier.Bcf.Bcf2
   [System.ComponentModel.DesignerCategoryAttribute("code")]
   public partial class Components
   {
+    private Component[] _displayComponentsField;
+    private bool _displayComponentsDirty = true;
 
     private ViewSetupHints viewSetupHintsField;
 
@@ -126,14 +130,22 @@ namespace Bcfier.Bcf.Bcf2
     public Component[] Selection
     {
       get { return this.selectionField; }
-      set { this.selectionField = value; }
+      set
+      {
+        this.selectionField = value;
+        InvalidateDisplayComponents();
+      }
     }
 
     /// <remarks/>
     public ComponentVisibility Visibility
     {
       get { return this.visibilityField; }
-      set { this.visibilityField = value; }
+      set
+      {
+        this.visibilityField = value;
+        InvalidateDisplayComponents();
+      }
     }
 
     /// <remarks/>
@@ -142,6 +154,55 @@ namespace Bcfier.Bcf.Bcf2
     {
       get { return this.coloringField; }
       set { this.coloringField = value; }
+    }
+
+    /// <summary>
+    /// Возвращает объединённый список компонентов для отображения в UI:
+    /// сначала Selection, затем Visibility.Exceptions без дублей.
+    /// </summary>
+    [XmlIgnore]
+    public Component[] DisplayComponents
+    {
+      get
+      {
+        if (!_displayComponentsDirty && _displayComponentsField != null)
+          return _displayComponentsField;
+
+        _displayComponentsField = (Selection ?? new Component[0])
+          .Concat(Visibility?.Exceptions ?? new Component[0])
+          .GroupBy(component => BuildComponentDedupKey(component), StringComparer.OrdinalIgnoreCase)
+          .Select(group => group.First())
+          .Where(component => component != null)
+          .ToArray();
+        _displayComponentsDirty = false;
+        return _displayComponentsField;
+      }
+    }
+
+    /// <summary>
+    /// Ключ дедупликации: IfcGuid важнее пустого AuthoringToolId (иначе все Solibri-компоненты сливаются в один).
+    /// </summary>
+    private static string BuildComponentDedupKey(Component component)
+    {
+      if (component == null)
+        return string.Empty;
+
+      if (!string.IsNullOrWhiteSpace(component.IfcGuid))
+        return component.IfcGuid.Trim();
+
+      if (!string.IsNullOrWhiteSpace(component.AuthoringToolId))
+        return component.AuthoringToolId.Trim();
+
+      return string.Empty;
+    }
+
+    /// <summary>
+    /// Сбрасывает кэш объединённого списка компонентов при изменении Selection/Visibility.
+    /// </summary>
+    private void InvalidateDisplayComponents()
+    {
+      _displayComponentsDirty = true;
+      _displayComponentsField = null;
     }
   }
 

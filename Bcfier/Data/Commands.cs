@@ -20,13 +20,18 @@ namespace Bcfier.Data
     public static readonly RoutedCommand DeleteIssues = new RoutedCommand("DeleteIssues", typeof(Button));
     //comments
     public static readonly RoutedCommand AddComment = new RoutedCommand("AddComment", typeof(Button));
+    public static readonly RoutedCommand EditComment = new RoutedCommand("EditComment", typeof(Button));
     public static readonly RoutedCommand DeleteComments = new RoutedCommand("DeleteComments", typeof(Button));
     //viewpoints
     public static readonly RoutedCommand AddView = new RoutedCommand("AddView", typeof(Button));
+    public static readonly RoutedCommand EditView = new RoutedCommand("EditView", typeof(Button));
     public static readonly RoutedCommand DeleteViews = new RoutedCommand("DeleteViews", typeof(Button));
     public static readonly RoutedCommand OpenView = new RoutedCommand("OpenView", typeof(Button));
+    public static readonly RoutedCommand OpenViewIsolated = new RoutedCommand("OpenViewIsolated", typeof(Button));
     public static readonly RoutedCommand OpenSnapshot = new RoutedCommand("OpenSnapshot", typeof(Button));
     public static readonly RoutedCommand OpenComponents = new RoutedCommand("OpenComponents", typeof(Button));
+    public static readonly RoutedCommand SelectComponent = new RoutedCommand("SelectComponent", typeof(Button));
+    public static readonly RoutedCommand SelectViewpointComponents = new RoutedCommand("SelectViewpointComponents", typeof(Button));
 
     public static readonly RoutedCommand CloseBcf = new RoutedCommand("CloseBcf", typeof(Button));
   }

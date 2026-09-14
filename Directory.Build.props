@@ -1,0 +1,122 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <UseWPF>true</UseWPF>
+    <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>
+    <Configurations>R2022;R2023;R2025;R2026;Win</Configurations>
+    <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+  </PropertyGroup>
+
+  <!--
+    Один TFM на конфигурацию: R2022/R2023/Win → net48, R2025/R2026/Debug → net8.
+    Иначе MSBuild всё равно гоняет «чужой» TFM и появляется bin\R2023\net8.0-windows
+    (Revit 2023 net8 не поддерживает).
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2025' Or '$(Configuration)' == 'R2026' Or '$(Configuration)' == 'Debug'">
+    <TargetFrameworks>net8.0-windows</TargetFrameworks>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'R2025' And '$(Configuration)' != 'R2026' And '$(Configuration)' != 'Debug'">
+    <TargetFrameworks>net48</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <DefineConstants>$(DefineConstants);REVIT_LONG_ELEMENT_ID</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R2022' Or '$(Configuration)' == '' Or '$(Configuration)' == 'Release'">
+    <OutputPath>bin\R2022\</OutputPath>
+    <DefineConstants>$(DefineConstants);R2022</DefineConstants>
+    <RevitVersion>2022</RevitVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'R2023'">
+    <OutputPath>bin\R2023\</OutputPath>
+    <DefineConstants>$(DefineConstants);R2023</DefineConstants>
+    <RevitVersion>2023</RevitVersion>
+  </PropertyGroup>
+  <!--
+    VS XAML-дизайнер всегда собирает Configuration=Debug.
+    SP_Addin мапит Debug → net8/R2025; Bcfier должен совпадать, иначе
+    Touch пустого net8 DLL → MC1000 "Image is too small" → XDG0008 в Styles.
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'R2025' Or '$(Configuration)' == 'Debug'">
+    <OutputPath>bin\R2025\</OutputPath>
+    <DefineConstants>$(DefineConstants);R2025</DefineConstants>
+    <RevitVersion>2025</RevitVersion>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'R2026'">
+    <OutputPath>bin\R2026\</OutputPath>
+    <DefineConstants>$(DefineConstants);R2026</DefineConstants>
+    <RevitVersion>2026</RevitVersion>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Win'">
+    <OutputPath>bin\Win\</OutputPath>
+    <DefineConstants>$(DefineConstants);WIN</DefineConstants>
+  </PropertyGroup>
+
+  <!--
+    SP_Addin (R2025) задаёт Bcfier TargetFramework=net8, но Configuration внука
+    часто остаётся R2022 → bin\R2022\net8.0-windows без DLL → CS0006.
+  -->
+  <PropertyGroup Condition="'$(TargetFramework)' == 'net8.0-windows' And ('$(Configuration)' == 'R2022' Or '$(Configuration)' == '' Or '$(Configuration)' == 'Release')">
+    <OutputPath>bin\R2025\</OutputPath>
+    <DefineConstants>$(DefineConstants);R2025</DefineConstants>
+    <RevitVersion>2025</RevitVersion>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+  </PropertyGroup>
+
+  <Choose>
+    <When Condition="'$(TargetFramework)' == 'net48' And '$(Configuration)' == 'R2023'">
+      <ItemGroup>
+        <RevitApiReference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2023\RevitAPI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+        <RevitApiReference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2023\RevitAPIUI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net48'">
+      <ItemGroup>
+        <RevitApiReference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+        <RevitApiReference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2022\RevitAPIUI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net8.0-windows' And '$(Configuration)' == 'R2026'">
+      <ItemGroup>
+        <RevitApiReference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+        <RevitApiReference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2026\RevitAPIUI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+      </ItemGroup>
+    </When>
+    <When Condition="'$(TargetFramework)' == 'net8.0-windows'">
+      <ItemGroup>
+        <RevitApiReference Include="RevitAPI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+        <RevitApiReference Include="RevitAPIUI">
+          <HintPath>C:\Program Files\Autodesk\Revit 2025\RevitAPIUI.dll</HintPath>
+          <Private>false</Private>
+        </RevitApiReference>
+      </ItemGroup>
+    </When>
+  </Choose>
+</Project>

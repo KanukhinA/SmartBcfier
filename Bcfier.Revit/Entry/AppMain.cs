@@ -1,11 +1,13 @@
-﻿using System;
+using Autodesk.Revit.Attributes;
+using Autodesk.Revit.UI;
+using Bcfier.Localization;
+using System;
 using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Autodesk.Revit.Attributes;
-using Autodesk.Revit.UI;
+using Bcfier.Data.Utils;
 
 namespace Bcfier.Revit.Entry
 {
@@ -26,26 +28,25 @@ namespace Bcfier.Revit.Entry
     {
       try
       {
-        // Tab
-        RibbonPanel panel = application.CreateRibbonPanel("BCFier");
+        Loc.ApplyCultureFromSettings();
+        // Панель и кнопка на ленте — локализованные подписи
+        RibbonPanel panel = application.CreateRibbonPanel(Loc.RibbonPanel);
 
-        // Button Data
         PushButton pushButton = panel.AddItem(new PushButtonData("BCFier",
-                                                                     "BCFier " + Assembly.GetExecutingAssembly().GetName().Version,
+                                                                     Loc.RibbonButton,
                                                                      Path.Combine(_path, "Bcfier.Revit.dll"),
                                                                      "Bcfier.Revit.Entry.CmdMain")) as PushButton;
 
-        // Images and Tooltip
         if (pushButton != null)
         {
-          pushButton.Image = LoadPngImgSource("Bcfier.Assets.BCFierIcon16x16.png", Path.Combine(_path, "Bcfier.dll"));
-          pushButton.LargeImage = LoadPngImgSource("Bcfier.Assets.BCFierIcon32x32.png", Path.Combine(_path, "Bcfier.dll"));
-          pushButton.ToolTip = "BCFier";
+          pushButton.Image = LoadPngImgSource("Bcfier.Assets.SP_BCFier16.png", Path.Combine(_path, "Bcfier.dll"));
+          pushButton.LargeImage = LoadPngImgSource("Bcfier.Assets.SP_BCFier32.png", Path.Combine(_path, "Bcfier.dll"));
+          pushButton.ToolTip = Loc.RibbonTooltip;
         }
       }
       catch (Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
         return Result.Failed;
       }
 

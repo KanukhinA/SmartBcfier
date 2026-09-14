@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -82,7 +82,7 @@ namespace Bcfier.Data.Utils
         }
         catch (System.Exception ex1)
         {
-          MessageBox.Show("exception: " + ex1);
+          ExceptionUi.Show(ex1);
         }
       }
     

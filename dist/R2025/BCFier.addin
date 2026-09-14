@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<RevitAddIns>
+  <AddIn Type="Application">
+    <Name>Замечания BCF</Name>
+    <Assembly>BCFier.Revit.Addin.dll</Assembly>
+    <AddInId>9d0b3796-ed3c-489c-bfca-edf6963e89fe</AddInId>
+    <FullClassName>Bcfier.Revit.Standalone.AppMain</FullClassName>
+    <VendorId>SPRO</VendorId>
+    <VendorDescription>SmartProject</VendorDescription>
+  </AddIn>
+</RevitAddIns>

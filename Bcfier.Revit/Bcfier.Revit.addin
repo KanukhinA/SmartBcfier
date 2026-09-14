@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <RevitAddIns>
   <AddIn Type="Application">
-    <Name>BCFier for Revit</Name>
+    <Name>Замечания BCF</Name>
     <Assembly>Bcfier.Revit\Bcfier.Revit.dll</Assembly>
-    <AddInId>0d553633-80f8-490b-84d6-9d3d6ad4196d</AddInId>
+    <AddInId>9d0b3796-ed3c-489c-bfca-edf6963e89fe</AddInId>
     <FullClassName>Bcfier.Revit.Entry.AppMain</FullClassName>
     <VendorId>TEOC</VendorId>
     <VendorDescription>Matteo Cominetti, http://bcfier.com</VendorDescription>

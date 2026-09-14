@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Media;
@@ -8,86 +8,175 @@ namespace Bcfier.Data.Utils
 {
   public static class ImagingUtils
   {
+    /// <summary>Максимальный размер снимка BCF (рекомендация BCF 2.1).</summary>
+    public const int BcfMaxPixelSize = 1500;
+
+    /// <summary>Ширина миниатюры в списках замечаний, не для аннотирования.</summary>
+    public const int ThumbnailPixelWidth = 480;
+
     /// <summary>
-    /// Classes for working with images
+    /// Загружает снимок в полном размере, уменьшая только если больше BCF-лимита.
+    /// Читает файл в память, чтобы после правки во внешнем редакторе не брался кэш WPF.
     /// </summary>
-    /// <param name="sourcePath"></param>
-    /// <returns></returns>
     public static ImageSource ImageSourceFromPath(string sourcePath)
     {
-
       try
       {
-        //var image = BitmapFromPath(sourcePath);
-        //return ConvertBitmapTo96Dpi(image);
+        byte[] imageBytes = LoadImageData(sourcePath);
+        if (imageBytes == null || imageBytes.Length == 0)
+          return null;
 
-        var image = BitmapFromPath(sourcePath);
+        BitmapImage image = CreateImage(imageBytes, decodePixelWidth: 0, decodePixelHeight: 0);
+        if (image == null)
+          return null;
+
         int width = image.PixelWidth;
         int height = image.PixelHeight;
+        if (width <= 0 || height <= 0)
+          return image;
 
-        const int maxWidth = 1500;
-        const int maxHeight = 1500;
-        if (width > maxWidth || height > maxHeight)
-        {
+        if (width <= BcfMaxPixelSize && height <= BcfMaxPixelSize)
+          return image;
 
-          double scale = (width > height) ? (double)width / (double)maxWidth : (double)height / (double)maxHeight;
-          int newHeight = Convert.ToInt32(height / scale);
-          int newWidth = Convert.ToInt32(width / scale);
-
-          MessageBoxResult answer = MessageBox.Show(
-            string.Format("Image size is {0}x{1}, "
-              + "such a big image could increase A LOT the BCF file size. "
-          + "Do you want me to resize it to {2}x{3} for you?", width, height, newWidth, newHeight), "Attention!",
-              MessageBoxButton.YesNo, MessageBoxImage.Question);
-          if (answer == MessageBoxResult.Yes)
-          {
-            width = newWidth;
-          }
-
-        }
-
-        byte[] imageBytes = LoadImageData(sourcePath);
-        return CreateImage(imageBytes, width, 0);
-
+        double scale = Math.Max((double)width / BcfMaxPixelSize, (double)height / BcfMaxPixelSize);
+        int decodeWidth = Convert.ToInt32(width / scale);
+        return CreateImage(imageBytes, decodeWidth, 0);
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return null;
     }
 
+    /// <summary>
+    /// Сохраняет изображение; формат берётся из расширения файла.
+    /// </summary>
     public static void SaveImageSource(ImageSource image, string destPath)
     {
       try
       {
-        var imageBytes = GetEncodedImageData(image, ".jpg");
+        if (image == null || string.IsNullOrWhiteSpace(destPath))
+          return;
+
+        string directory = Path.GetDirectoryName(destPath);
+        if (!string.IsNullOrEmpty(directory))
+          Directory.CreateDirectory(directory);
+
+        string ext = Path.GetExtension(destPath);
+        if (string.IsNullOrWhiteSpace(ext))
+          ext = ".png";
+
+        byte[] imageBytes = GetEncodedImageData(image, ext);
         SaveImageData(imageBytes, destPath);
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
 
-    public static BitmapImage BitmapFromPath(string path)
+    /// <summary>
+    /// Ждёт, пока внешний редактор отпустит файл (актуально для mspaint на Win11).
+    /// </summary>
+    public static void WaitForExternalEditor(string filePath)
     {
       try
       {
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+          return;
+
+        const int pollMs = 250;
+        const int openWaitMs = 8000;
+        const int closeWaitMs = 30 * 60 * 1000;
+
+        bool seenLock = false;
+        int waited = 0;
+        while (waited < openWaitMs)
+        {
+          if (IsFileLocked(filePath))
+          {
+            seenLock = true;
+            break;
+          }
+
+          System.Threading.Thread.Sleep(pollMs);
+          waited += pollMs;
+        }
+
+        // Классический Paint: WaitForExit уже дождался закрытия, блокировки не было.
+        if (!seenLock)
+          return;
+
+        waited = 0;
+        while (waited < closeWaitMs && IsFileLocked(filePath))
+        {
+          System.Threading.Thread.Sleep(pollMs);
+          waited += pollMs;
+        }
+      }
+      catch
+      {
+        // Не блокируем UI навсегда, если статус файла недоступен.
+      }
+    }
+
+    /// <summary>true, если файл открыт другим процессом без доступа на запись.</summary>
+    private static bool IsFileLocked(string filePath)
+    {
+      try
+      {
+        using (new FileStream(filePath, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+          return false;
+      }
+      catch (IOException)
+      {
+        return true;
+      }
+      catch
+      {
+        return false;
+      }
+    }
+
+    /// <summary>
+    /// Миниатюра для списка замечаний. Для аннотирования использовать ImageSourceFromPath.
+    /// </summary>
+    public static BitmapImage BitmapFromPath(string path)
+    {
+      return LoadBitmap(path, ThumbnailPixelWidth);
+    }
+
+    /// <summary>
+    /// Загружает BitmapImage. decodePixelWidth=0 — исходный размер файла.
+    /// </summary>
+    private static BitmapImage LoadBitmap(string path, int decodePixelWidth)
+    {
+      try
+      {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+          return null;
+
         var image = new BitmapImage();
         image.BeginInit();
         image.UriSource = new Uri(path);
         image.CacheOption = BitmapCacheOption.OnLoad;
         image.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
+        if (decodePixelWidth > 0)
+          image.DecodePixelWidth = decodePixelWidth;
         image.EndInit();
+        if (image.CanFreeze)
+          image.Freeze();
         return image;
       }
       catch
       {
         return null;
       }
-
     }
+    /// <summary>
+    /// Приводит изображение к 96 DPI с автоматическим ресайзом до BCF-лимита.
+    /// </summary>
     public static BitmapSource ConvertBitmapTo96Dpi(BitmapImage bitmapImage)
     {
       try
@@ -96,35 +185,22 @@ namespace Bcfier.Data.Utils
         int width = bitmapImage.PixelWidth;
         int height = bitmapImage.PixelHeight;
 
-        if (width > 1500 || height > 1500)
+        if (width > BcfMaxPixelSize || height > BcfMaxPixelSize)
         {
-          string size = width.ToString() + "x" + height.ToString();
-          int newWidth = 1500;
-          float scale = (float)newWidth / ((float)width / (float)height);
-          int newHeight = Convert.ToInt32(scale);
-
-          MessageBoxResult answer = MessageBox.Show("Image size is " + size + ", "
-              + "such a big image could increase A LOT the BCF file size. "
-          + "Do you want me to resize it to " + newWidth.ToString() + "x" + newHeight.ToString() + " for you?", "Attention!",
-              MessageBoxButton.YesNo, MessageBoxImage.Question);
-          if (answer == MessageBoxResult.Yes)
-          {
-            width = newWidth;
-            height = newHeight;
-          }
-
+          double scale = Math.Max((double)width / BcfMaxPixelSize, (double)height / BcfMaxPixelSize);
+          width = Convert.ToInt32(width / scale);
+          height = Convert.ToInt32(height / scale);
         }
 
-        int stride = width * 4; // 4 bytes per pixel
+        int stride = width * 4;
         byte[] pixelData = new byte[stride * height];
         bitmapImage.CopyPixels(pixelData, stride, 0);
 
         return BitmapSource.Create(width, height, dpi, dpi, PixelFormats.Bgra32, null, pixelData, stride);
       }
-
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return null;
     }
@@ -142,35 +218,39 @@ namespace Bcfier.Data.Utils
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return null;
     }
 
-    private static ImageSource CreateImage(byte[] imageData, int decodePixelWidth, int decodePixelHeight)
+    /// <summary>
+    /// Создаёт BitmapImage из байтов файла.
+    /// Не использовать IgnoreImageCache со StreamSource: у потока нет URI, WPF падает с ArgumentNullException.
+    /// </summary>
+    private static BitmapImage CreateImage(byte[] imageData, int decodePixelWidth, int decodePixelHeight)
     {
       try
       {
-        if (imageData == null) return null;
+        if (imageData == null || imageData.Length == 0)
+          return null;
+
         BitmapImage result = new BitmapImage();
         result.BeginInit();
         if (decodePixelWidth > 0)
-        {
           result.DecodePixelWidth = decodePixelWidth;
-        }
         if (decodePixelHeight > 0)
-        {
           result.DecodePixelHeight = decodePixelHeight;
-        }
         result.StreamSource = new MemoryStream(imageData);
         result.CreateOptions = BitmapCreateOptions.None;
-        result.CacheOption = BitmapCacheOption.Default;
+        result.CacheOption = BitmapCacheOption.OnLoad;
         result.EndInit();
+        if (result.CanFreeze)
+          result.Freeze();
         return result;
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return null;
     }
@@ -188,7 +268,7 @@ namespace Bcfier.Data.Utils
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
 
@@ -237,7 +317,7 @@ namespace Bcfier.Data.Utils
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return null;
     }

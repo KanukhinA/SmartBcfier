@@ -1,0 +1,115 @@
+<Project>
+  <PropertyGroup Condition="'$(Configuration)' == 'R2025' Or '$(Configuration)' == 'R2026' Or '$(Configuration)' == 'Debug'">
+    <_BcfActiveTfm>net8.0-windows</_BcfActiveTfm>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' != 'R2025' And '$(Configuration)' != 'R2026' And '$(Configuration)' != 'Debug'">
+    <_BcfActiveTfm>net48</_BcfActiveTfm>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DesignTimeBuild)' != 'true' And '$(MSBuildProjectName)' != 'Bcfier.Win' And '$(TargetFramework)' != '' And '$(_BcfActiveTfm)' != '' And '$(TargetFramework)' != '$(_BcfActiveTfm)'">
+    <_BcfSkipThisTfm>true</_BcfSkipThisTfm>
+    <!--
+      Multi-target: при R2023 net8 не нужен (Revit 2023 = net48).
+      TargetDir уже указывает на bin\R2023\net8 — перебиваем до таргетов.
+      BuildProjectReferences=false здесь (не в Target), иначе ResolveProjectReferences
+      успевает затянуть чужой TFM и падает на копировании DLL.
+    -->
+    <_BcfSkipOutDir>$(MSBuildProjectDirectory)\obj\_skip\$(Configuration)\$(TargetFramework)\</_BcfSkipOutDir>
+    <OutputPath>$(_BcfSkipOutDir)</OutputPath>
+    <OutDir>$(_BcfSkipOutDir)</OutDir>
+    <TargetDir>$(_BcfSkipOutDir)</TargetDir>
+    <IntermediateOutputPath>$(MSBuildProjectDirectory)\obj\_skip\$(Configuration)\$(TargetFramework)\int\</IntermediateOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <BuildProjectReferences>false</BuildProjectReferences>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
+    <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    <SkipCompilerExecution>true</SkipCompilerExecution>
+  </PropertyGroup>
+
+  <Target Name="BcfSkipMismatchedTfm"
+          BeforeTargets="ResolveProjectReferences;PrepareForBuild;MarkupCompilePass1;CoreCompile;CoreGenerateAssemblyInfo;GenerateSatelliteAssemblies;CopyFilesToOutputDirectory;GenerateBuildDependencyFile;GenerateBuildRuntimeConfigurationFiles"
+          Condition="'$(_BcfSkipThisTfm)' == 'true'">
+    <PropertyGroup>
+      <_BcfSkipOutDir Condition="'$(_BcfSkipOutDir)' == ''">$(MSBuildProjectDirectory)\obj\_skip\$(Configuration)\$(TargetFramework)\</_BcfSkipOutDir>
+      <OutputPath>$(_BcfSkipOutDir)</OutputPath>
+      <OutDir>$(_BcfSkipOutDir)</OutDir>
+      <TargetDir>$(_BcfSkipOutDir)</TargetDir>
+      <TargetPath>$(_BcfSkipOutDir)$(TargetName)$(TargetExt)</TargetPath>
+    </PropertyGroup>
+    <Message Importance="high"
+             Text="SP-BCFier: пропуск $(TargetFramework) (Configuration=$(Configuration) → $(_BcfActiveTfm))" />
+    <ItemGroup>
+      <Page Remove="@(Page)" />
+      <ApplicationDefinition Remove="@(ApplicationDefinition)" />
+      <Compile Remove="@(Compile)" />
+      <EmbeddedResource Remove="@(EmbeddedResource)" />
+      <Resource Remove="@(Resource)" />
+      <None Remove="@(None)" />
+      <ProjectReference Remove="@(ProjectReference)" />
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+      <AllItemsFullPathWithTargetPath Remove="@(AllItemsFullPathWithTargetPath)" />
+      <_SourceItemsToCopyToOutputDirectory Remove="@(_SourceItemsToCopyToOutputDirectory)" />
+      <_SourceItemsToCopyToOutputDirectoryAlways Remove="@(_SourceItemsToCopyToOutputDirectoryAlways)" />
+    </ItemGroup>
+    <PropertyGroup>
+      <SkipCompilerExecution>true</SkipCompilerExecution>
+      <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
+      <CopyOutputSymbolsToOutputDirectory>false</CopyOutputSymbolsToOutputDirectory>
+      <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+      <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+      <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+      <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+      <BuildProjectReferences>false</BuildProjectReferences>
+      <GenerateDependencyFile>false</GenerateDependencyFile>
+      <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    </PropertyGroup>
+    <MakeDir Directories="$(_BcfSkipOutDir)" Condition="!Exists('$(_BcfSkipOutDir)')" />
+    <!--
+      Не создаём пустой .dll: Reflection читает его как PE → MC1000 у SP_Addin.
+    -->
+    <Touch Files="$(_BcfSkipOutDir)$(TargetName).skipped" AlwaysCreate="true"
+           Condition="'$(TargetName)' != ''" />
+  </Target>
+
+  <Target Name="BcfClearCopyLocalForSkippedTfm"
+          AfterTargets="ResolveAssemblyReferences;ResolveProjectReferences"
+          BeforeTargets="CopyFilesToOutputDirectory"
+          Condition="'$(_BcfSkipThisTfm)' == 'true'">
+    <ItemGroup>
+      <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+      <AllItemsFullPathWithTargetPath Remove="@(AllItemsFullPathWithTargetPath)" />
+      <_SourceItemsToCopyToOutputDirectory Remove="@(_SourceItemsToCopyToOutputDirectory)" />
+      <_SourceItemsToCopyToOutputDirectoryAlways Remove="@(_SourceItemsToCopyToOutputDirectoryAlways)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    После сборки Bcfier.Revit копируем весь выходной каталог (Bcfier.dll, Bcfier.Revit.dll
+    и все их зависимости) в папку плагина SP_Updater соответствующей версии Revit,
+    чтобы SP_Addin подхватывал свежие DLL без ручного копирования.
+    SPUpdaterRoot можно переопределить (например, в Directory.Build.props.user), если
+    SP_Updater лежит не рядом с SP-BCFier.
+  -->
+  <PropertyGroup Condition="'$(SPUpdaterRoot)' == ''">
+    <SPUpdaterRoot>$(MSBuildThisFileDirectory)..\SP_Updater</SPUpdaterRoot>
+  </PropertyGroup>
+
+  <Target Name="CopyToSPUpdaterPlugin"
+          AfterTargets="Build"
+          Condition="'$(MSBuildProjectName)' == 'Bcfier.Revit' And '$(TargetFramework)' != '' And '$(_BcfSkipThisTfm)' != 'true'
+                     And ('$(Configuration)' == 'R2022' Or '$(Configuration)' == 'R2023' Or '$(Configuration)' == 'R2025' Or '$(Configuration)' == 'R2026')
+                     And Exists('$(SPUpdaterRoot)')">
+    <ItemGroup>
+      <_SPUpdaterFiles Include="$(TargetDir)**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(_SPUpdaterFiles)"
+          DestinationFiles="@(_SPUpdaterFiles->'$(SPUpdaterRoot)\bin\$(Configuration)\%(RecursiveDir)%(Filename)%(Extension)')"
+          SkipUnchangedFiles="true"
+          ContinueOnError="WarnAndContinue" />
+    <Message Importance="high"
+             Text="SP-BCFier: DLL скопированы в $(SPUpdaterRoot)\bin\$(Configuration)\" />
+  </Target>
+</Project>

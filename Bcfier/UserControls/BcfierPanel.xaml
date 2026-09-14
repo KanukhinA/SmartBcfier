@@ -8,7 +8,9 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
   xmlns:src="clr-namespace:Bcfier.Data.ValueConverters"
   xmlns:themes="clr-namespace:Bcfier.Themes"
+  xmlns:loc="clr-namespace:Bcfier.Localization"
   AllowDrop="True"
+  FontFamily="{DynamicResource SpFont.Ui}"
   DragEnter="Window_DragEnter"
   DragLeave="Window_DragLeave"
   DragOver="Window_DragOver"
@@ -17,8 +19,8 @@
   <UserControl.Resources>
     <ResourceDictionary>
       <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="../Themes/Icons.xaml" />
-        <ResourceDictionary Source="../Themes/ButtonStyles.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/ButtonStyles.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <src:BoolStarConverter x:Key="BoolStarConverter" />
       <src:BoolVisibConverter x:Key="BoolVisibConverter" />
@@ -30,6 +32,7 @@
       Command="data:Commands.DeleteIssues"
       Executed="OnDeleteIssues" />
     <CommandBinding Command="data:Commands.AddComment" Executed="OnAddComment" />
+    <CommandBinding Command="data:Commands.EditComment" Executed="OnEditComment" />
     <CommandBinding Command="data:Commands.DeleteComments" Executed="OnDeleteComment" />
     <!--<CommandBinding Command="data:Commands.AddView" Executed="OnAddView" />-->
     <CommandBinding Command="data:Commands.AddIssue" Executed="OnAddIssue" />
@@ -37,9 +40,11 @@
     <!--<CommandBinding Command="data:Commands.OpenView" Executed="OnOpenView" />-->
     <CommandBinding Command="data:Commands.OpenSnapshot" Executed="OnOpenSnapshot" />
     <CommandBinding Command="data:Commands.OpenComponents" Executed="OnOpenComponents" />
+    <CommandBinding Command="data:Commands.SelectComponent" Executed="OnSelectComponent" />
+    <CommandBinding Command="data:Commands.SelectViewpointComponents" Executed="OnSelectViewpointComponents" />
     <CommandBinding Command="data:Commands.CloseBcf" Executed="OnCloseBcf" />
   </UserControl.CommandBindings>
-  <Grid Background="{StaticResource BackgroundLight}">
+  <Grid Background="{StaticResource SpBrush.Surface}">
     <Grid.RowDefinitions>
       <RowDefinition Height="auto" />
       <RowDefinition Height="*" />
@@ -56,53 +61,102 @@
       Opacity=".70"
       Visibility="Collapsed" />
     <!--  MENU        ******************************************************************************************************************************  -->
-    <DockPanel Grid.ColumnSpan="3" Background="{StaticResource SecondaryLight}">
+    <!-- Главное меню: компактный SpMainMenuToolBar -->
+    <Border
+      Grid.Row="0"
+      Style="{StaticResource SpMainMenuToolBar}">
+    <DockPanel Background="Transparent" LastChildFill="True">
+      <!-- Сначала Right: иначе LastChildFill оставляет логотип рядом с кнопками -->
+      <StackPanel
+        DockPanel.Dock="Right"
+        Margin="8,0,0,0"
+        Orientation="Horizontal"
+        VerticalAlignment="Center"
+        HorizontalAlignment="Right">
+        <Image
+          Width="18"
+          Height="18"
+          Margin="0,0,6,0"
+          VerticalAlignment="Center"
+          RenderOptions.BitmapScalingMode="HighQuality"
+          Source="pack://application:,,,/Bcfier;component/Assets/SP_BCFier32.png"
+          Stretch="Uniform" />
+        <Label
+          Name="LabelVersion"
+          VerticalAlignment="Center"
+          Padding="0"
+          Foreground="{StaticResource SpBrush.Foreground}"
+          FontFamily="{StaticResource SpFont.Title}"
+          FontSize="13"
+          FontWeight="SemiBold"
+          Content="{x:Static loc:Loc.ProductName}" />
+      </StackPanel>
       <themes:ButtonIcon
         x:Name="NewBcfBtn"
         Style="{StaticResource MainMenuButton}"
-        Content="New BCF"
+        Content="{x:Static loc:Loc.NewBcf}"
         IconPath="{StaticResource IconNewFile}"
-        ToolTip="New BCF Report" />
+        ToolTip="{x:Static loc:Loc.NewBcf}" />
       <themes:ButtonIcon
         x:Name="SaveBcfBtn"
         Style="{StaticResource CanSaveEnablerStyle}"
-        Content="Save as..."
+        Content="{x:Static loc:Loc.SaveAs}"
         IconPath="{StaticResource IconSaveFile}"
-        ToolTip="Save BCF as..." />
+        ToolTip="{x:Static loc:Loc.SaveAs}" />
+      <themes:ButtonIcon
+        x:Name="SendToDbBtn"
+        Style="{StaticResource CanSaveEnablerStyle}"
+        Content="{x:Static loc:Loc.SendToDb}"
+        IconPath="{StaticResource IconSaveFile}"
+        ToolTip="{x:Static loc:Loc.SendToDb}"
+        Visibility="Collapsed" />
       <themes:ButtonIcon
         x:Name="OpenBcfBtn"
         Style="{StaticResource MainMenuButton}"
-        Content="Open BCF"
+        Content="{x:Static loc:Loc.OpenBcf}"
         IconPath="{StaticResource IconOpenFile}"
-        ToolTip="Open a BCF..." />
+        ToolTip="{x:Static loc:Loc.OpenBcf}" />
+      <themes:ButtonIcon
+        x:Name="OpenFromDbBtn"
+        Style="{StaticResource MainMenuButton}"
+        Content="{x:Static loc:Loc.OpenFromDb}"
+        IconPath="{StaticResource IconOpenFile}"
+        ToolTip="{x:Static loc:Loc.OpenFromDb}" />
       <!--<themes:ButtonIcon ToolTip="Open a Web Project..."  x:Name="OpenProjectBtn" Content="Open Project" IconPath="{StaticResource IconOpenFile}" Style="{StaticResource MainMenuButton}"/>-->
       <themes:ButtonIcon
         x:Name="MergeBcfBtn"
         Style="{StaticResource CanSaveEnablerStyle}"
-        Content="Merge..."
+        Content="{x:Static loc:Loc.Merge}"
         IconPath="{StaticResource IconMergeFile}"
-        ToolTip="Merge one or more BCFs with the current one" />
+        ToolTip="{x:Static loc:Loc.Merge}" />
+      <CheckBox
+        x:Name="AutoSyncCheckBox"
+        Margin="8,0,0,0"
+        VerticalAlignment="Center"
+        Content="{x:Static loc:Loc.AutoSyncWithDb}"
+        ToolTip="{x:Static loc:Loc.AutoSyncWithDbTip}"
+        Visibility="Collapsed" />
+      <themes:ButtonIcon
+        x:Name="TableModeBtn"
+        Style="{StaticResource MainMenuButton}"
+        Content="{x:Static loc:Loc.TableMode}"
+        IconPath="{StaticResource IconList}"
+        ToolTip="{x:Static loc:Loc.TableModeTip}" />
       <themes:ButtonIcon
         x:Name="SettingsBtn"
         Style="{StaticResource MainMenuButton}"
-        Content="Settings"
+        Content="{x:Static loc:Loc.Settings}"
         IconPath="{StaticResource IconSettings}"
-        ToolTip="Settings..." />
+        ToolTip="{x:Static loc:Loc.Settings}" />
       <themes:ButtonIcon
         x:Name="HelpBtn"
         HorizontalAlignment="Left"
         Style="{StaticResource MainMenuButton}"
-        Content="Help"
+        Content="{x:Static loc:Loc.Help}"
         IconPath="{StaticResource IconHelp}"
-        ToolTip="Help" />
-      <Label
-        Name="LabelVersion"
-        HorizontalAlignment="Right"
-        VerticalAlignment="Center"
-        Foreground="{StaticResource BackgroundDark}"
-        FontSize="10"
-        Content="BCFier v0.0.1" />
+        ToolTip="{x:Static loc:Loc.Help}" />
     </DockPanel>
+    </Border>
     <TabControl
       Name="BcfTabControl"
       Grid.Row="1"
@@ -112,60 +166,37 @@
       VerticalAlignment="Stretch"
       HorizontalContentAlignment="Stretch"
       VerticalContentAlignment="Stretch"
-      Background="{StaticResource BackgroundLight}"
+      Background="{StaticResource SpBrush.Surface}"
       BorderThickness="0"
       ItemsSource="{Binding BcfFiles}"
       SelectedIndex="{Binding SelectedReportIndex}">
       <TabControl.Resources>
-        <Style TargetType="TabItem">
-          <Setter Property="Template">
-            <Setter.Value>
-              <ControlTemplate TargetType="TabItem">
-                <Grid Name="Panel">
-                  <ContentPresenter
-                    x:Name="ContentSite"
-                    Margin="10,2"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    ContentSource="Header" />
-                </Grid>
-                <ControlTemplate.Triggers>
-                  <Trigger Property="IsSelected" Value="True">
-                    <Setter TargetName="Panel" Property="Background" Value="{StaticResource PrimaryLight}" />
-                  </Trigger>
-                  <Trigger Property="IsSelected" Value="False">
-                    <Setter TargetName="Panel" Property="Background" Value="{StaticResource PrimaryDark}" />
-                  </Trigger>
-                </ControlTemplate.Triggers>
-              </ControlTemplate>
-            </Setter.Value>
-          </Setter>
-        </Style>
+        <Style TargetType="TabItem" BasedOn="{StaticResource SpTabItem}" />
         <Style TargetType="{x:Type TabControl}">
           <Setter Property="Template">
             <Setter.Value>
               <ControlTemplate TargetType="TabControl">
-                <Grid UseLayoutRounding="True">
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="auto" />
-                    <RowDefinition Height="5" />
-                    <RowDefinition Height="*" />
-                  </Grid.RowDefinitions>
-                  <TabPanel
-                    Grid.Row="0"
-                    Panel.ZIndex="1"
-                    Background="{StaticResource PrimaryDark}"
-                    IsItemsHost="True" />
-                  <Border Grid.Row="1" Background="{StaticResource PrimaryLight}" />
+                <DockPanel LastChildFill="True" UseLayoutRounding="True">
                   <Border
-                    Grid.Row="2"
-                    Panel.ZIndex="0"
+                    Padding="{StaticResource SpSpace.ToolBarPadding}"
+                    Background="{StaticResource SpBrush.Inset}"
+                    CornerRadius="8,8,0,0"
+                    DockPanel.Dock="Top"
+                    SnapsToDevicePixels="True">
+                    <TabPanel
+                      VerticalAlignment="Bottom"
+                      Background="{x:Null}"
+                      HorizontalAlignment="Left"
+                      IsItemsHost="True" />
+                  </Border>
+                  <Border
                     Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}"
-                    BorderThickness="0">
+                    BorderBrush="{StaticResource SpBrush.BorderSubtle}"
+                    BorderThickness="1,0,1,1"
+                    CornerRadius="0,0,8,8">
                     <ContentPresenter Margin="0" ContentSource="SelectedContent" />
                   </Border>
-                </Grid>
+                </DockPanel>
               </ControlTemplate>
             </Setter.Value>
           </Setter>
@@ -175,12 +206,12 @@
         <DataTemplate>
           <StackPanel Margin="2,2,0,2" Orientation="Horizontal">
             <TextBlock
-              Foreground="White"
               FontWeight="Bold"
+              Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
               Text="{Binding Filename}" />
             <TextBlock
               VerticalAlignment="Center"
-              Foreground="White"
+              Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
               Text="{Binding HasBeenSaved, Converter={StaticResource BoolStarConverter}}" />
             <themes:ButtonIcon
               Name="CloseButton"
@@ -189,7 +220,7 @@
               BorderThickness="0"
               Command="data:Commands.CloseBcf"
               CommandParameter="{Binding Id}"
-              IconColor="DarkGray"
+              IconColor="{Binding Foreground, RelativeSource={RelativeSource AncestorType=TabItem}}"
               IconMarginVertical="0"
               IconPath="{StaticResource IconXClose}"
               IconSizeVertical="8"
@@ -203,22 +234,66 @@
         </DataTemplate>
       </TabControl.ContentTemplate>
     </TabControl>
-    <TextBlock
+    <ctr:BcfTablePanel
+      x:Name="TablePanel"
       Grid.Row="1"
+      Margin="0"
+      Visibility="Collapsed" />
+    <TextBlock
+      x:Name="EmptyDropHint"
+      Grid.Row="1"
+      Panel.ZIndex="10"
       Padding="40"
       HorizontalAlignment="Center"
       VerticalAlignment="Center"
-      Foreground="{StaticResource BackgroundDark}"
-      FontSize="40"
-      FontWeight="Bold"
+      Visibility="Collapsed"
+      Foreground="{StaticResource SpBrush.Muted}"
+      FontFamily="{StaticResource SpFont.Ui}"
+      FontSize="13"
+      FontWeight="SemiBold"
       TextAlignment="Center"
-      Visibility="{Binding ElementName=BcfTabControl, Path=HasItems, Converter={StaticResource BoolVisibConverter}, ConverterParameter='opposite'}">
-      Drag&amp;Drop one
-      <LineBreak />
-      or more BCF files
-      <LineBreak />
-      to open them
-    </TextBlock>
+      TextWrapping="Wrap"
+      Text="{x:Static loc:Loc.DragDropHint}" />
+    <Grid
+      x:Name="LoadingOverlay"
+      Grid.RowSpan="2"
+      Panel.ZIndex="250"
+      Background="#66E4E8EF"
+      Visibility="Collapsed">
+      <Border
+        Width="320"
+        Padding="18"
+        HorizontalAlignment="Center"
+        VerticalAlignment="Center"
+        Background="{StaticResource SpBrush.Card}"
+        BorderBrush="{StaticResource SpBrush.Border}"
+        BorderThickness="1"
+        CornerRadius="{StaticResource SpRadius.Card}"
+        Effect="{StaticResource SpEffect.NeoRaised}">
+        <StackPanel>
+          <TextBlock
+            HorizontalAlignment="Center"
+            FontFamily="{StaticResource SpFont.Title}"
+            FontSize="15"
+            FontWeight="SemiBold"
+            Text="Загрузка BCF" />
+          <TextBlock
+            x:Name="LoadingText"
+            Margin="0,8,0,12"
+            HorizontalAlignment="Center"
+            Foreground="{StaticResource SpBrush.Muted}"
+            Text="Выполняется анализ элементов модели..." 
+            TextAlignment="Center"
+            TextWrapping="Wrap" />
+          <ProgressBar
+            Height="6"
+            IsIndeterminate="True"
+            Foreground="{StaticResource SpBrush.Primary}"
+            Background="{StaticResource SpBrush.Inset}"
+            BorderThickness="0" />
+        </StackPanel>
+      </Border>
+    </Grid>
   </Grid>
 </UserControl>
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
+using Bcfier.Data.Utils;
 
 namespace Bcfier.Data.AttachedProperties
 {
@@ -43,6 +44,7 @@ namespace Bcfier.Data.AttachedProperties
       if (text_block == null)
         return;
 
+      TryEnableTextSelection(text_block);
       text_block.Inlines.Clear();
 
       var new_text = (string)e.NewValue;
@@ -83,7 +85,7 @@ namespace Bcfier.Data.AttachedProperties
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
 
@@ -97,6 +99,23 @@ namespace Bcfier.Data.AttachedProperties
       catch (System.Exception ex1)
       {
       Console.WriteLine(ex1.Message);
+      }
+    }
+
+    /// <summary>
+    /// Включает выделение текста в TextBlock, если платформа поддерживает IsTextSelectionEnabled (netcore/net8+).
+    /// </summary>
+    private static void TryEnableTextSelection(TextBlock textBlock)
+    {
+      try
+      {
+        var prop = typeof(TextBlock).GetProperty("IsTextSelectionEnabled");
+        if (prop != null && prop.CanWrite)
+          prop.SetValue(textBlock, true);
+      }
+      catch
+      {
+        // Старые runtime без свойства — копирование через контекстное меню / Ctrl+C
       }
     }
   }

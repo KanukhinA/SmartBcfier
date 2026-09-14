@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Настройки</value></data>
+  <data name="Save" xml:space="preserve"><value>Сохранить</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="Close" xml:space="preserve"><value>Закрыть</value></data>
+  <data name="Add" xml:space="preserve"><value>Добавить</value></data>
+  <data name="AddIssue" xml:space="preserve"><value>Добавить замечание</value></data>
+  <data name="BatchAdd" xml:space="preserve"><value>Пакетное добавление</value></data>
+  <data name="OpenBcf" xml:space="preserve"><value>Открыть BCF</value></data>
+  <data name="SaveBcf" xml:space="preserve"><value>Сохранить BCF</value></data>
+  <data name="SaveAs" xml:space="preserve"><value>Сохранить как...</value></data>
+  <data name="NewBcf" xml:space="preserve"><value>Новый BCF</value></data>
+  <data name="Merge" xml:space="preserve"><value>Объединить...</value></data>
+  <data name="Settings" xml:space="preserve"><value>Настройки</value></data>
+  <data name="Help" xml:space="preserve"><value>Справка</value></data>
+  <data name="Language" xml:space="preserve"><value>Язык</value></data>
+  <data name="CreationAuthor" xml:space="preserve"><value>Автор</value></data>
+  <data name="AssignedTo" xml:space="preserve"><value>Ответственный</value></data>
+  <data name="DueDate" xml:space="preserve"><value>Срок выполнения</value></data>
+  <data name="Priority" xml:space="preserve"><value>Приоритет</value></data>
+  <data name="Labels" xml:space="preserve"><value>Метки</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Выбрать все</value></data>
+  <data name="DeselectAll" xml:space="preserve"><value>Снять все</value></data>
+  <data name="ElementsList" xml:space="preserve"><value>Элементы</value></data>
+  <data name="SelectInModel" xml:space="preserve"><value>Выделить в модели</value></data>
+  <data name="SelectAllInModel" xml:space="preserve"><value>Выделить все</value></data>
+  <data name="SelectInModelTip" xml:space="preserve"><value>Выделить в модели. Ctrl+клик добавляет к текущему выделению</value></data>
+  <data name="SelectAllInModelTip" xml:space="preserve"><value>Выделить в модели все элементы этого вида</value></data>
+  <data name="TooManyComponents" xml:space="preserve"><value>Выбрано более 1000 элементов. Уменьшите выбор для стабильной работы.</value></data>
+  <data name="TooManyViewElements" xml:space="preserve"><value>В видимой области скриншота более 100 элементов. Укажите Id элемента/элементов вручную.</value></data>
+  <data name="ManualElementIdsHint" xml:space="preserve"><value>Id элемента/элементов через пробел, запятую или точку с запятой</value></data>
+  <data name="TopicStatuses" xml:space="preserve"><value>Статусы замечаний:</value></data>
+  <data name="StatusNameColumn" xml:space="preserve"><value>Имя</value></data>
+  <data name="StatusColorColumn" xml:space="preserve"><value>Цвет</value></data>
+  <data name="PickStatusColorTip" xml:space="preserve"><value>Квадрат — палитра; в поле можно вставить код #RRGGBB</value></data>
+  <data name="AddStatus" xml:space="preserve"><value>Добавить</value></data>
+  <data name="RemoveStatus" xml:space="preserve"><value>Удалить</value></data>
+  <data name="NewStatusName" xml:space="preserve"><value>Новый статус</value></data>
+  <data name="TopicTypes" xml:space="preserve"><value>Типы замечаний:</value></data>
+  <data name="PrioritiesList" xml:space="preserve"><value>Приоритеты:</value></data>
+  <data name="LabelsList" xml:space="preserve"><value>Метки:</value></data>
+  <data name="AssigneesList" xml:space="preserve"><value>Ответственные:</value></data>
+  <data name="SearchIssues" xml:space="preserve"><value>Поиск замечаний...</value></data>
+  <data name="SearchIssuesTip" xml:space="preserve"><value>Поиск по заголовку, описанию и комментариям...</value></data>
+  <data name="ActiveDocumentIssuesOnly" xml:space="preserve"><value>Замечания только к активному документу</value></data>
+  <data name="NewIssue" xml:space="preserve"><value>Новое замечание</value></data>
+  <data name="IssueTitle" xml:space="preserve"><value>Заголовок</value></data>
+  <data name="IssueTitleRequired" xml:space="preserve"><value>Заголовок (обязательно)</value></data>
+  <data name="Description" xml:space="preserve"><value>Описание</value></data>
+  <data name="AddComment" xml:space="preserve"><value>Добавить комментарий</value></data>
+  <data name="AddCommentPlaceholder" xml:space="preserve"><value>Сообщение...</value></data>
+  <data name="AddView" xml:space="preserve"><value>Добавить вид</value></data>
+  <data name="EditView" xml:space="preserve"><value>Редактировать вид</value></data>
+  <data name="EditViewTip" xml:space="preserve"><value>Изменить снимок и связанные элементы</value></data>
+  <data name="ViewEditSnapshotComment" xml:space="preserve"><value>{0} изменил(а) снимок вида</value></data>
+  <data name="ViewEditElementsComment" xml:space="preserve"><value>{0} изменил(а) связанные элементы вида</value></data>
+  <data name="ViewEditSnapshotAndElementsComment" xml:space="preserve"><value>{0} изменил(а) снимок и связанные элементы вида</value></data>
+  <data name="DeleteSelected" xml:space="preserve"><value>Удалить выбранные</value></data>
+  <data name="Browse" xml:space="preserve"><value>Обзор...</value></data>
+  <data name="Annotate" xml:space="preserve"><value>Аннотировать</value></data>
+  <data name="AnnotateSnapshot" xml:space="preserve"><value>Аннотировать снимок</value></data>
+  <data name="Remove" xml:space="preserve"><value>Удалить</value></data>
+  <data name="CommaSeparated" xml:space="preserve"><value>Через запятую</value></data>
+  <data name="Russian" xml:space="preserve"><value>Русский</value></data>
+  <data name="EmptyBcf" xml:space="preserve"><value>Текущий BCF-отчёт пуст.</value></data>
+  <data name="NoIssue" xml:space="preserve"><value>Нет замечаний</value></data>
+  <data name="BcfWriteVersion" xml:space="preserve"><value>Версия BCF (сохранение)</value></data>
+  <data name="English" xml:space="preserve"><value>English</value></data>
+  <data name="AuthorName" xml:space="preserve"><value>Имя автора:</value></data>
+  <data name="Yes" xml:space="preserve"><value>Да</value></data>
+  <data name="MaybeLater" xml:space="preserve"><value>Позже</value></data>
+  <data name="OnlyVisible" xml:space="preserve"><value>Только видимые</value></data>
+  <data name="OnlySelected" xml:space="preserve"><value>Только выделенные (по умолчанию)</value></data>
+  <data name="None" xml:space="preserve"><value>Нет</value></data>
+  <data name="TabGeneral" xml:space="preserve"><value>Общие</value></data>
+  <data name="GroupBcf" xml:space="preserve"><value>BCF</value></data>
+  <data name="GroupSnapshot" xml:space="preserve"><value>Снимок</value></data>
+  <data name="TabRevit" xml:space="preserve"><value>Autodesk Revit</value></data>
+  <data name="GroupView" xml:space="preserve"><value>Вид</value></data>
+  <data name="FirstAndLast" xml:space="preserve"><value>Имя и фамилия</value></data>
+  <data name="SnapshotsEditor" xml:space="preserve"><value>Редактор снимков:</value></data>
+  <data name="BrowseDoubleClick" xml:space="preserve"><value>Двойной щелчок для выбора...</value></data>
+  <data name="SnapshotEditorTip" xml:space="preserve"><value>Выберите приложение для правки снимков&#x0a;или будет использован Paint по умолчанию.</value></data>
+  <data name="UseDefaultViewer" xml:space="preserve"><value>Открывать снимки (.png) программой по умолчанию</value></data>
+  <data name="UseDefaultViewerTip" xml:space="preserve"><value>Снимки откроются приложением,&#x0a;связанным с PNG в Windows.</value></data>
+  <data name="AlwaysNewRevitView" xml:space="preserve"><value>Всегда создавать новый вид Revit при открытии видов</value></data>
+  <data name="BcfCoordinateMode" xml:space="preserve"><value>Система координат BCF</value></data>
+  <data name="BcfCoordinateModeRevitZUp" xml:space="preserve"><value>Revit / Z вверх</value></data>
+  <data name="BcfCoordinateModeSourceYUp" xml:space="preserve"><value>Внешний BCF / Y вверх</value></data>
+  <data name="BcfCoordinateModeSourceXUp" xml:space="preserve"><value>Внешний BCF / X вверх</value></data>
+  <data name="AttachElements" xml:space="preserve"><value>Прикрепить элементы к виду</value></data>
+  <data name="LoadLocalImage" xml:space="preserve"><value>Загрузить локальное изображение как снимок</value></data>
+  <data name="SelectLocalImage" xml:space="preserve"><value>Выберите локальное изображение:</value></data>
+  <data name="Path" xml:space="preserve"><value>Путь</value></data>
+  <data name="CommentOptional" xml:space="preserve"><value>Комментарий (необязательно)</value></data>
+  <data name="VerbalStatusOptional" xml:space="preserve"><value>Примечание</value></data>
+  <data name="IncludeComment" xml:space="preserve"><value>Добавить комментарий</value></data>
+  <data name="BrowseOrDropImage" xml:space="preserve"><value>Выберите или перетащите локальное изображение — 3D-информация в вид не включается</value></data>
+  <data name="ViewElements" xml:space="preserve"><value>Элементы вида</value></data>
+  <data name="OriginatingSystemLabel" xml:space="preserve"><value>Система-источник</value></data>
+  <data name="SelectModelElements" xml:space="preserve"><value>Выбрать элементы</value></data>
+  <data name="SelectModelElementsPrompt" xml:space="preserve"><value>Выберите элементы модели для связи с замечанием</value></data>
+  <data name="ViewHas3dInfo" xml:space="preserve"><value>В вид будет включена 3D/2D-информация текущего вида</value></data>
+  <data name="OpenViewTip" xml:space="preserve"><value>Открыть вид »</value></data>
+  <data name="OpenViewIsolatedTip" xml:space="preserve"><value>Открыть 3D вид с изоляцией »</value></data>
+  <data name="OpenViewButton" xml:space="preserve"><value>3D</value></data>
+  <data name="OpenViewIsolatedButton" xml:space="preserve"><value>3D с изоляцией</value></data>
+  <data name="EnlargeView" xml:space="preserve"><value>Увеличить вид</value></data>
+  <data name="DeleteView" xml:space="preserve"><value>Удалить вид</value></data>
+  <data name="DeleteComment" xml:space="preserve"><value>Удалить</value></data>
+  <data name="EditComment" xml:space="preserve"><value>Изменить</value></data>
+  <data name="CommentEdited" xml:space="preserve"><value>(изм.)</value></data>
+  <data name="CommentDeletedFormat" xml:space="preserve"><value>Комментарий был удалён {0}</value></data>
+  <data name="CopyComment" xml:space="preserve"><value>Копировать комментарий</value></data>
+  <data name="CopyCommentTip" xml:space="preserve"><value>Выделите текст или щёлкните правой кнопкой, чтобы скопировать</value></data>
+  <data name="GeneralComments" xml:space="preserve"><value>Общие комментарии</value></data>
+  <data name="Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="Error" xml:space="preserve"><value>Ошибка</value></data>
+  <data name="Warning" xml:space="preserve"><value>Внимание!</value></data>
+  <data name="DragDropHint" xml:space="preserve"><value>Перетащите один&#x0a;или несколько BCF-файлов,&#x0a;чтобы открыть</value></data>
+  <data name="OpenBcfFilter" xml:space="preserve"><value>BIM Collaboration Format (*.bcf;*.bcfzip)|*.bcf;*.bcfzip</value></data>
+  <data name="OpenImageFilter" xml:space="preserve"><value>Файлы изображений(*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png</value></data>
+  <data name="OpenExeFilter" xml:space="preserve"><value>Исполняемый файл (*.exe)|*.exe</value></data>
+  <data name="NewBcfReport" xml:space="preserve"><value>Новый BCF-отчёт</value></data>
+  <data name="SaveReportTitle" xml:space="preserve"><value>Сохранить отчёт?</value></data>
+  <data name="SaveReportMessage" xml:space="preserve"><value>{0} был изменён.&#x0a;Сохранить изменения?</value></data>
+  <data name="NoIssueSelected" xml:space="preserve"><value>Не выбрано замечание</value></data>
+  <data name="NoCommentSelected" xml:space="preserve"><value>Не выбран комментарий</value></data>
+  <data name="NoViewSelected" xml:space="preserve"><value>Не выбран вид</value></data>
+  <data name="DeleteIssuesTitle" xml:space="preserve"><value>Удалить замечание?</value></data>
+  <data name="TableRowDeleteIssue" xml:space="preserve"><value>Удалить замечание</value></data>
+  <data name="DeleteIssuesTitlePlural" xml:space="preserve"><value>Удалить замечания?</value></data>
+  <data name="DeleteIssuesMessage" xml:space="preserve"><value>Удалить {0} замечание?&#x0a;{1}</value></data>
+  <data name="DeleteIssuesMessagePlural" xml:space="preserve"><value>Удалить {0} замечаний?&#x0a;{1}</value></data>
+  <data name="DeleteCommentTitle" xml:space="preserve"><value>Удалить комментарий?</value></data>
+  <data name="DeleteCommentMessage" xml:space="preserve"><value>Удалить этот комментарий?</value></data>
+  <data name="DeleteViewpointCommentsTitle" xml:space="preserve"><value>Удалить комментарии вида?</value></data>
+  <data name="DeleteViewpointCommentsMessage" xml:space="preserve"><value>Также удалить комментарии, связанные с выбранным видом?</value></data>
+  <data name="SnapshotMissing" xml:space="preserve"><value>Выбранный снимок не существует</value></data>
+  <data name="ViewpointNull" xml:space="preserve"><value>У выбранного вида нет данных камеры (файл viewpoint отсутствует или повреждён)</value></data>
+  <data name="InvalidSnapshot" xml:space="preserve"><value>Снимок не является корректным изображением, попробуйте снова.</value></data>
+  <data name="TitleRequired" xml:space="preserve"><value>Нужен заголовок</value></data>
+  <data name="TitleRequiredMessage" xml:space="preserve"><value>Укажите заголовок замечания.</value></data>
+  <data name="ProductName" xml:space="preserve"><value>Замечания BCF</value></data>
+  <data name="PanelLongDescription" xml:space="preserve"><value>Открывает панель «Замечания BCF» для создания, просмотра и обмена BCF-замечаниями (BCF 3.0).</value></data>
+  <data name="ScheduleSnapshotWarning" xml:space="preserve"><value>Замечания BCF не могут делать снимки спецификаций (schedules).</value></data>
+  <data name="PerspectiveViewWarning" xml:space="preserve"><value>Операция недоступна в перспективном виде.&#x0a;Закройте текущее окно (окна) и повторите.</value></data>
+  <data name="UnknownFilename" xml:space="preserve"><value>Неизвестно</value></data>
+  <data name="NoneLower" xml:space="preserve"><value>нет</value></data>
+  <data name="NewVersionTitle" xml:space="preserve"><value>Доступна новая версия «Замечания BCF»!</value></data>
+  <data name="RibbonPanel" xml:space="preserve"><value>Замечания BCF</value></data>
+  <data name="RibbonButton" xml:space="preserve"><value>Замечания&#x0a;BCF</value></data>
+  <data name="RibbonTooltip" xml:space="preserve"><value>Замечания BCF — создание, просмотр и координация BCF-замечаний</value></data>
+  <data name="ColumnId" xml:space="preserve"><value>ID</value></data>
+  <data name="ColumnIfcGuid" xml:space="preserve"><value>IfcGuid</value></data>
+  <data name="ComponentsNotFoundTitle" xml:space="preserve"><value>Элементы не найдены</value></data>
+  <data name="ComponentsNotFoundMessage" xml:space="preserve"><value>Не удалось сопоставить {0} элемент(ов) ни по IfcGuid, ни по Id в имени (после двоеточия):&#x0a;{1}</value></data>
+  <data name="ColumnFamily" xml:space="preserve"><value>Семейство</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>Тип</value></data>
+  <data name="SelectedElements" xml:space="preserve"><value>Выбранные элементы</value></data>
+  <data name="OtherElements" xml:space="preserve"><value>Остальные элементы</value></data>
+  <data name="AvailableOnView" xml:space="preserve"><value>Доступные на виде</value></data>
+  <data name="MoveToSelected" xml:space="preserve"><value>Добавить в выбранные</value></data>
+  <data name="MoveToAvailable" xml:space="preserve"><value>Убрать из выбранных</value></data>
+  <data name="MoveAllToSelected" xml:space="preserve"><value>Добавить все в выбранные</value></data>
+  <data name="MoveAllToAvailable" xml:space="preserve"><value>Убрать все из выбранных</value></data>
+  <data name="PlaceholderStatuses" xml:space="preserve"><value>Открыт, В работе, Решён, Закрыт</value></data>
+  <data name="PlaceholderTypes" xml:space="preserve"><value>Архитектура, Конструкции, Инженерия, Координация</value></data>
+  <data name="PlaceholderPriorities" xml:space="preserve"><value>Низкий, Обычный, Высокий, Критический</value></data>
+  <data name="PlaceholderLabels" xml:space="preserve"><value>Коллизия, Запрос, Информация</value></data>
+  <data name="PlaceholderAssignees" xml:space="preserve"><value>user@company.com</value></data>
+  <data name="CountViewpoints_one" xml:space="preserve"><value>{0} вид</value></data>
+  <data name="CountViewpoints_few" xml:space="preserve"><value>{0} вида</value></data>
+  <data name="CountViewpoints_many" xml:space="preserve"><value>{0} видов</value></data>
+  <data name="CountComments_one" xml:space="preserve"><value>{0} комментарий</value></data>
+  <data name="CountComments_few" xml:space="preserve"><value>{0} комментария</value></data>
+  <data name="CountComments_many" xml:space="preserve"><value>{0} комментариев</value></data>
+  <data name="CountIssues_one" xml:space="preserve"><value>{0} замечание</value></data>
+  <data name="CountIssues_few" xml:space="preserve"><value>{0} замечания</value></data>
+  <data name="CountIssues_many" xml:space="preserve"><value>{0} замечаний</value></data>
+  <data name="CountSelected_one" xml:space="preserve"><value>{0} выбран</value></data>
+  <data name="CountSelected_few" xml:space="preserve"><value>{0} выбрано</value></data>
+  <data name="CountSelected_many" xml:space="preserve"><value>{0} выбрано</value></data>
+  <data name="RelativeJustNow" xml:space="preserve"><value>только что</value></data>
+  <data name="RelativeMinuteAgo" xml:space="preserve"><value>минуту назад</value></data>
+  <data name="RelativeHourAgo" xml:space="preserve"><value>час назад</value></data>
+  <data name="RelativeYesterday" xml:space="preserve"><value>вчера</value></data>
+  <data name="RelativeSeconds_one" xml:space="preserve"><value>{0} секунду назад</value></data>
+  <data name="RelativeSeconds_few" xml:space="preserve"><value>{0} секунды назад</value></data>
+  <data name="RelativeSeconds_many" xml:space="preserve"><value>{0} секунд назад</value></data>
+  <data name="RelativeMinutes_one" xml:space="preserve"><value>{0} минуту назад</value></data>
+  <data name="RelativeMinutes_few" xml:space="preserve"><value>{0} минуты назад</value></data>
+  <data name="RelativeMinutes_many" xml:space="preserve"><value>{0} минут назад</value></data>
+  <data name="RelativeHours_one" xml:space="preserve"><value>{0} час назад</value></data>
+  <data name="RelativeHours_few" xml:space="preserve"><value>{0} часа назад</value></data>
+  <data name="RelativeHours_many" xml:space="preserve"><value>{0} часов назад</value></data>
+  <data name="RelativeDays_one" xml:space="preserve"><value>{0} день назад</value></data>
+  <data name="RelativeDays_few" xml:space="preserve"><value>{0} дня назад</value></data>
+  <data name="RelativeDays_many" xml:space="preserve"><value>{0} дней назад</value></data>
+  <data name="RelativeYears_one" xml:space="preserve"><value>{0} год назад</value></data>
+  <data name="RelativeYears_few" xml:space="preserve"><value>{0} года назад</value></data>
+  <data name="RelativeYears_many" xml:space="preserve"><value>{0} лет назад</value></data>
+  <data name="TabServer" xml:space="preserve"><value>Сервер</value></data>
+  <data name="TabCustomFields" xml:space="preserve"><value>Польз. поля</value></data>
+  <data name="CustomFieldsCatalogHint" xml:space="preserve"><value>Задайте имена полей, которые можно добавить к отчёту (проекту). Значения пишутся в Documents/custom-fields.xml внутри BCF.</value></data>
+  <data name="CustomFieldName" xml:space="preserve"><value>Имя</value></data>
+  <data name="CustomFieldType" xml:space="preserve"><value>Тип</value></data>
+  <data name="CustomFieldTypeText" xml:space="preserve"><value>Текст</value></data>
+  <data name="CustomFieldTypeDate" xml:space="preserve"><value>Дата</value></data>
+  <data name="CustomFieldDuplicateName" xml:space="preserve"><value>Поле с именем "{0}" уже есть в каталоге. Переименуйте одно из них — имена должны быть уникальны.</value></data>
+  <data name="CustomFieldsAddDefinition" xml:space="preserve"><value>Добавить поле</value></data>
+  <data name="CustomFieldsRemoveDefinition" xml:space="preserve"><value>Удалить</value></data>
+  <data name="CustomFieldsAddToTopic" xml:space="preserve"><value>Пользовательские поля</value></data>
+  <data name="CustomFieldsAddTitle" xml:space="preserve"><value>Добавить пользовательские поля</value></data>
+  <data name="CustomFieldsManageTitle" xml:space="preserve"><value>Пользовательские поля</value></data>
+  <data name="CustomFieldsAddHint" xml:space="preserve"><value>Выберите поля из каталога, которые нужно добавить к отчёту. Значения можно будет заполнить в основной панели.</value></data>
+  <data name="CustomFieldsAddHintReport" xml:space="preserve"><value>Выберите поля из каталога, которые нужно добавить к отчёту. Значения можно будет заполнить в основной панели.</value></data>
+  <data name="CustomFieldsManageHint" xml:space="preserve"><value>Отмеченные поля есть в отчёте. Снимите галочку, чтобы удалить поле. Значения редактируются в основной панели.</value></data>
+  <data name="CustomFieldsGroupTitle" xml:space="preserve"><value>Пользовательские поля</value></data>
+  <data name="CustomFieldsPrompt" xml:space="preserve"><value>В отчёте есть пользовательские поля в Documents. Показать?</value></data>
+  <data name="CustomFieldsPreviewTitle" xml:space="preserve"><value>Предпросмотр пользовательских полей</value></data>
+  <data name="CustomFieldsPreviewHint" xml:space="preserve"><value>Просмотрите поля отчёта из Documents и решите, показывать ли их в интерфейсе.</value></data>
+  <data name="CustomFieldsPreviewScope" xml:space="preserve"><value>Область</value></data>
+  <data name="CustomFieldsPreviewShow" xml:space="preserve"><value>Показать в UI</value></data>
+  <data name="CustomFieldsPreviewHide" xml:space="preserve"><value>Не показывать</value></data>
+  <data name="CustomFieldsNoneSelected" xml:space="preserve"><value>Пользовательские поля относятся ко всему отчёту.</value></data>
+  <data name="CustomFieldsNoDefinitions" xml:space="preserve"><value>В настройках нет определений полей. Добавьте их: Настройки → Польз. поля.</value></data>
+  <data name="CustomFieldsValue" xml:space="preserve"><value>Значение</value></data>
+  <data name="CustomFieldsReportLevel" xml:space="preserve"><value>Отчёт</value></data>
+  <data name="GroupSpService" xml:space="preserve"><value>Подключение к SP-Service</value></data>
+  <data name="SpServiceBaseUrl" xml:space="preserve"><value>Адрес сервера</value></data>
+  <data name="SpServiceLogin" xml:space="preserve"><value>Логин</value></data>
+  <data name="SpServicePassword" xml:space="preserve"><value>Пароль</value></data>
+  <data name="SpServiceProject" xml:space="preserve"><value>Проект</value></data>
+  <data name="SpServiceModel" xml:space="preserve"><value>Модель</value></data>
+  <data name="SpServiceSyncInterval" xml:space="preserve"><value>Интервал синхронизации</value></data>
+  <data name="SpServiceSyncIntervalUnit" xml:space="preserve"><value>секунд</value></data>
+  <data name="SpServiceTestConnection" xml:space="preserve"><value>Проверить подключение</value></data>
+  <data name="SpServiceTestHint" xml:space="preserve"><value>Проверьте подключение, затем выберите проект. Модель назначается автоматически при экспорте.</value></data>
+  <data name="SpServiceTesting" xml:space="preserve"><value>Проверка...</value></data>
+  <data name="SpServiceTestOk" xml:space="preserve"><value>Вход выполнен: {0}. Проектов: {1}.</value></data>
+  <data name="SpServiceTestError" xml:space="preserve"><value>Ошибка: {0}</value></data>
+  <data name="SpServiceSavedProject" xml:space="preserve"><value>Сохранённый проект</value></data>
+  <data name="SpServiceSavedModel" xml:space="preserve"><value>Сохранённая модель</value></data>
+  <data name="SpServiceNotConfigured" xml:space="preserve"><value>Настройте подключение к SP-Service в настройках.</value></data>
+  <data name="SpServiceModelRequired" xml:space="preserve"><value>Выберите модель в настройках перед открытием из БД.</value></data>
+  <data name="OpenFromDb" xml:space="preserve"><value>Открыть из БД</value></data>
+  <data name="SendToDb" xml:space="preserve"><value>Отправить в БД</value></data>
+  <data name="AutoSyncWithDb" xml:space="preserve"><value>Автоматически синхронизироваться с БД</value></data>
+  <data name="AutoSyncWithDbTip" xml:space="preserve"><value>Отправка локальных изменений и получение обновлений с сервера с интервалом из настроек.</value></data>
+  <data name="SpServicePickTitle" xml:space="preserve"><value>BCF-файлы на сервере</value></data>
+  <data name="SpServicePickHint" xml:space="preserve"><value>Выберите BCF-отчёт для открытия.</value></data>
+  <data name="SpServiceSelectBcfFile" xml:space="preserve"><value>Выберите BCF-файл.</value></data>
+  <data name="SpServiceConflictMessage" xml:space="preserve"><value>Замечание изменено на сервере. Да = оставить локальное, Нет = взять серверное, Отмена = прервать.</value></data>
+  <data name="SpServiceNoBcfFiles" xml:space="preserve"><value>Для выбранной модели нет BCF-файлов.</value></data>
+  <data name="SpServiceOpenError" xml:space="preserve"><value>Не удалось открыть BCF из БД: {0}</value></data>
+  <data name="SpServiceSyncError" xml:space="preserve"><value>Ошибка синхронизации: {0}</value></data>
+  <data name="SpServiceSyncOk" xml:space="preserve"><value>Изменения отправлены в БД.</value></data>
+  <data name="TableMode" xml:space="preserve"><value>Таблица</value></data>
+  <data name="TableModeTip" xml:space="preserve"><value>Переключить на табличный вид</value></data>
+  <data name="ClassicMode" xml:space="preserve"><value>Карточки</value></data>
+  <data name="ClassicModeTip" xml:space="preserve"><value>Переключить на классический двухпанельный вид</value></data>
+  <data name="TableReportLabel" xml:space="preserve"><value>Отчёт</value></data>
+  <data name="TableReportRenameTip" xml:space="preserve"><value>Название отчёта — введите новое, чтобы переименовать (только отображение, файл на диске не переименовывается)</value></data>
+  <data name="TableColumns" xml:space="preserve"><value>Колонки</value></data>
+  <data name="TableColumnsTip" xml:space="preserve"><value>Выбор и переименование колонок</value></data>
+  <data name="TableColumnsTitle" xml:space="preserve"><value>Колонки таблицы</value></data>
+  <data name="TableColumnsHint" xml:space="preserve"><value>Отметьте колонки для отображения. Кастомное имя заменяет заголовок по умолчанию. Выберите выравнивание текста для каждой колонки. Порядковый номер (#) всегда слева и по центру.</value></data>
+  <data name="TableColumnMoveUp" xml:space="preserve"><value>Вверх</value></data>
+  <data name="TableColumnMoveDown" xml:space="preserve"><value>Вниз</value></data>
+  <data name="TableColumnCustomName" xml:space="preserve"><value>Своё имя</value></data>
+  <data name="TableColumnCustomNameTip" xml:space="preserve"><value>Оставьте пустым, чтобы использовать имя по умолчанию</value></data>
+  <data name="TableColumnVisibleHeader" xml:space="preserve"><value>Показ</value></data>
+  <data name="TableColumnDefaultHeader" xml:space="preserve"><value>Колонка</value></data>
+  <data name="TableExportExcel" xml:space="preserve"><value>Excel</value></data>
+  <data name="TableExportExcelTip" xml:space="preserve"><value>Экспорт таблицы в Excel (.xlsx)</value></data>
+  <data name="TableExportHtml" xml:space="preserve"><value>HTML</value></data>
+  <data name="TableExportHtmlTip" xml:space="preserve"><value>Экспорт таблицы в HTML</value></data>
+  <data name="TableExportExcelFilter" xml:space="preserve"><value>Книга Excel (*.xlsx)|*.xlsx</value></data>
+  <data name="TableExportHtmlFilter" xml:space="preserve"><value>HTML (*.html)|*.html</value></data>
+  <data name="TableExportPdf" xml:space="preserve"><value>Экспорт PDF</value></data>
+  <data name="TableExportPdfTip" xml:space="preserve"><value>Экспортировать таблицу в PDF</value></data>
+  <data name="TableExportPdfFilter" xml:space="preserve"><value>PDF (*.pdf)|*.pdf</value></data>
+  <data name="TableExportEmpty" xml:space="preserve"><value>Нечего экспортировать. Сначала откройте BCF-отчёт с замечаниями.</value></data>
+  <data name="TableEmptyHint" xml:space="preserve"><value>Откройте или создайте BCF-отчёт, чтобы увидеть замечания в таблице.</value></data>
+  <data name="TableColStage" xml:space="preserve"><value>Стадия</value></data>
+  <data name="TableColCreationDate" xml:space="preserve"><value>Создано</value></data>
+  <data name="TableColModifiedAuthor" xml:space="preserve"><value>Изменил</value></data>
+  <data name="TableColModifiedDate" xml:space="preserve"><value>Изменено</value></data>
+  <data name="TableColIndex" xml:space="preserve"><value>Индекс</value></data>
+  <data name="TableColGuid" xml:space="preserve"><value>GUID</value></data>
+  <data name="TableColDescriptionAndSnapshot" xml:space="preserve"><value>Описание + снимок</value></data>
+  <data name="TableColTitleAndSnapshot" xml:space="preserve"><value>Заголовок + снимок</value></data>
+  <data name="TableCommentUserColumn" xml:space="preserve"><value>Комментарии (пользователь)</value></data>
+  <data name="TableCommentGroupColumn" xml:space="preserve"><value>Комментарии (группа)</value></data>
+  <data name="TableCommentScopeAll" xml:space="preserve"><value>Все</value></data>
+  <data name="TableCommentScopeUser" xml:space="preserve"><value>Пользователь</value></data>
+  <data name="TableCommentScopeGroup" xml:space="preserve"><value>Группа</value></data>
+  <data name="TableCommentDuplicateColumn" xml:space="preserve"><value>Дублировать колонку комментариев</value></data>
+  <data name="TableCommentRemoveColumn" xml:space="preserve"><value>Удалить колонку комментариев</value></data>
+  <data name="TableCommentGroupsTitle" xml:space="preserve"><value>Группы пользователей</value></data>
+  <data name="TableCommentGroupsHint" xml:space="preserve"><value>Создайте группы, чтобы показывать одну колонку комментариев для нескольких авторов. Имена сравниваются без учёта регистра.</value></data>
+  <data name="TableCommentAddGroup" xml:space="preserve"><value>Добавить группу</value></data>
+  <data name="TableCommentDeleteGroup" xml:space="preserve"><value>Удалить группу</value></data>
+  <data name="TableCommentGroupName" xml:space="preserve"><value>Имя группы</value></data>
+  <data name="TableCommentMembers" xml:space="preserve"><value>Участники</value></data>
+  <data name="TableCommentAddPlaceholder" xml:space="preserve"><value>Добавить комментарий…</value></data>
+  <data name="TableAlignLeft" xml:space="preserve"><value>Слева</value></data>
+  <data name="TableAlignCenter" xml:space="preserve"><value>По центру</value></data>
+  <data name="TableAlignRight" xml:space="preserve"><value>Справа</value></data>
+  <data name="TableAlignColumn" xml:space="preserve"><value>Выравнивание</value></data>
+  <data name="ExcelImport" xml:space="preserve"><value>Импорт</value></data>
+  <data name="ExcelImportTip" xml:space="preserve"><value>Импорт замечаний из Excel</value></data>
+  <data name="ExcelImportTitle" xml:space="preserve"><value>Импорт из Excel</value></data>
+  <data name="ExcelImportSheet" xml:space="preserve"><value>Лист</value></data>
+  <data name="ExcelImportHasHeaderRow" xml:space="preserve"><value>Первая строка — заголовки</value></data>
+  <data name="ExcelImportMappingHint" xml:space="preserve"><value>Сопоставьте поля BCF с колонками Excel. Заголовок (Title) обязателен. Строки без заголовка пропускаются.</value></data>
+  <data name="ExcelImportNotMapped" xml:space="preserve"><value>(не задано)</value></data>
+  <data name="ExcelImportResult" xml:space="preserve"><value>Создано: {0}. Пропущено: {1}.</value></data>
+  <data name="ExcelImportFilter" xml:space="preserve"><value>Книга Excel (*.xlsx)|*.xlsx</value></data>
+  <data name="ExcelImportFileMissing" xml:space="preserve"><value>Укажите существующий файл Excel.</value></data>
+  <data name="ExcelImportSheetEmpty" xml:space="preserve"><value>Лист пуст или не найден.</value></data>
+  <data name="ExcelImportReadError" xml:space="preserve"><value>Не удалось прочитать Excel: {0}</value></data>
+  <data name="ExcelImportColumnN" xml:space="preserve"><value>Столбец {0}</value></data>
+  <data name="ExcelImportNoReport" xml:space="preserve"><value>Сначала откройте или создайте BCF-отчёт.</value></data>
+  <data name="ExcelImportNoRows" xml:space="preserve"><value>Нет строк данных для импорта.</value></data>
+  <data name="ExcelImportWorking" xml:space="preserve"><value>Импорт…</value></data>
+</root>

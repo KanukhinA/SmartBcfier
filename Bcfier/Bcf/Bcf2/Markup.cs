@@ -26,6 +26,8 @@ namespace Bcfier.Bcf.Bcf2
     private ObservableCollection<Comment> commentField;
 
     private ObservableCollection<ViewPoint> viewpointsField;
+    private ObservableCollection<ViewComment> _viewCommentsField;
+    private bool _viewCommentsDirty = true;
 
 
     /// <remarks/>
@@ -54,6 +56,7 @@ namespace Bcfier.Bcf.Bcf2
       set
       {
         this.commentField = value;
+        InvalidateViewComments();
         NotifyPropertyChanged("Comment");
       }
     }
@@ -66,6 +69,7 @@ namespace Bcfier.Bcf.Bcf2
       set
       {
         this.viewpointsField = value;
+        InvalidateViewComments();
         NotifyPropertyChanged("Viewpoints");
 
       }
@@ -81,23 +85,40 @@ namespace Bcfier.Bcf.Bcf2
     {
       get
       {
+        if (!_viewCommentsDirty && _viewCommentsField != null)
+          return _viewCommentsField;
+
         var viewCommentsField = new ObservableCollection<ViewComment>();
-        foreach (var viewpoint in Viewpoints)
+        IEnumerable<ViewPoint> viewpoints = Viewpoints ?? Enumerable.Empty<ViewPoint>();
+        IEnumerable<Comment> comments = Comment ?? Enumerable.Empty<Comment>();
+        HashSet<string> viewpointGuids = new HashSet<string>(
+          viewpoints
+            .Where(viewpoint => viewpoint != null && !string.IsNullOrWhiteSpace(viewpoint.Guid))
+            .Select(viewpoint => viewpoint.Guid));
+
+        foreach (var viewpoint in viewpoints)
         {
           var vc = new ViewComment
           {
             Viewpoint = viewpoint,
-            Comments = new ObservableCollection<Comment>(Comment.Where(x => x.Viewpoint != null && x.Viewpoint.Guid == viewpoint.Guid))
+            Comments = new ObservableCollection<Comment>(comments.Where(x => x.Viewpoint != null && x.Viewpoint.Guid == viewpoint.Guid))
           };
           viewCommentsField.Add(vc);
         }
+
         var vcEmpty = new ViewComment
         {
           Comments =
-            new ObservableCollection<Comment>(Comment.Where(x => !Viewpoints.Any(v => x.Viewpoint != null && v.Guid == x.Viewpoint.Guid)))
+            new ObservableCollection<Comment>(comments.Where(x =>
+              x?.Viewpoint == null
+              || string.IsNullOrWhiteSpace(x.Viewpoint.Guid)
+              || !viewpointGuids.Contains(x.Viewpoint.Guid)))
         };
         viewCommentsField.Add(vcEmpty);
-        return viewCommentsField;
+
+        _viewCommentsField = viewCommentsField;
+        _viewCommentsDirty = false;
+        return _viewCommentsField;
       }
     }
 
@@ -143,16 +164,41 @@ namespace Bcfier.Bcf.Bcf2
     public void RegisterEvents()
     {
       if (Viewpoints != null)
-        Viewpoints.CollectionChanged += delegate (object sender, NotifyCollectionChangedEventArgs args) { NotifyPropertyChanged("ViewComments"); };
+      {
+        Viewpoints.CollectionChanged -= ViewpointsOnCollectionChanged;
+        Viewpoints.CollectionChanged += ViewpointsOnCollectionChanged;
+      }
       if (Comment != null)
+      {
+        Comment.CollectionChanged -= CommentOnCollectionChanged;
         Comment.CollectionChanged += CommentOnCollectionChanged;
+      }
+    }
+
+    /// <summary>
+    /// Сбрасывает кэш представления комментариев при изменении списка видов.
+    /// </summary>
+    private void ViewpointsOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs args)
+    {
+      InvalidateViewComments();
+      NotifyPropertyChanged("ViewComments");
     }
 
     private void CommentOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
     {
+      InvalidateViewComments();
       NotifyPropertyChanged("ViewComments");
       //NotifyPropertyChanged("LastCommentStatus");
       //NotifyPropertyChanged("LastCommentVerbalStatus");
+    }
+
+    /// <summary>
+    /// Сбрасывает кэш ViewComments перед повторным построением.
+    /// </summary>
+    private void InvalidateViewComments()
+    {
+      _viewCommentsDirty = true;
+      _viewCommentsField = null;
     }
     [field: NonSerialized]
     public event PropertyChangedEventHandler PropertyChanged;
@@ -346,9 +392,9 @@ namespace Bcfier.Bcf.Bcf2
   public partial class Comment
   {
 
-    //private string verbalStatusField;
+    private string verbalStatusField;
 
-    //private string statusField;
+    private string statusField;
 
     private System.DateTime dateField;
 
@@ -375,28 +421,41 @@ namespace Bcfier.Bcf.Bcf2
       //this.statusField = "Unknown";
     }
 
-    // /// <remarks/>
-    // [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
-    // public string VerbalStatus
-    // {
-    //   get { return this.verbalStatusField; }
-    //   set { this.verbalStatusField = value; }
-    // }
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
+    public string VerbalStatus
+    {
+      get { return this.verbalStatusField; }
+      set { this.verbalStatusField = value; }
+    }
 
-    // /// <remarks/>
-    // [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
-    // public string Status
-    // {
-    //   get { return this.statusField; }
-    //   set { this.statusField = value; }
-    // }
+    /// <remarks/>
+    [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
+    public string Status
+    {
+      get { return this.statusField; }
+      set
+      {
+        if (this.statusField == value)
+          return;
+        this.statusField = value;
+        OnPropertyChanged(nameof(Status));
+        NotifyOwnershipFlags();
+      }
+    }
 
     /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
     public System.DateTime Date
     {
       get { return this.dateField; }
-      set { this.dateField = value; }
+      set
+      {
+        if (this.dateField == value)
+          return;
+        this.dateField = value;
+        OnPropertyChanged(nameof(Date));
+      }
     }
 
     /// <remarks/>
@@ -404,7 +463,14 @@ namespace Bcfier.Bcf.Bcf2
     public string Author
     {
       get { return this.authorField; }
-      set { this.authorField = value; }
+      set
+      {
+        if (this.authorField == value)
+          return;
+        this.authorField = value;
+        OnPropertyChanged(nameof(Author));
+        NotifyOwnershipFlags();
+      }
     }
 
     /// <remarks/>
@@ -412,7 +478,13 @@ namespace Bcfier.Bcf.Bcf2
     public string Comment1
     {
       get { return this.comment1Field; }
-      set { this.comment1Field = value; }
+      set
+      {
+        if (this.comment1Field == value)
+          return;
+        this.comment1Field = value;
+        OnPropertyChanged(nameof(Comment1));
+      }
     }
 
     // /// <remarks/>
@@ -444,7 +516,14 @@ namespace Bcfier.Bcf.Bcf2
     public System.DateTime ModifiedDate
     {
       get { return this.modifiedDateField; }
-      set { this.modifiedDateField = value; }
+      set
+      {
+        if (this.modifiedDateField == value)
+          return;
+        this.modifiedDateField = value;
+        OnPropertyChanged(nameof(ModifiedDate));
+        OnPropertyChanged(nameof(IsEdited));
+      }
     }
 
     /// <remarks/>
@@ -452,7 +531,14 @@ namespace Bcfier.Bcf.Bcf2
     public bool ModifiedDateSpecified
     {
       get { return this.modifiedDateFieldSpecified; }
-      set { this.modifiedDateFieldSpecified = value; }
+      set
+      {
+        if (this.modifiedDateFieldSpecified == value)
+          return;
+        this.modifiedDateFieldSpecified = value;
+        OnPropertyChanged(nameof(ModifiedDateSpecified));
+        OnPropertyChanged(nameof(IsEdited));
+      }
     }
 
     /// <remarks/>
@@ -460,7 +546,13 @@ namespace Bcfier.Bcf.Bcf2
     public string ModifiedAuthor
     {
       get { return this.modifiedAuthorField; }
-      set { this.modifiedAuthorField = value; }
+      set
+      {
+        if (this.modifiedAuthorField == value)
+          return;
+        this.modifiedAuthorField = value;
+        OnPropertyChanged(nameof(ModifiedAuthor));
+      }
     }
 
     /// <remarks/>
@@ -645,6 +737,10 @@ namespace Bcfier.Bcf.Bcf2
 
     private ObservableCollection<string> topicStatusesCollection;
 
+    private ObservableCollection<string> prioritiesCollection;
+    private ObservableCollection<string> labelsCollection;
+    private ObservableCollection<string> assigneesCollection;
+
     /// <remarks/>
     [System.Xml.Serialization.XmlElementAttribute(Form = System.Xml.Schema.XmlSchemaForm.Unqualified)]
     public string[] ReferenceLink
@@ -658,7 +754,13 @@ namespace Bcfier.Bcf.Bcf2
     public string Title
     {
       get { return this.titleField; }
-      set { this.titleField = value; }
+      set
+      {
+        if (this.titleField == value)
+          return;
+        this.titleField = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(Title)));
+      }
     }
 
     /// <remarks/>
@@ -875,24 +977,44 @@ namespace Bcfier.Bcf.Bcf2
       set { this.topicStatusesCollection = value; }
     }
 
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public ObservableCollection<string> PrioritiesCollection
+    {
+      get { return prioritiesCollection; }
+      set { prioritiesCollection = value; }
+    }
+
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public ObservableCollection<string> LabelsCollection
+    {
+      get { return labelsCollection; }
+      set { labelsCollection = value; }
+    }
+
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public ObservableCollection<string> AssigneesCollection
+    {
+      get { return assigneesCollection; }
+      set { assigneesCollection = value; }
+    }
+
+    /// <summary>Метки topic для UI (синхронизируются с Labels[] при сохранении).</summary>
+    [System.Xml.Serialization.XmlIgnoreAttribute()]
+    public ObservableCollection<string> SelectedLabels { get; set; } = new ObservableCollection<string>();
+
     public Topic()
     {
-      Guid = System.Guid.NewGuid().ToString();
-      CreationDate = DateTime.Now;
+      Guid = System.Guid.NewGuid().ToString().ToLowerInvariant();
+      CreationDate = DateTime.UtcNow;
       ModifiedDate = CreationDate;
 
+      // Инициализируем пустые UI-коллекции без копирования глобальных списков,
+      // чтобы десериализация большого числа issue не создавала лишнюю нагрузку.
       TopicStatusesCollection = new ObservableCollection<string>();
       TopicTypesCollection = new ObservableCollection<string>();
-      foreach (var status in Globals.AvailStatuses)
-      {
-        TopicStatusesCollection.Add(status);
-      }
-      foreach (var type in Globals.AvailTypes)
-      {
-        TopicTypesCollection.Add(type);
-      }
-
-
+      PrioritiesCollection = new ObservableCollection<string>();
+      LabelsCollection = new ObservableCollection<string>();
+      AssigneesCollection = new ObservableCollection<string>();
     }
   }
 

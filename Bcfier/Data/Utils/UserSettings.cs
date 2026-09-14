@@ -1,7 +1,9 @@
-﻿using System;
+using System;
 using System.Configuration;
+using System.Globalization;
 using System.Windows;
 using System.Windows.Controls;
+using Bcfier.Localization;
 using Bcfier.Themes;
 
 namespace Bcfier.Data.Utils
@@ -36,18 +38,102 @@ namespace Bcfier.Data.Utils
           config.Save(ConfigurationSaveMode.Modified);
         }
       }
-      catch (System.Exception ex1)
+      catch
       {
-        MessageBox.Show("exception: " + ex1);
       }
       return string.Empty;
+    }
+
+    /// <summary>Нормализация кода языка настроек: en или ru.</summary>
+    public static string NormalizeLanguage(string language)
+    {
+      if (string.IsNullOrWhiteSpace(language))
+        return "ru";
+      return language.StartsWith("en", StringComparison.OrdinalIgnoreCase) ? "en" : "ru";
+    }
+
+    public static string CurrentLanguage => NormalizeLanguage(Get("Language"));
+
+    /// <summary>
+    /// Список topic для языка: сохранённое значение, иначе миграция со старого ключа, иначе дефолт.
+    /// </summary>
+    public static string GetLanguageBound(string key, string language = null)
+    {
+      string lang = NormalizeLanguage(language ?? Get("Language"));
+      string boundKey = key + "." + lang;
+
+      if (TryGet(boundKey, out string bound) && !string.IsNullOrWhiteSpace(bound))
+        return bound;
+
+      // Миграция: старый общий ключ без суффикса — на язык текущих настроек
+      if (lang == CurrentLanguage
+          && TryGet(key, out string legacy)
+          && !string.IsNullOrWhiteSpace(legacy))
+      {
+        Set(boundKey, legacy);
+        return legacy;
+      }
+
+      return GetDefaultTopicList(key, lang);
+    }
+
+    public static void SetLanguageBound(string key, string value, string language = null)
+    {
+      string lang = NormalizeLanguage(language ?? Get("Language"));
+      Set(key + "." + lang, value ?? string.Empty);
+    }
+
+    /// <summary>Значения по умолчанию для списков topic на указанном языке.</summary>
+    public static string GetDefaultTopicList(string key, string language)
+    {
+      string lang = NormalizeLanguage(language);
+      // Ответственные по умолчанию пустые — в UI только placeholder
+      if (string.Equals(key, "Assignees", StringComparison.Ordinal))
+        return string.Empty;
+
+      CultureInfo culture = lang == "en" ? new CultureInfo("en") : new CultureInfo("ru-RU");
+      switch (key)
+      {
+        case "Stauses":
+          return Loc.Get("PlaceholderStatuses", culture);
+        case "Types":
+          return Loc.Get("PlaceholderTypes", culture);
+        case "Priorities":
+          return Loc.Get("PlaceholderPriorities", culture);
+        case "Labels":
+          return Loc.Get("PlaceholderLabels", culture);
+        default:
+          return string.Empty;
+      }
+    }
+
+    private static bool TryGet(string key, out string value)
+    {
+      value = null;
+      try
+      {
+        Configuration config = GetConfig();
+        if (config == null)
+          return false;
+
+        KeyValueConfigurationElement element = config.AppSettings.Settings[key];
+        if (element == null)
+          return false;
+
+        value = element.Value;
+        return true;
+      }
+      catch
+      {
+        return false;
+      }
     }
     /// <summary>
     /// Sets the user setting with the specified key and value, if it doesn't exists it is created
     /// </summary>
     /// <param name="key"></param>
     /// <param name="value"></param>
-    private static void Set(string key, string value)
+    public static void Set(string key, string value)
     {
       try
       {
@@ -62,11 +148,12 @@ namespace Bcfier.Data.Utils
           config.AppSettings.Settings.Add(key, value);
 
         config.Save(ConfigurationSaveMode.Modified);
+        ConfigurationManager.RefreshSection("appSettings");
 
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
     /// <summary>
@@ -86,7 +173,7 @@ namespace Bcfier.Data.Utils
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return value;
     }

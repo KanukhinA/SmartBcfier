@@ -194,3 +194,16 @@ FakesAssemblies/
 
 # Visual Studio 6 workspace options file
 *.opt
+
+# -----------------------------------------------------------------------------
+# Локальные / корпоративные артефакты (не входят в публичный репозиторий)
+# -----------------------------------------------------------------------------
+
+# Синхронизация с SP-Service (не нужна standalone-плагину)
+Bcfier/Sync/
+tests/Bcfier.Tests/TopicSnapshotDiffTests.cs
+
+# Сгенерированный InnoSetup-скрипт (исходник — SP-BCFier.iss)
+InnoSetup/*.generated.iss
+
+# dist/ — релизные артефакты (Setup.exe, ZIP, DLL) публикуются в репозитории

@@ -16,15 +16,17 @@ namespace Bcfier.Data.ValueConverters
     {
       if (value == null)
         return "";
-      var date = new DateTime();
-      if (! DateTime.TryParse(value.ToString(), out date))
+      DateTime date;
+      if (value is DateTime dateValue)
+        date = dateValue;
+      else if (!DateTime.TryParse(value.ToString(), culture ?? CultureInfo.CurrentCulture, DateTimeStyles.None, out date))
         return "";
 
-      if (parameter!=null&&parameter.ToString() == "relative")
+      if (parameter != null && parameter.ToString() == "relative")
         return RelativeDate.ToRelative(date);
-      else
-        return date.ToShortDateString() + " at " + date.ToShortTimeString();
 
+      // Стандартный краткий формат текущего языка: без жёстко заданного английского "at".
+      return date.ToLocalTime().ToString("g", CultureInfo.CurrentCulture);
     }
 
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

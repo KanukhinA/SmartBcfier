@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -9,9 +9,12 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using System.IO;
 using System.Collections.ObjectModel;
-using Teocomi.Bcfier.Classes;
+using Bcfier.Bcf;
+using Bcfier.Data;
+using Bcfier.Data.Utils;
+using Bcfier.Localization;
 
-namespace Teocomi.Bcfier.Revit
+namespace Bcfier.Revit
 {
     /// <summary>
     /// Interaction logic for AddIssueRevit.xaml
@@ -33,6 +36,7 @@ namespace Teocomi.Bcfier.Revit
                 doc = uidoc.Document;
 
                 snapshot = System.IO.Path.Combine(folder, "snapshot.png");
+                Loc.ApplyCultureFromSettings();
                 InitializeComponent();
                 TitleBox.Focus();
                 
@@ -60,7 +64,7 @@ namespace Teocomi.Bcfier.Revit
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
 
         }
@@ -78,7 +82,7 @@ namespace Teocomi.Bcfier.Revit
                 options.ExportRange = ExportRange.VisibleRegionOfCurrentView;
                 options.ZoomType = ZoomFitType.FitToPage;
                 options.ImageResolution = ImageResolution.DPI_72;
-                options.PixelSize = 1000;
+                options.PixelSize = Bcfier.Data.Utils.ImagingUtils.BcfMaxPixelSize;
                 doc.ExportImage(options);
                 BitmapImage source = new BitmapImage();
                 source.BeginInit();
@@ -88,11 +92,11 @@ namespace Teocomi.Bcfier.Revit
                 source.EndInit();
                 SnapshotImg.Source = source;
 
-                PathLabel.Content = "none";
+                PathLabel.Content = Loc.Get("NoneLower");
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
 
         }
@@ -139,7 +143,7 @@ namespace Teocomi.Bcfier.Revit
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
 
         }
@@ -150,7 +154,7 @@ namespace Teocomi.Bcfier.Revit
 
             Microsoft.Win32.OpenFileDialog openFileDialog1 = new Microsoft.Win32.OpenFileDialog();
             //  openFileDialog1.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-            openFileDialog1.Filter = "Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png";
+            openFileDialog1.Filter = Loc.Get("OpenImageFilter");
             openFileDialog1.RestoreDirectory = true;
             Nullable<bool> result = openFileDialog1.ShowDialog(); // Show the dialog.
 
@@ -167,38 +171,13 @@ namespace Teocomi.Bcfier.Revit
                     BitmapSource a = ConvertBitmapTo96DPI(image);
                     int width = (int)a.Width;
                     int height = (int)a.Height;
-                    if (width > 1500 || image.Height > 1500)
+                    if (width > Bcfier.Data.Utils.ImagingUtils.BcfMaxPixelSize
+                        || height > Bcfier.Data.Utils.ImagingUtils.BcfMaxPixelSize)
                     {
-                        string size = width.ToString() + "x" + height.ToString();
-                        int newWidth = 1500;
-                        float scale = (float)newWidth / ((float)width / (float)height);
-                        int newHeight = Convert.ToInt32(scale);
-
-                        MessageBoxResult answer = MessageBox.Show("Image size is " + size + ", "
-                            + "such a big image could increase A LOT the BCF file size. "
-                        + "Do you want me to resize it to " + newWidth.ToString() + "x" + newHeight.ToString() + " for you?", "Attention!",
-                            MessageBoxButton.YesNo, MessageBoxImage.Question);
-                        if (answer == MessageBoxResult.Yes)
-                        {
-                            width = newWidth;
-                        }
-
-                        /*
-                        TaskDialog mainDialog = new TaskDialog("Attention!");
-                        mainDialog.MainInstruction = "Attention!";
-                        mainDialog.MainContent =
-                            "Image size is " + size + ", "
-                            + "such a big image could increase A LOT the BCF file size. "
-                        + "Do you want me to resize it to " + newWidth.ToString() + "x" + newHeight.ToString() + " for you?";
-                        mainDialog.CommonButtons = TaskDialogCommonButtons.No ^ TaskDialogCommonButtons.Yes;
-                        mainDialog.DefaultButton = TaskDialogResult.Yes;
-                        TaskDialogResult tResult = mainDialog.Show();
-                        
-                        //ONLY IF NECESSARY I RESIZE
-                        if (TaskDialogResult.Yes == tResult)
-                        {
-                           width = newHeight;
-                        }*/
+                        double scale = Math.Max(
+                            (double)width / Bcfier.Data.Utils.ImagingUtils.BcfMaxPixelSize,
+                            (double)height / Bcfier.Data.Utils.ImagingUtils.BcfMaxPixelSize);
+                        width = Convert.ToInt32(width / scale);
                     }
                     byte[] imageBytes = LoadImageData(openFileDialog1.FileName);
                     ImageSource imageSource = CreateImage(imageBytes, width, 0);
@@ -216,7 +195,7 @@ namespace Teocomi.Bcfier.Revit
                 }
                 catch (System.Exception ex1)
                 {
-                    TaskDialog.Show("Error!", "exception: " + ex1);
+                    RevitExceptionUi.Show(ex1);
                 }
             }
         }
@@ -238,7 +217,7 @@ namespace Teocomi.Bcfier.Revit
 
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
             return null;
         }
@@ -256,7 +235,7 @@ namespace Teocomi.Bcfier.Revit
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
             return null;
         }
@@ -284,7 +263,7 @@ namespace Teocomi.Bcfier.Revit
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
             return null;
         }
@@ -302,7 +281,7 @@ namespace Teocomi.Bcfier.Revit
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
         }
 
@@ -351,7 +330,7 @@ namespace Teocomi.Bcfier.Revit
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
             return null;
         }
@@ -365,7 +344,7 @@ namespace Teocomi.Bcfier.Revit
         {
             if (string.IsNullOrWhiteSpace(TitleBox.Text))
             {
-                MessageBox.Show("Please insert an Issue Title.", "Title required", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show(Loc.Get("TitleRequiredMessage"), Loc.Get("TitleRequired"), MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
             DialogResult = true;
@@ -379,32 +358,31 @@ namespace Teocomi.Bcfier.Revit
 
                 if (File.Exists(snapshot))
                 {
-                    string customeditor = MySettings.Get("editSnap");
+                    string customeditor = UserSettings.Get("editSnap");
                     if (!string.IsNullOrEmpty(customeditor) && File.Exists(customeditor))
                         editSnap = customeditor;
-                    
-                    
-                    Process paint = new Process();
-                    // paint.Start(editSnap, "\"" + snapshot + "\"");
-                    ProcessStartInfo paintInfo = new ProcessStartInfo(editSnap, "\"" + snapshot + "\"");
 
-                    paintInfo.UseShellExecute = false;
-                    //navisworksStartInfo.RedirectStandardOutput = true;
+                    Process paint = new Process();
+                    ProcessStartInfo paintInfo = new ProcessStartInfo(editSnap, "\"" + snapshot + "\"")
+                    {
+                        UseShellExecute = true
+                    };
 
                     paint.StartInfo = paintInfo;
                     paint.Start();
 
-                    paint.WaitForExit();
+                    try { paint.WaitForExit(); }
+                    catch { /* часть редакторов не даёт WaitForExit */ }
+
+                    ImagingUtils.WaitForExternalEditor(snapshot);
                     Refresh_Click(null, null);
-
-
                 }
                 else
-                    MessageBox.Show("Snapshot is not a valit image, please try again.", "Error!", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(Loc.Get("InvalidSnapshot"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
         }
 
@@ -412,17 +390,12 @@ namespace Teocomi.Bcfier.Revit
         {
             try
             {
-                BitmapImage source = new BitmapImage();
-                source.BeginInit();
-                source.UriSource = new Uri(snapshot);
-                source.CacheOption = BitmapCacheOption.OnLoad;
-                source.CreateOptions = BitmapCreateOptions.IgnoreImageCache;
-                source.EndInit();
-                SnapshotImg.Source = source;
+                SnapshotImg.Source = null;
+                SnapshotImg.Source = ImagingUtils.ImageSourceFromPath(snapshot);
             }
             catch (System.Exception ex1)
             {
-                TaskDialog.Show("Error!", "exception: " + ex1);
+                RevitExceptionUi.Show(ex1);
             }
         }
 

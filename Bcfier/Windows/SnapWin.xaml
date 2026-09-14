@@ -6,7 +6,7 @@
   Name="SnapWindow"
   Title="snapshot.png"
   MaxHeight="800"
-  Icon="/Bcfier;component/Assets/icon.ico"
+  Icon="pack://application:,,,/Bcfier;component/Assets/SP_BCFier32.png"
   SizeToContent="WidthAndHeight">
   <Window.Resources>
     <valueConverters:PathToImageConv x:Key="pathToImageConv" />

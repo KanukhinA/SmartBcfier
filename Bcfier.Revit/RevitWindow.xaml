@@ -4,22 +4,82 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:ctr="clr-namespace:Bcfier.UserControls;assembly=Bcfier"
   xmlns:data="clr-namespace:Bcfier.Data;assembly=Bcfier"
+  xmlns:loc="clr-namespace:Bcfier.Localization;assembly=Bcfier"
+  xmlns:themes="clr-namespace:Bcfier.Themes;assembly=Bcfier"
   Name="mainWin"
-  Title="BCFier for Revit"
-  Width="700"
+  Title="{x:Static loc:Loc.ProductName}"
+  Width="1000"
   Height="700"
+  MinWidth="900"
+  MinHeight="600"
+  WindowStyle="None"
+  ResizeMode="CanResize"
+  AllowsTransparency="True"
+  WindowStartupLocation="CenterScreen"
+  Background="Transparent"
+  FontFamily="{DynamicResource SpFont.Ui}"
   Closing="Window_Closing"
-  Icon="Assets/icon.ico"
+  StateChanged="Window_StateChanged"
+  Icon="pack://application:,,,/Bcfier;component/Assets/SP_BCFier32.png"
   Loaded="RevitWindow_OnLoaded">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/ButtonStyles.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/Generic.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
   <Window.CommandBindings>
-    <CommandBinding Command="data:Commands.OpenView" Executed="OnOpenView" />
-    <CommandBinding Command="data:Commands.AddView" Executed="OnAddView" />
+    <!-- {x:Static}: CommandConverter("data:…") в Revit падает, если Bcfier.dll без поля -->
+    <CommandBinding Command="{x:Static data:Commands.OpenView}" Executed="OnOpenView" />
+    <CommandBinding Command="{x:Static data:Commands.AddView}" Executed="OnAddView" />
+    <CommandBinding Command="{x:Static data:Commands.EditView}" Executed="OnEditView" />
+    <!-- OpenViewIsolated вешается в code-behind: старый Bcfier.dll без этого RoutedCommand -->
   </Window.CommandBindings>
-  <Grid>
-    <ctr:BcfierPanel
-      x:Name="Bcfier"
-      HorizontalAlignment="Stretch"
-      HorizontalContentAlignment="Stretch" />
-  </Grid>
+  <Border
+    x:Name="ChromeOuter"
+    Style="{StaticResource SpSettingsChromeOuter}">
+    <Border
+      x:Name="ChromeRoot"
+      Style="{StaticResource SpSettingsChrome}"
+      SizeChanged="ChromeRoot_SizeChanged">
+      <Grid>
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto" />
+          <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Border
+          Grid.Row="0"
+          Style="{StaticResource SpSettingsHeader}"
+          MouseLeftButtonDown="Header_MouseLeftButtonDown">
+          <Grid Margin="{StaticResource SpSpace.HeaderInset}">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*" />
+              <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock
+              Text="{x:Static loc:Loc.ProductName}"
+              Style="{StaticResource SpSettingsHeaderTitle}"
+              FontFamily="Arial"
+              FontSize="15.5"
+              FontWeight="SemiBold" />
+            <Button
+              x:Name="HeaderCloseButton"
+              Grid.Column="1"
+              VerticalAlignment="Center"
+              Style="{StaticResource SpSettingsHeaderClose}"
+              Click="HeaderClose_Click"
+              AutomationProperties.Name="Закрыть" />
+          </Grid>
+        </Border>
+        <ctr:BcfierPanel
+          x:Name="Bcfier"
+          Grid.Row="1"
+          Margin="{StaticResource SpSpace.ContentInset}"
+          HorizontalAlignment="Stretch"
+          HorizontalContentAlignment="Stretch" Loaded="Bcfier_Loaded" />
+      </Grid>
+    </Border>
+  </Border>
 </Window>
-

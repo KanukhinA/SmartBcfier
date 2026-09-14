@@ -3,6 +3,7 @@ using Autodesk.Revit.Attributes;
 using Autodesk.Revit.UI;
 using System;
 using System.Windows;
+using Bcfier.Revit.Host;
 
 namespace Bcfier.Revit.Entry
 {
@@ -61,23 +62,14 @@ namespace Bcfier.Revit.Entry
     {
       try
       {
-        // If we do not have a dialog yet, create and show it  
-        if (RvtWindow != null) return;
-
-        // A new handler to handle request posting by the dialog  
-        var handler = new ExtEvntOpenView();
-
-        // External Event for the dialog to use (to post requests)  
-        var extEvent = ExternalEvent.Create(handler);
-
-        // We give the objects to the new dialog;  
-        // The dialog becomes the owner responsible for disposing them, eventually.
-        RvtWindow = new RevitWindow(uiapp, extEvent, handler);
-        RvtWindow.Show();
+        // Тот же bootstrap WPF + окно, что у Standalone
+        var win = BcfierRevitHost.OpenPanel(uiapp, IntPtr.Zero) as RevitWindow;
+        if (win != null)
+          RvtWindow = win;
       }
       catch (Exception ex)
       {
-        MessageBox.Show(ex.ToString());
+        BcfierRevitHost.ShowRevitError("BCFier", ex.ToString());
       }
     }
 

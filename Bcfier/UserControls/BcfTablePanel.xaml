@@ -1,0 +1,536 @@
+<UserControl
+  x:Class="Bcfier.UserControls.BcfTablePanel"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:themes="clr-namespace:Bcfier.Themes"
+  xmlns:loc="clr-namespace:Bcfier.Localization"
+  xmlns:local="clr-namespace:Bcfier.UserControls"
+  xmlns:src="clr-namespace:Bcfier.Data.ValueConverters"
+  xmlns:data="clr-namespace:Bcfier.Data"
+  FontFamily="{DynamicResource SpFont.Ui}"
+  Background="{StaticResource SpBrush.Surface}">
+  <UserControl.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/Icons.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/ButtonStyles.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/ReportTableStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+      <src:PathToImageConv x:Key="PathToImageConv" />
+      <src:BoolVisibConverter x:Key="BoolVisibConverter" />
+      <src:StatusToBrushConverter x:Key="StatusToBrushConverter" />
+
+      <!--
+        Ячейки таблицы: рамка/фон появляются только при наведении или фокусе (редактировании) —
+        в состоянии покоя поле выглядит как обычный текст, чтобы не перегружать дизайн таблицы
+        сплошными "боксами". Базовые шаблоны (SpComboBox/SpDatePicker/SpTextBox) уже красят рамку
+        по IsMouseOver/IsKeyboardFocused — достаточно сделать дефолтные Background/BorderBrush прозрачными.
+      -->
+      <!--
+        Своя копия ControlTemplate от SpComboBox: та же визуальная логика (ToggleButton-рамка,
+        watermark, попап), но закрытое значение переносится по словам вместо обрезки/эллипсиса,
+        а высота не фиксирована — ячейка/строка таблицы растёт под многострочный текст.
+      -->
+      <Style x:Key="TableCompactComboBoxStyle" TargetType="ComboBox" BasedOn="{StaticResource SpComboBox}">
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="Padding" Value="6,4" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Margin" Value="4,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+        <Setter Property="ItemTemplate">
+          <Setter.Value>
+            <DataTemplate>
+              <TextBlock Text="{Binding}" TextWrapping="Wrap" />
+            </DataTemplate>
+          </Setter.Value>
+        </Setter>
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="ComboBox">
+              <Grid>
+                <ToggleButton
+                  x:Name="ToggleButton"
+                  ClickMode="Press"
+                  Focusable="False"
+                  IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                  <ToggleButton.Template>
+                    <ControlTemplate TargetType="ToggleButton">
+                      <Border
+                        x:Name="ToggleBd"
+                        Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                        BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                        BorderThickness="{Binding BorderThickness, RelativeSource={RelativeSource AncestorType=ComboBox}}"
+                        CornerRadius="{StaticResource SpRadius.Control}"
+                        SnapsToDevicePixels="True">
+                        <Grid>
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="20" />
+                          </Grid.ColumnDefinitions>
+                          <Border Grid.Column="1" Background="Transparent" VerticalAlignment="Top">
+                            <Path
+                              x:Name="Arrow"
+                              Width="10"
+                              Height="6"
+                              Margin="0,8,0,0"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Top"
+                              Data="M 0,0 L 4,4 L 8,0"
+                              Stretch="Uniform"
+                              Stroke="{StaticResource SpBrush.Muted}"
+                              StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round"
+                              StrokeStartLineCap="Round"
+                              StrokeThickness="1.5" />
+                          </Border>
+                        </Grid>
+                      </Border>
+                      <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                          <Setter TargetName="ToggleBd" Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                          <Setter TargetName="Arrow" Property="Stroke" Value="{StaticResource SpBrush.Primary}" />
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="True">
+                          <Setter TargetName="ToggleBd" Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                          <Setter TargetName="Arrow" Property="Stroke" Value="{StaticResource SpBrush.Primary}" />
+                        </Trigger>
+                      </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                  </ToggleButton.Template>
+                </ToggleButton>
+                <ContentPresenter
+                  x:Name="ContentSite"
+                  Margin="6,4,22,4"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Center"
+                  Content="{TemplateBinding SelectionBoxItem}"
+                  ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                  ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}"
+                  IsHitTestVisible="False"
+                  RecognizesAccessKey="False"
+                  TextElement.FontFamily="{TemplateBinding FontFamily}"
+                  TextElement.FontSize="{TemplateBinding FontSize}"
+                  TextElement.Foreground="{TemplateBinding Foreground}" />
+                <TextBox
+                  x:Name="PART_EditableTextBox"
+                  Margin="6,4,22,4"
+                  Padding="0"
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Center"
+                  VerticalContentAlignment="Center"
+                  AcceptsReturn="True"
+                  Background="Transparent"
+                  BorderThickness="0"
+                  CaretBrush="{StaticResource SpBrush.Primary}"
+                  Focusable="True"
+                  FontFamily="{TemplateBinding FontFamily}"
+                  FontSize="{TemplateBinding FontSize}"
+                  Foreground="{TemplateBinding Foreground}"
+                  IsReadOnly="{TemplateBinding IsReadOnly}"
+                  TextWrapping="Wrap"
+                  Visibility="Hidden" />
+                <TextBlock
+                  x:Name="PlaceholderText"
+                  Margin="6,4,22,4"
+                  VerticalAlignment="Center"
+                  Foreground="{StaticResource SpBrush.Muted}"
+                  IsHitTestVisible="False"
+                  Text="{TemplateBinding Tag}"
+                  TextTrimming="CharacterEllipsis"
+                  Visibility="Collapsed" />
+                <Popup
+                  x:Name="PART_Popup"
+                  AllowsTransparency="True"
+                  Focusable="False"
+                  IsOpen="{TemplateBinding IsDropDownOpen}"
+                  Placement="Bottom"
+                  PopupAnimation="None">
+                  <Border
+                    x:Name="DropDownBorder"
+                    MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                    Margin="0,2,0,0"
+                    Background="{StaticResource SpBrush.Field}"
+                    BorderBrush="{StaticResource SpBrush.NeoEdge}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource SpRadius.Control}"
+                    SnapsToDevicePixels="True">
+                    <ScrollViewer
+                      Margin="0,2"
+                      CanContentScroll="False"
+                      Focusable="False"
+                      HorizontalScrollBarVisibility="Disabled"
+                      MaxHeight="{TemplateBinding MaxDropDownHeight}"
+                      VerticalScrollBarVisibility="Auto">
+                      <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                    </ScrollViewer>
+                  </Border>
+                </Popup>
+              </Grid>
+              <ControlTemplate.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                  <Setter Property="Opacity" Value="0.55" />
+                </Trigger>
+                <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                  <Setter Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                </Trigger>
+                <Trigger Property="IsEditable" Value="True">
+                  <Setter Property="IsTabStop" Value="False" />
+                  <Setter TargetName="ContentSite" Property="Visibility" Value="Hidden" />
+                  <Setter TargetName="PART_EditableTextBox" Property="Visibility" Value="Visible" />
+                </Trigger>
+                <MultiTrigger>
+                  <MultiTrigger.Conditions>
+                    <Condition Property="IsEditable" Value="False" />
+                    <Condition Property="SelectedIndex" Value="-1" />
+                  </MultiTrigger.Conditions>
+                  <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
+                </MultiTrigger>
+                <MultiTrigger>
+                  <MultiTrigger.Conditions>
+                    <Condition Property="IsEditable" Value="True" />
+                    <Condition Property="Text" Value="" />
+                    <Condition Property="IsKeyboardFocusWithin" Value="False" />
+                  </MultiTrigger.Conditions>
+                  <Setter TargetName="PlaceholderText" Property="Visibility" Value="Visible" />
+                </MultiTrigger>
+              </ControlTemplate.Triggers>
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+      <Style x:Key="TableCompactDatePickerStyle" TargetType="DatePicker" BasedOn="{StaticResource SpDatePicker}">
+        <Setter Property="MinHeight" Value="30" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Margin" Value="2,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+      </Style>
+      <Style x:Key="TableCellTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource SpTextBox}">
+        <Setter Property="MinHeight" Value="26" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Margin" Value="4,2" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="AcceptsReturn" Value="True" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+      </Style>
+
+      <!-- Правый клик по строке — удалить замечание. DataContext ContextMenu не наследуется
+           автоматически из визуального дерева, поэтому явно берём его у PlacementTarget. -->
+      <Style x:Key="TableIssueRowStyle" TargetType="DataGridRow" BasedOn="{StaticResource SpReportDataGridRow}">
+        <Setter Property="ContextMenu">
+          <Setter.Value>
+            <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+              <MenuItem
+                Header="{x:Static loc:Loc.TableRowDeleteIssue}"
+                Command="{x:Static data:Commands.DeleteIssues}"
+                CommandParameter="{Binding Issue}"
+                CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+            </ContextMenu>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <!-- Компактная иконка-«+» вместо текстовой кнопки — не растягивает пустую ячейку по высоте -->
+      <Style x:Key="TableAddSnapshotButton" TargetType="themes:ButtonIcon" BasedOn="{StaticResource OverlayIconButton}">
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Margin" Value="0" />
+      </Style>
+
+      <!-- Миниатюра без рамки/фона — только картинка + курсор "рука" -->
+      <Style x:Key="TableSnapshotThumbButton" TargetType="Button">
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="ToolTip" Value="{x:Static loc:Loc.EnlargeView}" />
+        <Setter Property="Template">
+          <Setter.Value>
+            <ControlTemplate TargetType="Button">
+              <ContentPresenter />
+            </ControlTemplate>
+          </Setter.Value>
+        </Setter>
+      </Style>
+
+      <!--
+        Галерея снимков замечания: BCF допускает несколько viewpoint/снимков на тему,
+        поэтому показываем миниатюры всех (не только первого) + кнопку добавления ещё одного.
+      -->
+      <DataTemplate x:Key="SnapshotGalleryTemplate">
+        <WrapPanel Orientation="Horizontal">
+          <ItemsControl ItemsSource="{Binding Issue.Viewpoints}">
+            <ItemsControl.ItemsPanel>
+              <ItemsPanelTemplate>
+                <WrapPanel Orientation="Horizontal" />
+              </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border
+                  Width="72"
+                  Height="52"
+                  Margin="0,0,6,6"
+                  CornerRadius="4"
+                  ClipToBounds="True"
+                  Visibility="{Binding HasSnapshot, Converter={StaticResource BoolVisibConverter}}">
+                  <Button
+                    Style="{StaticResource TableSnapshotThumbButton}"
+                    Command="data:Commands.OpenSnapshot"
+                    CommandParameter="{Binding}">
+                    <Image Stretch="UniformToFill" Source="{Binding SnapshotPath, Converter={StaticResource PathToImageConv}}" />
+                  </Button>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+          <themes:ButtonIcon
+            Style="{StaticResource TableAddSnapshotButton}"
+            IconPath="{StaticResource IconAdd}"
+            ToolTip="{x:Static loc:Loc.TableAddSnapshot}"
+            Click="AddSnapshot_Click" />
+        </WrapPanel>
+      </DataTemplate>
+
+      <DataTemplate x:Key="SnapshotOnlyCellTemplate">
+        <ContentPresenter Margin="8,6" Content="{Binding}" ContentTemplate="{StaticResource SnapshotGalleryTemplate}" />
+      </DataTemplate>
+
+      <DataTemplate x:Key="DescriptionSnapshotCellTemplate">
+        <StackPanel Margin="8,6" Orientation="Vertical">
+          <TextBox
+            Style="{StaticResource TableCellTextBoxStyle}"
+            Margin="0,0,0,6"
+            MinHeight="40"
+            MaxHeight="120"
+            VerticalScrollBarVisibility="Auto"
+            Text="{Binding Issue.Topic.Description, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+            LostFocus="TableDescription_LostFocus" />
+          <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource SnapshotGalleryTemplate}" />
+        </StackPanel>
+      </DataTemplate>
+
+      <DataTemplate x:Key="TitleSnapshotCellTemplate">
+        <StackPanel Margin="8,6" Orientation="Vertical">
+          <TextBox
+            Style="{StaticResource TableCellTextBoxStyle}"
+            Margin="0,0,0,6"
+            MinHeight="26"
+            MaxHeight="80"
+            VerticalScrollBarVisibility="Auto"
+            Text="{Binding Issue.Topic.Title, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+            LostFocus="TableTitle_LostFocus" />
+          <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource SnapshotGalleryTemplate}" />
+        </StackPanel>
+      </DataTemplate>
+
+      <DataTemplate x:Key="TopicStatusCellTemplate">
+        <ComboBox
+          Style="{StaticResource TableCompactComboBoxStyle}"
+          ItemsSource="{Binding Issue.Topic.TopicStatusesCollection}"
+          SelectedItem="{Binding Issue.Topic.TopicStatus, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          SelectionChanged="TableCombo_SelectionChanged">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <Border
+                  Width="10"
+                  Height="10"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  Background="{Binding Converter={StaticResource StatusToBrushConverter}}"
+                  CornerRadius="2" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding}" TextWrapping="Wrap" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
+      </DataTemplate>
+
+      <DataTemplate x:Key="TopicTypeCellTemplate">
+        <ComboBox
+          Style="{StaticResource TableCompactComboBoxStyle}"
+          ItemsSource="{Binding Issue.Topic.TopicTypesCollection}"
+          SelectedItem="{Binding Issue.Topic.TopicType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          SelectionChanged="TableCombo_SelectionChanged" />
+      </DataTemplate>
+
+      <DataTemplate x:Key="PriorityCellTemplate">
+        <ComboBox
+          Style="{StaticResource TableCompactComboBoxStyle}"
+          ItemsSource="{Binding Issue.Topic.PrioritiesCollection}"
+          SelectedItem="{Binding Issue.Topic.Priority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+          SelectionChanged="TableCombo_SelectionChanged" />
+      </DataTemplate>
+
+      <DataTemplate x:Key="AssignedToCellTemplate">
+        <ComboBox
+          Style="{StaticResource TableCompactComboBoxStyle}"
+          IsEditable="True"
+          StaysOpenOnEdit="True"
+          IsTextSearchEnabled="False"
+          ItemsSource="{Binding Issue.Topic.AssigneesCollection}"
+          Text="{Binding Issue.Topic.AssignedTo, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+          LostFocus="TableAssignedTo_LostFocus" />
+      </DataTemplate>
+
+      <DataTemplate x:Key="LabelsCellTemplate">
+        <ComboBox
+          Style="{StaticResource TableCompactComboBoxStyle}"
+          ItemsSource="{Binding Issue.Topic.LabelsCollection}"
+          Loaded="TableLabelsCombo_Loaded"
+          SelectionChanged="TableLabelsCombo_SelectionChanged" />
+      </DataTemplate>
+
+      <DataTemplate x:Key="DueDateCellTemplate">
+        <DatePicker
+          Style="{StaticResource TableCompactDatePickerStyle}"
+          SelectedDateFormat="Short"
+          Loaded="TableDueDate_Loaded"
+          SelectedDateChanged="TableDueDate_SelectedDateChanged" />
+      </DataTemplate>
+    </ResourceDictionary>
+  </UserControl.Resources>
+
+  <Grid Margin="0,4,0,8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+    </Grid.RowDefinitions>
+
+    <!-- Строка отчёта — во всю ширину, отдельно от кнопок, чтобы им хватало места по горизонтали -->
+    <Border Grid.Row="0" Style="{StaticResource SpReportTableToolBar}">
+      <ComboBox
+        x:Name="ReportCombo"
+        MinHeight="30"
+        HorizontalAlignment="Stretch"
+        VerticalAlignment="Center"
+        IsEditable="True"
+        IsTextSearchEnabled="False"
+        ToolTip="{x:Static loc:Loc.TableReportRenameTip}"
+        Style="{StaticResource SpComboBox}"
+        DisplayMemberPath="Filename"
+        ItemsSource="{Binding BcfFiles}"
+        SelectedIndex="{Binding SelectedReportIndex, Mode=TwoWay}"
+        SelectionChanged="ReportCombo_SelectionChanged"
+        LostFocus="ReportCombo_LostFocus"
+        KeyDown="ReportCombo_KeyDown" />
+    </Border>
+
+    <!-- Кнопки — отдельной строкой ниже, рядом с зоной пользовательских полей -->
+    <Border Grid.Row="1" Style="{StaticResource SpReportTableToolBar}">
+        <!-- ScrollViewer страхует от обрезки кнопок при узком окне — весь ряд остаётся доступен прокруткой -->
+        <ScrollViewer
+          HorizontalScrollBarVisibility="Auto"
+          VerticalScrollBarVisibility="Disabled"
+          VerticalContentAlignment="Center">
+          <StackPanel
+            Orientation="Horizontal"
+            VerticalAlignment="Center">
+            <themes:ButtonIcon
+              x:Name="AddIssueBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.AddIssue}"
+              IconPath="{StaticResource IconAdd}"
+              ToolTip="{x:Static loc:Loc.AddIssue}"
+              Command="data:Commands.AddIssue" />
+            <themes:ButtonIcon
+              x:Name="ColumnsBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableColumns}"
+              IconPath="{StaticResource IconSettings}"
+              ToolTip="{x:Static loc:Loc.TableColumnsTip}"
+              Click="ColumnsBtn_Click" />
+            <themes:ButtonIcon
+              x:Name="ExportExcelBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableExportExcel}"
+              IconPath="{StaticResource IconUploadFile}"
+              ToolTip="{x:Static loc:Loc.TableExportExcelTip}"
+              Click="ExportExcelBtn_Click" />
+            <themes:ButtonIcon
+              x:Name="ImportExcelBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableExportExcel}"
+              IconPath="{StaticResource IconDownloadFile}"
+              ToolTip="{x:Static loc:Loc.ExcelImportTip}"
+              Click="ImportExcelBtn_Click" />
+            <themes:ButtonIcon
+              x:Name="ExportHtmlBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableExportHtml}"
+              IconPath="{StaticResource IconExternalLink}"
+              ToolTip="{x:Static loc:Loc.TableExportHtmlTip}"
+              Click="ExportHtmlBtn_Click" />
+            <themes:ButtonIcon
+              x:Name="ExportPdfBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableExportPdf}"
+              IconPath="{StaticResource IconDownloadFile}"
+              ToolTip="{x:Static loc:Loc.TableExportPdfTip}"
+              Click="ExportPdfBtn_Click" />
+            <themes:ButtonIcon
+              x:Name="AddCustomFieldsBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.CustomFieldsAddToTopic}"
+              IconPath="{StaticResource IconAdd}"
+              Click="AddCustomFieldsBtn_Click" />
+          </StackPanel>
+        </ScrollViewer>
+    </Border>
+
+    <Border
+      Grid.Row="2"
+      Margin="0,0,0,6"
+      Padding="10,8"
+      Background="{StaticResource SpBrush.Card}"
+      BorderBrush="{StaticResource SpBrush.Border}"
+      BorderThickness="1"
+      CornerRadius="{StaticResource SpRadius.Card}">
+      <StackPanel>
+        <local:CustomFieldsDisplay
+          x:Name="CustomFieldsBlock"
+          FieldsChanged="CustomFieldsBlock_FieldsChanged" />
+      </StackPanel>
+    </Border>
+
+    <Border
+      Grid.Row="3"
+      Background="{StaticResource SpBrush.Field}"
+      BorderBrush="{StaticResource SpBrush.Border}"
+      BorderThickness="1"
+      CornerRadius="{StaticResource SpRadius.Card}"
+      ClipToBounds="True">
+      <Grid>
+        <DataGrid
+          x:Name="IssuesGrid"
+          Style="{StaticResource SpReportDataGrid}"
+          RowStyle="{StaticResource TableIssueRowStyle}"
+          IsReadOnly="False"
+          SelectionUnit="CellOrRowHeader"
+          BorderThickness="0"
+          Background="Transparent"
+          SelectionChanged="IssuesGrid_SelectionChanged"
+          CellEditEnding="IssuesGrid_CellEditEnding" />
+
+        <TextBlock
+          x:Name="EmptyHint"
+          HorizontalAlignment="Center"
+          VerticalAlignment="Center"
+          Padding="40"
+          FontSize="13"
+          FontWeight="SemiBold"
+          Foreground="{StaticResource SpBrush.Muted}"
+          TextAlignment="Center"
+          TextWrapping="Wrap"
+          Text="{x:Static loc:Loc.TableEmptyHint}"
+          Visibility="Collapsed" />
+      </Grid>
+    </Border>
+  </Grid>
+</UserControl>

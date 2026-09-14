@@ -1,108 +1,167 @@
-![](/Assets/bcfier-text.png)
+# SP-BCFier
 
+Плагин Autodesk Revit и автономный Windows Viewer для работы с замечаниями в формате [BCF](https://github.com/buildingSMART/BCF-XML). Форк [BCFier](https://github.com/teocomi/BCFier) с поддержкой современных версий Revit, BCF 3.0 и доработками под ежедневную работу с замечаниями.
 
+В интерфейсе продукт отображается как **«Замечания BCF»**.
 
-# UPDATE 2024
-> I no longer have time to maintain this project, so it has been archived. All my focus is now going to [Speckle](https://speckle.systems/), the Open Source Data Platform for AEC data.
-We're planning at some point to add some BCF-like features to Speckle.
-
+| | |
+|---|---|
+| **Revit** | 2022, 2023, 2025, 2026 |
+| **Windows Viewer** | автономное приложение без Revit |
+| **BCF** | чтение 1.0–3.0, запись 2.1 или 3.0 |
+| **Языки** | русский, английский |
+| **Версия** | 1.0.18 |
 
 ---
 
+## Возможности
 
-## Intro
+### Общие (Revit и Windows Viewer)
 
-BCFier is an extendible and Open Source BCF client. Like IFC is the open standard for Building Information models, [BCF](https://github.com/BuildingSMART/BCF-XML) is the open standard for Building Issues. BCFier is a set of plugins and standalone apps (modules) that handle BCF and integrate directly with BIM tools.
+- Создание, открытие, сохранение и объединение отчётов `.bcf` / `.bcfzip`
+- Drag and drop файлов, несколько отчётов во вкладках
+- Замечания: статус, тип, приоритет, метки, исполнитель, срок, описание
+- Виды (viewpoints): снимок, комментарии, список компонентов
+- Настройки автора, списков статусов/типов и версии записи BCF
 
-Currently BCFier is composed of the following modules:
-- Autodesk Revit addin
-- Standalone Windows Viewer
+### Только Revit
 
-Ready to start developing BCFier? Keep reading!
+- Виды с камеры 3D, привязка элементов, Section Box ↔ BCF `ClippingPlanes`
+- Выбор и выделение элементов модели, сопоставление по Id / IfcGuid
+- Фильтр «только замечания активного документа»
+- Режимы координат: Revit Z-up, Source Y-up, Source X-up
 
-**If you are looking for a Guide on how to use the installed version of BCFier instedad, refer to the [UserGuide](http://bcfier.com/userguide/)**
+### Windows Viewer
 
-## Disclaimer
-The project in not actively maintained, I will regularly check issues and pull requests but cannot guarantee regular support and maintenance.
+- Просмотр и редактирование BCF без установленного Revit
+- Добавление видов из файла изображения (Browse / drag and drop)
 
-## Getting Started
+### Типичный сценарий (Revit)
 
-To get started fork the repo, if you are going to extend the Revit Project make sure the Autodesk dlls are referenced correctly, otherwise there are no other dependencies that need to be added.
+1. Откройте панель **«Замечания BCF»** на ленте Revit.
+2. Создайте или откройте BCF-файл.
+3. Добавьте замечание или вид с текущего 3D-вида (снимок, элементы, section box).
+4. Заполните статусы и комментарии.
+5. Сохраните `.bcf` / `.bcfzip` и передайте коллегам: при открытии viewpoint восстанавливаются камера, section box и выделение.
 
-### Structure
+Настройки хранятся в `%LocalAppData%\BCFier\settings.config`.
 
-The core of BCFier is under `Bcfier`, it contains all the logic and UI that is used by all the different integrations (modules). All modules will reference that project and extend it adding specific commands for the software they are integrating with.
+---
 
-The control `Bcfier.UserControls.BcfierPanel` contains the logic and UI for the main panel, while `Bcfier.UserControls.BcfReportPanel` for each BCF opened inside the TabControl.
+## Установка
 
-All controls bind to ModelViews defined in `Bcfier.Bcf`, it's not a perfect MVVM models since I use the same classes to serialize/deserialize BCFs, but it works great.
+### Установщик (рекомендуется)
 
-### Creating a new Module
+1. Закройте Revit (если ставите add-in).
+2. Запустите `dist\BCFier-SP-1.0.18-Setup.exe`.
+3. Выберите компоненты:
+   - **Add-in for Autodesk Revit 2022 / 2025**
+   - **BCFier for Windows** (просмотр BCF без Revit)
+4. Для Revit: запустите Revit, на ленте появится панель **«Замечания BCF»**.
+5. Для Viewer: ярлык в меню «Пуск» (и опционально на рабочем столе) → `BCFier.Win.exe`.
 
-To create a new Module, for instance, an Achicad plugin, follow these steps:
-- create a new project with the namespace `Bcfier.Archicad`
-- reference the `Bcfier` project
-- add the specific Archicad methods and structure to fire the plugin (like the Entry folder in the Revit plugin)
-- create a main WPF window that contains the `Bcfier.UserControls.BcfierPanel`
-- create a command for adding a new view (`data:Commands.AddView`), this will have to generate a BCF ViewPoint (see Revit plugin for reference)
-- create a command for and opening a view (`data:Commands.OpenView`)
-- extend the installer to copy these new dlls where needed
+Установка per-user, права администратора не нужны.
 
-### Settings
-The settings file is stored in `%localappdata%\BCFier\settings.config` so that it can be accessible by all modules, the Settingd Window UI will has different tabs for each module and ideally those will show up only if that specific module is installed.
-The class that handles the settings file is under `Bcfier.Data.Utils.UserSettings`, and stores the file as a `ExeConfigurationFileMap` for easy management. The same class provides methods to automatically save/retrieve settings based on the UserControl name.
+| Компонент | Куда ставится |
+|-----------|----------------|
+| Revit add-in | `%AppData%\Autodesk\Revit\Addins\{год}\` |
+| Windows Viewer | `%LocalAppData%\BCFier-SP\` |
 
-## Autodesk Revit Addin
-The module for Autodesk Revit is in `Bcfier.Revit`,.
+Исходник установщика: [`InnoSetup/SP-BCFier.iss`](InnoSetup/SP-BCFier.iss).
 
-### Building the Revit Project
+### ZIP / ручная установка
 
-Before building the Revit project, select the corresponding build configuration. 
+**Revit add-in** — архивы и папки в `dist\`:
 
-![image](https://user-images.githubusercontent.com/2679513/33550628-93d0661e-d8e6-11e7-819d-b486b55db05c.png)
+- `BCFier-SP-1.0.18-R2022.zip`, `BCFier-SP-1.0.18-R2025.zip`
+- папки `dist\R2022\`, `dist\R2025\`
 
-For each there are snippets of code in Bcfier.Revit.csproj with post built event that copy the dll and manifest to the Revit Addin folder.
+Скопируйте содержимое папки года в `%AppData%\Autodesk\Revit\Addins\{год}\` (Revit должен быть закрыт).
 
-![image](https://user-images.githubusercontent.com/2679513/33550664-b19fb028-d8e6-11e7-8453-3210d022d0db.png)
+**Windows Viewer** — папка `dist\Win\`:
 
+1. Скопируйте содержимое `dist\Win\` в любую папку.
+2. Запустите `BCFier.Win.exe`.
 
+Удаление: удалите файлы add-in / Viewer или воспользуйтесь «Установка и удаление программ» (после Setup).
 
-To seamlessly debug the project set a Debug start action to start your version of revit.exe.ree and awesome [InnoSetup](http://www.jrsoftware.org/isinfo.php) to generate .exe files, extending the .iss files is pretty straightforward.
+---
 
-## Backlog
-A more detailed list of things that need to be done can be found in the [issues page](https://github.com/teocomi/BCFier/issues), but to start:
+## Что изменилось относительно оригинального BCFier
 
-**New BCFier features**
-- support of the BCF REST API
-- integration with issue tracking platforms (JIRA, redmine...)
+Оригинальный [BCFier](https://github.com/teocomi/BCFier) архивирован в 2024 году. Этот форк продолжает Revit-часть и автономный Windows Viewer.
 
-**New modules**
-- Archicad
-- Navisworks
+### Удалено
 
-**New Autodesk Revit module Features**
-- support for crop boxes
-- a setting to apply vew templates to new view
+- модули Navisworks и Xbim Explorer
+- старый monorepo-инсталлер upstream
 
-### Contact
-You can contact Matteo Cominetti at: hello@teocomi.com
+### Добавлено и существенно доработано
 
-### License
-GNU General Public License v3 Extended
-This program uses the GNU General Public License v3, extended to support the use of BCFier as Plugin of the non-free main software Autodesk Revit.
-See <http://www.gnu.org/licenses/gpl-faq.en.html#GPLPluginsInNF>.
+- поддержка Revit **2022–2026** (net48 / net8.0-windows), совместимость `ElementId` int/long
+- запись **BCF 3.0** (наряду с 2.1)
+- round-trip **Section Box** через `ClippingPlanes`
+- выбор и выделение элементов, обновление ссылок компонентов
+- сопоставление элементов по Id, IfcGuid и Id в имени (удобно для файлов из Solibri / Navisworks)
+- локализация **ru / en** (русский по умолчанию)
+- отдельный проект add-in для Revit (`Bcfier.Revit.Standalone`): кнопка на ленте и манифест `.addin`
+- обновлённый **Windows Viewer** (`Bcfier.Win`) на текущем UI и BCF 3.0
+- SDK-style сборка, InnoSetup-установщик, unit-тесты round-trip BCF
 
-Copyright (c) 2013-2016 Matteo Cominetti
+---
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+## Сборка из исходников
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+**Solution:** `SP-BCFier.sln`
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/gpl.txt>.
+| Проект | Назначение |
+|--------|------------|
+| `Bcfier` | Ядро: BCF I/O, WPF UI, локализация |
+| `Bcfier.Revit` | Интеграция с Revit |
+| `Bcfier.Revit.Standalone` | Add-in (лента и `.addin`) |
+| `Bcfier.Win` | Автономный Windows Viewer |
+| `tests/Bcfier.Tests` | Тесты |
+
+Конфигурации: **R2022 | R2023 | R2025 | R2026 | Win**.
+
+Для Revit-проектов нужен установленный Autodesk Revit (пути к API в `Directory.Build.props`).
+
+**Revit add-in**
+
+1. Откройте `SP-BCFier.sln` в Visual Studio.
+2. Выберите конфигурацию года Revit.
+3. Соберите solution. DLL остаются в `bin\R{год}\{tfm}\` (Revit при этом может быть запущен).
+4. В Addins по умолчанию ничего не копируется: можно держать установленную версию и подгружать сборку из `bin` через Addin Manager.
+5. Чтобы один раз положить add-in в Revit (Revit лучше закрыть):
+
+```text
+dotnet build Bcfier.Revit.Standalone -c R2023 -p:DeployToRevit=true
+```
+
+или скрипт `dist\R{год}\Install-Standalone.ps1`.
+
+Плагин SP ссылается на `Bcfier` / `Bcfier.Revit` через ProjectReference и забирает DLL из тех же `bin\R{год}\{tfm}\` — отдельный деплой в Addins для этого не нужен.
+
+**Windows Viewer**
+
+```text
+dotnet build SP-BCFier.sln -c Win
+```
+
+Результат: `dist\Win\BCFier.Win.exe`.
+
+Для отладки Revit укажите `revit.exe` нужной версии как стартовое действие.
+
+---
+
+## Лицензия
+
+Основано на BCFier (Matteo Cominetti).
+
+GNU General Public License v3 Extended: допускается использование как плагина несвободного Autodesk Revit.  
+См. [GPL FAQ: Plugins](http://www.gnu.org/licenses/gpl-faq.en.html#GPLPluginsInNF).
+
+Copyright (c) 2013–2016 Matteo Cominetti  
+Доработки: Copyright (c) Канухин Александр
+
+Программа распространяется без каких-либо гарантий. Полный текст лицензии: [GNU GPL v3](https://www.gnu.org/licenses/gpl-3.0.html).

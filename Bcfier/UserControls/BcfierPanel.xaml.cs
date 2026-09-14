@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -10,14 +11,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using System.Xml.Linq;
-using Bcfier.Api;
 using Bcfier.Bcf;
 using Bcfier.Bcf.Bcf2;
 using Bcfier.Data.Utils;
 using Bcfier.Windows;
 using Bcfier.Data;
+using Bcfier.Localization;
+using Bcfier.SpService;
+using Bcfier.ReportTable;
 using Version = System.Version;
+using BcfComponent = Bcfier.Bcf.Bcf2.Component;
 
 namespace Bcfier.UserControls
 {
@@ -28,20 +33,55 @@ namespace Bcfier.UserControls
   {
     //my data context
     private readonly BcfContainer _bcf = new BcfContainer();
+    private int _loadingOverlayCounter;
+    private readonly DispatcherTimer _loadingMessageTimer;
+    private string _pendingLoadingMessage;
+    private string _lastAppliedLoadingMessage;
+    private DispatcherTimer _autoSyncTimer;
+    private bool _autoSyncEnabled;
+    private bool _isAutoSyncing;
+    private bool _isTableMode;
 
 
 
     public BcfierPanel()
     {
+      // Культура должна применяться до разбора XAML со {x:Static loc:...}
+      Loc.ApplyCultureFromSettings();
       InitializeComponent();
       DataContext = _bcf;
+      _loadingMessageTimer = CreateLoadingMessageTimer();
+      ComponentListHost.ReportProgress = UpdateLoadingOverlayMessage;
+      BcfReader.ReportProgress = UpdateLoadingOverlayMessage;
       _bcf.UpdateDropdowns();
       //top menu buttons and events
-      NewBcfBtn.Click += delegate { _bcf.NewFile(); OnAddIssue(null, null); };
-      OpenBcfBtn.Click += delegate { _bcf.OpenFile(); _bcf.UpdateDropdowns(); };
+      NewBcfBtn.Click += delegate
+      {
+        _bcf.NewFile();
+        OnAddIssue(null, null);
+        ScheduleRefreshComponentLinks();
+        UpdateServerSyncUi();
+      };
+      OpenBcfBtn.Click += delegate
+      {
+        _ = OpenBcfFilesFromDialogAsync();
+      };
+      OpenFromDbBtn.Click += delegate
+      {
+        _ = OpenBcfFromDatabaseAsync();
+      };
       //OpenProjectBtn.Click += OnOpenWebProject;
       SaveBcfBtn.Click += delegate { _bcf.SaveFile(SelectedBcf()); };
-      MergeBcfBtn.Click += delegate { _bcf.MergeFiles(SelectedBcf()); };
+      SendToDbBtn.Click += delegate
+      {
+        _ = SendSelectedToDatabaseAsync(interactive: true);
+      };
+      MergeBcfBtn.Click += delegate
+      {
+        _bcf.MergeFiles(SelectedBcf());
+        _bcf.UpdateDropdowns();
+        ScheduleRefreshComponentLinks();
+      };
       SettingsBtn.Click += delegate
       {
         var s = new Settings();
@@ -50,21 +90,78 @@ namespace Bcfier.UserControls
         if (s.DialogResult.HasValue && s.DialogResult.Value)
         {
           _bcf.UpdateDropdowns();
+          foreach (BcfFile bcf in _bcf.BcfFiles)
+            bcf?.RefreshReportMetadata();
+          ApplyAutoSyncIntervalFromSettings();
         }
 
       };
       HelpBtn.Click += HelpBtnOnClick;
+      TableModeBtn.Click += delegate { SetTableMode(!_isTableMode); };
+      AutoSyncCheckBox.Checked += delegate
+      {
+        _autoSyncEnabled = true;
+        UpdateServerSyncUi();
+        EnsureAutoSyncTimer();
+      };
+      AutoSyncCheckBox.Unchecked += delegate
+      {
+        _autoSyncEnabled = false;
+        UpdateServerSyncUi();
+        UpdateAutoSyncTimerState();
+      };
+      BcfTabControl.SelectionChanged += delegate
+      {
+        UpdateServerSyncUi();
+        UpdateAutoSyncTimerState();
+        if (_isTableMode)
+          TablePanel.RefreshRows();
+      };
+      _bcf.BcfFiles.CollectionChanged += delegate
+      {
+        UpdateServerSyncUi();
+        UpdateAutoSyncTimerState();
+        if (_isTableMode)
+          TablePanel.RefreshRows();
+        UpdateEmptyHintVisibility();
+      };
       //set version
-      LabelVersion.Content = "BCFier " +
+      LabelVersion.Content = Loc.ProductName + " " +
                          System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-
-
-
-      if (UserSettings.GetBool("checkupdates"))
-        CheckUpdates();
-
+      ApplyAutoSyncIntervalFromSettings();
+      UpdateServerSyncUi();
+      TablePanel.AttachContainer(_bcf);
+      SetTableMode(ReportTableSettings.IsTableMode(), persist: false);
     }
 
+    /// <summary>Переключает классический и табличный режимы отображения.</summary>
+    private void SetTableMode(bool tableMode, bool persist = true)
+    {
+      _isTableMode = tableMode;
+      if (persist)
+        ReportTableSettings.SetDisplayMode(tableMode);
+
+      BcfTabControl.Visibility = tableMode ? Visibility.Collapsed : Visibility.Visible;
+      TablePanel.Visibility = tableMode ? Visibility.Visible : Visibility.Collapsed;
+
+      TableModeBtn.Content = tableMode ? Loc.ClassicMode : Loc.TableMode;
+      TableModeBtn.ToolTip = tableMode ? Loc.ClassicModeTip : Loc.TableModeTip;
+
+      if (tableMode)
+        TablePanel.RefreshRows();
+
+      UpdateEmptyHintVisibility();
+    }
+
+    private void UpdateEmptyHintVisibility()
+    {
+      if (EmptyDropHint == null)
+        return;
+
+      bool hasFiles = _bcf.BcfFiles != null && _bcf.BcfFiles.Count > 0;
+      // В табличном режиме пустой hint скрываем — его показывает сам TablePanel
+      EmptyDropHint.Visibility = (!hasFiles && !_isTableMode) ? Visibility.Visible : Visibility.Collapsed;
+    }
 
     private bool CheckSaveBcf(BcfFile bcf)
     {
@@ -73,7 +170,9 @@ namespace Bcfier.UserControls
         if (BcfTabControl.SelectedIndex != -1 && bcf != null && !bcf.HasBeenSaved && bcf.Issues.Any())
         {
 
-          MessageBoxResult answer = MessageBox.Show(bcf.Filename + " has been modified.\nDo you want to save changes?", "Save Report?",
+          MessageBoxResult answer = MessageBox.Show(
+            Loc.Format("SaveReportMessage", bcf.Filename),
+            Loc.Get("SaveReportTitle"),
           MessageBoxButton.YesNoCancel, MessageBoxImage.Question, MessageBoxResult.Cancel);
           if (answer == MessageBoxResult.Yes)
           {
@@ -88,7 +187,7 @@ namespace Bcfier.UserControls
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return true;
     }
@@ -104,19 +203,24 @@ namespace Bcfier.UserControls
         if (SelectedBcf() == null)
           return;
 
-        var selItems = e.Parameter as IList;
-        var issues = selItems.Cast<Markup>().ToList();
+        List<Markup> issues;
+        if (e.Parameter is Markup single)
+          issues = new List<Markup> { single };
+        else if (e.Parameter is IList selItems)
+          issues = selItems.Cast<Markup>().ToList();
+        else
+          issues = new List<Markup>();
+
         if (!issues.Any())
         {
-          MessageBox.Show("No Issue selected", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("NoIssueSelected"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
         MessageBoxResult answer = MessageBox.Show(
-            String.Format("Are you sure you want to delete {0} Issue{1}?\n{2}", 
-            issues.Count, 
-            (issues.Count > 1) ? "s" : "",
-            "\n - " + string.Join("\n - ", issues.Select(x => x.Topic.Title))),
-            String.Format("Delete Issue{0}?", (issues.Count > 1) ? "s" : ""), 
+            issues.Count == 1
+              ? Loc.Format("DeleteIssuesMessage", issues.Count, "\n - " + string.Join("\n - ", issues.Select(x => x.Topic.Title)))
+              : Loc.Format("DeleteIssuesMessagePlural", issues.Count, "\n - " + string.Join("\n - ", issues.Select(x => x.Topic.Title))),
+            issues.Count == 1 ? Loc.Get("DeleteIssuesTitle") : Loc.Get("DeleteIssuesTitlePlural"),
             MessageBoxButton.YesNo, MessageBoxImage.Question);
         if (answer == MessageBoxResult.No)
           return;
@@ -126,7 +230,7 @@ namespace Bcfier.UserControls
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
 
@@ -140,25 +244,22 @@ namespace Bcfier.UserControls
         var values = (object[])e.Parameter;
         var view = values[0] as ViewPoint;
         var issue = values[1] as Markup;
-        var content = values[2].ToString();
-        //var status = (values[3] == null) ? "" : values[3].ToString();
-        //var verbalStatus = values[4].ToString();
+        var textBox = values[2] as System.Windows.Controls.TextBox;
+        var content = textBox != null ? textBox.Text : values[2]?.ToString();
         if (issue == null)
         {
-          MessageBox.Show("No Issue selected", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("NoIssueSelected"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
 
+        if (string.IsNullOrWhiteSpace(content))
+          return;
 
         Comment c = new Comment();
         c.Guid = Guid.NewGuid().ToString();
-        c.Comment1 = content;
-        //c.Topic = new CommentTopic();
-        //c.Topic.Guid = issue.Topic.Guid;
+        c.Comment1 = content.Trim();
         c.Date = DateTime.Now;
-        //c.VerbalStatus = verbalStatus;
-        //c.Status = status;
-        c.Author = Utils.GetUsername();
+        c.Author = BcfAuthorContext.ResolveAuthor();
 
         c.Viewpoint = new CommentViewpoint();
         c.Viewpoint.Guid = (view != null) ? view.Guid : "";
@@ -167,12 +268,46 @@ namespace Bcfier.UserControls
 
         SelectedBcf().HasBeenSaved = false;
 
+        if (textBox != null)
+          textBox.Text = string.Empty;
+
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
+
+    private void OnEditComment(object sender, ExecutedRoutedEventArgs e)
+    {
+      try
+      {
+        if (SelectedBcf() == null)
+          return;
+        var values = e.Parameter as object[];
+        if (values == null || values.Length < 2)
+          return;
+
+        var comment = values[0] as Comment;
+        var textBox = values[1] as System.Windows.Controls.TextBox;
+        var content = textBox != null
+          ? textBox.Text
+          : (values.Length > 1 ? values[1]?.ToString() : null);
+
+        if (comment == null || !comment.CanModify)
+          return;
+        if (string.IsNullOrWhiteSpace(content))
+          return;
+
+        comment.ApplyEdit(content.Trim(), BcfAuthorContext.ResolveAuthor());
+        SelectedBcf().HasBeenSaved = false;
+      }
+      catch (System.Exception ex1)
+      {
+        ExceptionUi.Show(ex1);
+      }
+    }
+
     private void OnDeleteComment(object sender, ExecutedRoutedEventArgs e)
     {
       try
@@ -181,33 +316,20 @@ namespace Bcfier.UserControls
           return;
         var values = (object[])e.Parameter;
         var comment = values[0] as Comment;
-        //  var comments = selItems.Cast<Comment>().ToList();
-        var issue = (Markup)values[1];
-        if (issue == null)
-        {
-          MessageBox.Show("No Issue selected", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-          return;
-        }
         if (comment == null)
         {
-          MessageBox.Show("No Comment selected", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("NoCommentSelected"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
-        MessageBoxResult answer = MessageBox.Show(
-          "Are you sure you want to\nDelete this comment?",
-           "Delete Comment?", MessageBoxButton.YesNo, MessageBoxImage.Question);
-        //MessageBoxResult answer = MessageBox.Show(
-        //  String.Format("Are you sure you want to\nDelete {0} Comment{1}?", comments.Count, (comments.Count > 1) ? "s" : ""),
-        //   "Delete Issue?", MessageBoxButton.YesNo, MessageBoxImage.Question);
-
-        if (answer == MessageBoxResult.No)
+        if (!comment.CanModify)
           return;
 
-        SelectedBcf().RemoveComment(comment, issue);
+        comment.MarkDeleted(BcfAuthorContext.ResolveAuthor());
+        SelectedBcf().HasBeenSaved = false;
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
 
@@ -223,18 +345,18 @@ namespace Bcfier.UserControls
         var issue = (Markup)values[1];
         if (issue == null)
         {
-          MessageBox.Show("No Issue selected", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("NoIssueSelected"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
         if (view == null)
         {
-          MessageBox.Show("No View selected", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("NoViewSelected"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
         var delComm = true;
 
-        MessageBoxResult answer = MessageBox.Show("Do you also want to delete the comments linked to the selected viewpoint?",
-           "Delete Viewpoint's Comments?", MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
+        MessageBoxResult answer = MessageBox.Show(Loc.Get("DeleteViewpointCommentsMessage"),
+           Loc.Get("DeleteViewpointCommentsTitle"), MessageBoxButton.YesNoCancel, MessageBoxImage.Question);
 
         if (answer == MessageBoxResult.Cancel)
           return;
@@ -245,7 +367,7 @@ namespace Bcfier.UserControls
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
     private void OnAddIssue(object sender, ExecutedRoutedEventArgs e)
@@ -255,23 +377,41 @@ namespace Bcfier.UserControls
 
         if (SelectedBcf() == null)
           return;
-        var issue = new Markup(DateTime.Now);
+        var issue = new Markup(DateTime.UtcNow);
+        BcfIssueHelper.InitializeNewIssue(issue, BcfAuthorContext.ResolveAuthor());
         SelectedBcf().Issues.Add(issue);
         SelectedBcf().SelectedIssue = issue;
+        _bcf.UpdateDropdowns();
 
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
     private void HasIssueSelected(object sender, CanExecuteRoutedEventArgs e)
     {
-      if (SelectedBcf().SelectedIssue != null)
-        e.CanExecute = true;
-      else
+      var bcf = SelectedBcf();
+      if (bcf == null)
+      {
         e.CanExecute = false;
+        return;
+      }
 
+      // Крестик на карточке передаёт Markup — команда доступна без выбора в списке
+      if (e.Parameter is Markup)
+      {
+        e.CanExecute = true;
+        return;
+      }
+
+      if (e.Parameter is IList list && list.Count > 0)
+      {
+        e.CanExecute = true;
+        return;
+      }
+
+      e.CanExecute = bcf.SelectedIssue != null;
     }
     private void OnOpenSnapshot(object sender, ExecutedRoutedEventArgs e)
     {
@@ -280,7 +420,7 @@ namespace Bcfier.UserControls
         var view = e.Parameter as ViewPoint;
         if (view == null || !File.Exists(view.SnapshotPath))
         {
-          MessageBox.Show("The selected Snapshot does not exist", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("SnapshotMissing"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
         if (!UserSettings.GetBool("useDefPhoto", true))
@@ -294,7 +434,7 @@ namespace Bcfier.UserControls
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
     private void OnOpenComponents(object sender, ExecutedRoutedEventArgs e)
@@ -304,18 +444,399 @@ namespace Bcfier.UserControls
         var view = e.Parameter as ViewPoint;
         if (view == null)
         {
-          MessageBox.Show("The selected ViewPoint is null", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+          MessageBox.Show(Loc.Get("ViewpointNull"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
           return;
         }
-        var dialog = new ComponentsList(view.VisInfo.Components);
-        dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        dialog.Show();
+        Window window = ComponentListHost.CreateWindow != null
+          ? ComponentListHost.CreateWindow(view.VisInfo.Components, true)
+          : new Windows.ComponentsList(view.VisInfo.Components, true);
+
+        window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        window.ShowDialog();
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
+
+    private void OnSelectComponent(object sender, ExecutedRoutedEventArgs e)
+    {
+      try
+      {
+        if (ComponentListHost.SelectInModel == null || e.Parameter == null)
+          return;
+
+        int elementId;
+        if (e.Parameter is BcfComponent component)
+        {
+          if (!BcfViewpointComponents.TryGetSelectableElementId(component, out elementId))
+            return;
+        }
+        else if (e.Parameter is int intId)
+        {
+          elementId = intId;
+        }
+        else if (!int.TryParse(e.Parameter.ToString(), out elementId))
+        {
+          return;
+        }
+
+        bool append = (Keyboard.Modifiers & ModifierKeys.Control) == ModifierKeys.Control;
+        ComponentListHost.SelectInModel(new List<int> { elementId }, append);
+      }
+      catch (Exception ex)
+      {
+        ExceptionUi.Show(ex);
+      }
+    }
+
+    /// <summary>
+    /// Выделяет в модели все сопоставленные элементы viewpoint.
+    /// </summary>
+    private void OnSelectViewpointComponents(object sender, ExecutedRoutedEventArgs e)
+    {
+      try
+      {
+        if (ComponentListHost.SelectInModel == null)
+          return;
+
+        var viewpoint = e.Parameter as ViewPoint;
+        List<int> ids = CollectLinkedElementIds(viewpoint?.VisInfo?.Components?.DisplayComponents);
+        if (ids.Count == 0)
+          return;
+
+        ComponentListHost.SelectInModel(ids, false);
+      }
+      catch (Exception ex)
+      {
+        ExceptionUi.Show(ex);
+      }
+    }
+
+    /// <summary>
+    /// Собирает Revit ElementId компонентов: найденный LinkedElementId или числовой AuthoringToolId.
+    /// </summary>
+    private static List<int> CollectLinkedElementIds(IEnumerable<BcfComponent> components)
+    {
+      var ids = new List<int>();
+      if (components == null)
+        return ids;
+
+      foreach (BcfComponent component in components)
+      {
+        if (!BcfViewpointComponents.TryGetSelectableElementId(component, out int elementId))
+          continue;
+
+        if (!ids.Contains(elementId))
+          ids.Add(elementId);
+      }
+
+      return ids;
+    }
+
+    /// <summary>
+    /// Планирует обновление ссылок компонентов: сначала отрисовка BCF, затем фоновый resolve в Revit.
+    /// </summary>
+    public void ScheduleRefreshComponentLinks()
+    {
+      UpdateLoadingOverlayMessage("Подготовка списка компонентов BCF...");
+
+      // Сбор компонентов на UI-потоке (ObservableCollection нельзя читать из фонового потока).
+      IList<BcfComponent> components;
+      try
+      {
+        components = CollectAllBcfComponents();
+      }
+      catch (Exception ex)
+      {
+        Debug.WriteLine("ScheduleRefreshComponentLinks CollectAllBcfComponents: " + ex);
+        HideLoadingOverlay();
+        return;
+      }
+
+      if (components == null || components.Count == 0)
+      {
+        HideLoadingOverlay();
+        return;
+      }
+
+      ShowLoadingOverlay("Выполняется анализ элементов модели...");
+      UpdateLoadingOverlayMessage("Передача компонентов в Revit...");
+
+      if (ComponentListHost.RunWithRevitContext != null)
+      {
+        // ExternalEvent Revit: кэш строится на API-потоке, UI обновляется в колбэке.
+        ComponentListHost.RunWithRevitContext(() =>
+        {
+          try
+          {
+            UpdateLoadingOverlayMessage("Обновление связей в списке замечаний...");
+            RefreshComponentLinks();
+            UpdateLoadingOverlayMessage("Загрузка завершена.");
+          }
+          finally
+          {
+            HideLoadingOverlay();
+          }
+        }, components);
+      }
+      else
+      {
+        try
+        {
+          RefreshComponentLinks();
+        }
+        finally
+        {
+          HideLoadingOverlay();
+        }
+      }
+    }
+
+    /// <summary>
+    /// Собирает все компоненты из открытых BCF для пакетного сопоставления в Revit.
+    /// </summary>
+    private List<BcfComponent> CollectAllBcfComponents()
+    {
+      var components = new List<BcfComponent>();
+      var componentKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+      if (_bcf?.BcfFiles == null)
+        return components;
+
+      foreach (BcfFile bcf in _bcf.BcfFiles)
+      {
+        bcf?.RefreshReportMetadata();
+        foreach (Markup issue in bcf?.Issues ?? Enumerable.Empty<Markup>())
+        {
+          BcfViewpointComponents.ApplyAuthoringToolIdsFromIssueText(issue);
+          foreach (ViewPoint viewpoint in issue?.Viewpoints ?? Enumerable.Empty<ViewPoint>())
+          {
+            AddComponents(componentKeys, components, BcfViewpointComponents.EnumerateViewpointComponents(viewpoint));
+          }
+        }
+      }
+
+      return components;
+    }
+
+    /// <summary>
+    /// Добавляет уникальные компоненты в список для пакетного resolve.
+    /// </summary>
+    private static void AddComponents(
+      HashSet<string> componentKeys,
+      List<BcfComponent> target,
+      IEnumerable<BcfComponent> source)
+    {
+      if (target == null || source == null)
+        return;
+
+      foreach (BcfComponent component in source)
+      {
+        if (component == null)
+          continue;
+
+        string key = BuildComponentResolveKey(component);
+        if (componentKeys.Add(key))
+          target.Add(component);
+      }
+    }
+
+    /// <summary>
+    /// При подгрузке BCF помечает компоненты, которые реально существуют в активной модели.
+    /// </summary>
+    public void RefreshComponentLinks()
+    {
+      if (_bcf?.BcfFiles == null)
+        return;
+
+      bool revitHost = ComponentListHost.RunWithRevitContext != null;
+      if (!revitHost && ComponentListHost.ResolveElementId == null)
+        return;
+
+      try
+      {
+        // Локальный пакетный кэш на одну загрузку: одинаковые компоненты в разных viewpoints
+        // не должны запускать одинаковый resolve повторно.
+        var batchCache = new Dictionary<string, int?>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var bcf in _bcf.BcfFiles)
+        {
+          foreach (var issue in bcf?.Issues ?? Enumerable.Empty<Markup>())
+          {
+            foreach (var viewpoint in issue?.Viewpoints ?? Enumerable.Empty<ViewPoint>())
+            {
+              UpdateComponentLinks(BcfViewpointComponents.EnumerateViewpointComponents(viewpoint), batchCache, revitHost);
+            }
+          }
+        }
+
+        RefreshIssueFilters();
+      }
+      catch (Exception ex)
+      {
+        Debug.WriteLine("RefreshComponentLinks: " + ex);
+      }
+    }
+
+    /// <summary>
+    /// Выставляет признак ссылки и найденный id для списка компонентов.
+    /// </summary>
+    private static void UpdateComponentLinks(
+      IEnumerable<Bcfier.Bcf.Bcf2.Component> components,
+      IDictionary<string, int?> batchCache,
+      bool revitHost)
+    {
+      foreach (Bcfier.Bcf.Bcf2.Component component in components ?? Enumerable.Empty<Bcfier.Bcf.Bcf2.Component>())
+      {
+        if (component == null)
+          continue;
+
+        string key = BuildComponentResolveKey(component);
+        if (!batchCache.TryGetValue(key, out int? resolved))
+        {
+          if (revitHost)
+          {
+            // В Revit UI-поток не вызывает API: только уже прогретый кэш после ExternalEvent.
+            // found=true означает «ключ был в кэше» (в т.ч. явный miss с elementId=null).
+            var cached = ComponentListHost.TryGetCachedElementId?.Invoke(component);
+            if (cached != null && cached.Value.found)
+              resolved = cached.Value.elementId;
+            else
+              resolved = null;
+          }
+          else
+          {
+            resolved = ComponentListHost.ResolveElementId?.Invoke(component);
+          }
+
+          batchCache[key] = resolved;
+        }
+
+        bool hasLink = resolved.HasValue;
+        int linkedId = resolved ?? 0;
+        if (component.HasModelLink == hasLink && component.LinkedElementId == linkedId)
+          continue;
+
+        // Сначала Id, потом флаг: DisplayLabel должен сразу показать числовой ElementId, а не IfcGuid.
+        component.LinkedElementId = linkedId;
+        component.HasModelLink = hasLink;
+      }
+    }
+
+    /// <summary>
+    /// Формирует ключ для пакетного кэша сопоставления компонента.
+    /// </summary>
+    private static string BuildComponentResolveKey(Bcfier.Bcf.Bcf2.Component component)
+    {
+      return BcfViewpointComponents.BuildComponentKey(component);
+    }
+
+    /// <summary>
+    /// Обновляет фильтры замечаний после пакетного resolve компонентов в активном документе.
+    /// </summary>
+    private void RefreshIssueFilters()
+    {
+      foreach (BcfFile bcf in _bcf?.BcfFiles ?? Enumerable.Empty<BcfFile>())
+      {
+        bcf?.ApplyIssueFilter();
+      }
+    }
+
+    /// <summary>
+    /// Создаёт таймер коалесцирования статусов загрузки, чтобы не перегружать Dispatcher.
+    /// </summary>
+    private DispatcherTimer CreateLoadingMessageTimer()
+    {
+      var timer = new DispatcherTimer(DispatcherPriority.Background)
+      {
+        Interval = TimeSpan.FromMilliseconds(150)
+      };
+      timer.Tick += (_, __) => FlushPendingLoadingMessage();
+      return timer;
+    }
+
+    /// <summary>
+    /// Применяет последнее накопленное сообщение загрузки на UI-потоке.
+    /// </summary>
+    private void FlushPendingLoadingMessage()
+    {
+      try
+      {
+        string message = Interlocked.Exchange(ref _pendingLoadingMessage, null);
+        if (string.IsNullOrWhiteSpace(message) || string.Equals(message, _lastAppliedLoadingMessage, StringComparison.Ordinal))
+          return;
+
+        _lastAppliedLoadingMessage = message;
+        LoadingText.Text = message;
+      }
+      catch
+      {
+        // Ошибка текста статуса не должна блокировать основную загрузку BCF
+      }
+    }
+
+    /// <summary>
+    /// Показывает overlay-индикатор на время анализа BCF-компонентов.
+    /// </summary>
+    private void ShowLoadingOverlay(string message)
+    {
+      try
+      {
+        _loadingOverlayCounter++;
+        if (!_loadingMessageTimer.IsEnabled)
+          _loadingMessageTimer.Start();
+        UpdateLoadingOverlayMessage(message);
+
+        LoadingOverlay.Visibility = Visibility.Visible;
+      }
+      catch
+      {
+        // Ошибка индикатора не должна блокировать основную загрузку BCF
+      }
+    }
+
+    /// <summary>
+    /// Скрывает overlay-индикатор после завершения анализа компонентов.
+    /// </summary>
+    private void HideLoadingOverlay()
+    {
+      try
+      {
+        _loadingOverlayCounter = Math.Max(0, _loadingOverlayCounter - 1);
+        if (_loadingOverlayCounter > 0)
+          return;
+
+        FlushPendingLoadingMessage();
+        _loadingMessageTimer.Stop();
+        LoadingOverlay.Visibility = Visibility.Collapsed;
+      }
+      catch
+      {
+        // Ошибка индикатора не должна блокировать основную загрузку BCF
+      }
+    }
+
+    /// <summary>
+    /// Обновляет текст окна загрузки из любого потока.
+    /// </summary>
+    private void UpdateLoadingOverlayMessage(string message)
+    {
+      try
+      {
+        if (string.IsNullOrWhiteSpace(message))
+          return;
+
+        Interlocked.Exchange(ref _pendingLoadingMessage, message);
+        if (Dispatcher.CheckAccess())
+          FlushPendingLoadingMessage();
+      }
+      catch
+      {
+        // Ошибка текста статуса не должна блокировать основную загрузку BCF
+      }
+    }
+
     private void OnCloseBcf(object sender, ExecutedRoutedEventArgs e)
     {
       try
@@ -331,7 +852,7 @@ namespace Bcfier.UserControls
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
 
@@ -356,9 +877,141 @@ namespace Bcfier.UserControls
 
     }
 
+    /// <summary>
+    /// Открывает диалог выбора BCF и выносит разбор архива с UI-потока.
+    /// </summary>
+    private async Task OpenBcfFilesFromDialogAsync()
+    {
+      try
+      {
+        var dialog = new Microsoft.Win32.OpenFileDialog
+        {
+          Filter = Loc.Get("OpenBcfFilter"),
+          DefaultExt = ".bcf",
+          Multiselect = true,
+          RestoreDirectory = true,
+          CheckFileExists = true,
+          CheckPathExists = true
+        };
+
+        if (dialog.ShowDialog() != true)
+          return;
+
+        await OpenBcfFilesAsync(dialog.FileNames);
+      }
+      catch (Exception ex)
+      {
+        BcfHostCapabilities.ShowError(Loc.Error, ex.InnerException?.Message ?? ex.Message);
+      }
+    }
+
+    /// <summary>
+    /// Читает BCF-файлы в фоне и добавляет их в UI только после завершения разбора.
+    /// </summary>
+    private async Task OpenBcfFilesAsync(IEnumerable<string> paths)
+    {
+      try
+      {
+        List<string> validPaths = paths?
+          .Where(path => !string.IsNullOrWhiteSpace(path) && File.Exists(path))
+          .Distinct(StringComparer.OrdinalIgnoreCase)
+          .ToList();
+
+        if (validPaths == null || validPaths.Count == 0)
+          return;
+
+        ShowLoadingOverlay("Загрузка BCF...");
+        UpdateLoadingOverlayMessage("Чтение BCF-архива...");
+
+        var uiSw = System.Diagnostics.Stopwatch.StartNew();
+        Debug.WriteLine("[BCFier-UI] before Task.Run: " + uiSw.ElapsedMilliseconds + "ms");
+
+        var loadResult = await Task.Run(() =>
+        {
+          var result = new List<BcfFile>();
+          var errors = new List<string>();
+          foreach (string path in validPaths)
+          {
+            try
+            {
+              BcfFile file = BcfReader.Open(path);
+              if (file != null)
+                result.Add(file);
+            }
+            catch (Exception ex)
+            {
+              errors.Add(Path.GetFileName(path) + ": " + (ex.InnerException?.Message ?? ex.Message));
+            }
+          }
+
+          return new { Files = result, Errors = errors };
+        });
+
+        List<BcfFile> loadedFiles = loadResult.Files;
+
+        Debug.WriteLine("[BCFier-UI] Task.Run done: " + uiSw.ElapsedMilliseconds + "ms");
+        UpdateLoadingOverlayMessage("Добавление замечаний в интерфейс...");
+        await Task.Yield();
+
+        foreach (BcfFile loadedFile in loadedFiles)
+        {
+          try
+          {
+            _bcf.AddOpenedFile(loadedFile);
+            if (loadedFile.HasCustomFields)
+            {
+              var preview = new CustomFieldsPreviewWindow(loadedFile)
+              {
+                Owner = Window.GetWindow(this)
+              };
+              preview.ShowDialog();
+              loadedFile.CustomFieldsVisible = preview.ShowCustomFields;
+            }
+
+            if (loadedFile.ReadWarnings != null && loadedFile.ReadWarnings.Count > 0)
+            {
+              loadResult.Errors.Add(
+                loadedFile.Filename + ":\n" + string.Join("\n", loadedFile.ReadWarnings));
+            }
+          }
+          catch (Exception ex)
+          {
+            loadResult.Errors.Add(
+              (loadedFile.Filename ?? "BCF") + ": " + (ex.InnerException?.Message ?? ex.Message));
+          }
+        }
+
+        Debug.WriteLine("[BCFier-UI] AddOpenedFile done: " + uiSw.ElapsedMilliseconds + "ms");
+        UpdateLoadingOverlayMessage("Подготовка списков статусов...");
+        await Task.Yield();
+
+        _bcf.UpdateDropdowns();
+        Debug.WriteLine("[BCFier-UI] UpdateDropdowns done: " + uiSw.ElapsedMilliseconds + "ms");
+
+        // Закрываем оверлей разбора BCF: дальнейший resolve управляет своим индикатором.
+        HideLoadingOverlay();
+
+        if (loadResult.Errors.Count > 0)
+        {
+          BcfHostCapabilities.ShowError(
+            Loc.Error,
+            string.Join(Environment.NewLine + Environment.NewLine, loadResult.Errors));
+        }
+
+        // Связи с моделью и фильтр обновятся в колбэке после ExternalEvent Revit.
+        ScheduleRefreshComponentLinks();
+        Debug.WriteLine("[BCFier-UI] ScheduleRefreshComponentLinks queued: " + uiSw.ElapsedMilliseconds + "ms");
+      }
+      catch (Exception ex)
+      {
+        HideLoadingOverlay();
+        BcfHostCapabilities.ShowError(Loc.Error, ex.InnerException?.Message ?? ex.Message);
+      }
+    }
+
     public void BcfFileClicked(string path)
     {
-      _bcf.OpenFile(path);
+      _ = OpenBcfFilesAsync(new[] { path });
     }
     //prompt to save bcf
     //delete temp folders
@@ -393,48 +1046,9 @@ namespace Bcfier.UserControls
     }
 
     #endregion
-
     #region web
-    //check github API for new release
-    private void CheckUpdates()
-    {
-      Task.Run(() =>
-      {
-        try
-        {
-          var release = GitHubRest.GetLatestRelease();
-          if (release == null)
-            return;
-
-          string version = release.tag_name.Replace("v", "");
-          var mine = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
-          var online = Version.Parse(version);
-
-          if (mine.CompareTo(online) < 0 && release.assets.Any())
-          {
-            Application.Current.Dispatcher.Invoke((Action)delegate {
-
-              var dialog = new NewVersion();
-              dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-              dialog.Description.Text = release.name + " has been released on " + release.published_at.ToLongDateString() + "\ndo you want to check it out now?";
-              //dialog.NewFeatures.Text = document.Element("Bcfier").Element("Changelog").Element("NewFeatures").Value;
-              //dialog.BugFixes.Text = document.Element("Bcfier").Element("Changelog").Element("BugFixes").Value;
-              //dialog.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-              dialog.ShowDialog();
-              if (dialog.DialogResult.HasValue && dialog.DialogResult.Value)
-                Process.Start(release.assets.First().browser_download_url);
-
-            });
-          
-          }
-        }
-        catch (System.Exception ex1)
-        {
-          //warning suppressed
-          Console.WriteLine("exception: " + ex1);
-        }
-      });
-    }
+    // Автообновления отключены в форке SP-BCFier
+    private void CheckUpdates() { }
 
     #endregion
     #region drag&drop
@@ -454,16 +1068,12 @@ namespace Bcfier.UserControls
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
           var files = (string[])e.Data.GetData(DataFormats.FileDrop);
-          foreach (var f in files)
-          {
-            if (File.Exists(f))
-              _bcf.OpenFile(f);
-          }
+          _ = OpenBcfFilesAsync(files);
         }
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
     private void Window_DragOver(object sender, DragEventArgs e)
@@ -475,7 +1085,11 @@ namespace Bcfier.UserControls
         if (e.Data.GetDataPresent(DataFormats.FileDrop, true))
         {
           var filenames = e.Data.GetData(DataFormats.FileDrop, true) as string[];
-          if (filenames.Any(x => Path.GetExtension(x).ToUpperInvariant() != ".BCFZIP"))
+                  if (filenames.Any(x =>
+                  {
+                    var ext = Path.GetExtension(x).ToUpperInvariant();
+                    return ext != ".BCFZIP" && ext != ".BCF";
+                  }))
             dropEnabled = false;
         }
         else
@@ -489,7 +1103,7 @@ namespace Bcfier.UserControls
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
     }
     #endregion
@@ -502,6 +1116,169 @@ namespace Bcfier.UserControls
     }
     #endregion
 
+    #region SP-Service / BCF-API sync
 
+    private async Task OpenBcfFromDatabaseAsync()
+    {
+      try
+      {
+        SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
+        if (!settings.HasConnection)
+        {
+          MessageBox.Show(Loc.Get("SpServiceNotConfigured"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Warning);
+          return;
+        }
+
+        ShowLoadingOverlay(Loc.Get("OpenFromDb"));
+        using var client = new SpBcfServiceClient(settings.BaseUrl);
+        await client.LoginAsync(settings.Login, settings.Password).ConfigureAwait(true);
+        IReadOnlyList<SpBcfServiceClient.BcfApiProject> projects =
+          await client.GetBcfApiProjectsAsync().ConfigureAwait(true);
+
+        if (projects == null || projects.Count == 0)
+        {
+          HideLoadingOverlay();
+          MessageBox.Show(Loc.Get("SpServiceNoBcfFiles"), Loc.Warning, MessageBoxButton.OK, MessageBoxImage.Information);
+          return;
+        }
+
+        var items = projects
+          .Where(p => p.ParsedId != null)
+          .Select(p => new SpBcfServiceClient.BcfFileItem
+          {
+            Id = p.ParsedId.Value,
+            Name = p.Name ?? p.ProjectId
+          })
+          .ToList();
+
+        HideLoadingOverlay();
+        var pick = new BcfServerPickWindow(items) { Owner = Window.GetWindow(this) };
+        if (pick.ShowDialog() != true || pick.SelectedFile == null)
+          return;
+
+        ShowLoadingOverlay(Loc.Get("OpenFromDb"));
+        BcfFile opened = await SpBcfServerLoader
+          .OpenFromServerAsync(client, pick.SelectedFile.Id.ToString("D"))
+          .ConfigureAwait(true);
+        _bcf.AddOpenedFile(opened);
+        _autoSyncEnabled = true;
+        if (AutoSyncCheckBox != null)
+          AutoSyncCheckBox.IsChecked = true;
+        UpdateServerSyncUi();
+        EnsureAutoSyncTimer();
+        ScheduleRefreshComponentLinks();
+      }
+      catch (Exception ex)
+      {
+        MessageBox.Show(Loc.Format("SpServiceOpenError", ex.Message), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+      }
+      finally
+      {
+        HideLoadingOverlay();
+      }
+    }
+
+    private async Task SendSelectedToDatabaseAsync(bool interactive)
+    {
+      try
+      {
+        BcfFile bcf = SelectedBcf();
+        if (bcf == null || !bcf.IsFromServer)
+          return;
+        ShowLoadingOverlay(Loc.Get("SendToDb"));
+        await SpBcfSyncService.SyncAsync(bcf, interactive).ConfigureAwait(true);
+        if (interactive)
+          MessageBox.Show(Loc.Get("SpServiceSyncOk"), Loc.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
+        UpdateServerSyncUi();
+      }
+      catch (Exception ex)
+      {
+        if (interactive)
+          MessageBox.Show(Loc.Format("SpServiceSyncError", ex.Message), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+      }
+      finally
+      {
+        HideLoadingOverlay();
+      }
+    }
+
+    private void UpdateServerSyncUi()
+    {
+      try
+      {
+        BcfFile bcf = SelectedBcf();
+        bool fromServer = bcf != null && bcf.IsFromServer;
+        if (AutoSyncCheckBox != null)
+          AutoSyncCheckBox.Visibility = fromServer ? Visibility.Visible : Visibility.Collapsed;
+        if (SendToDbBtn != null)
+        {
+          bool showSend = fromServer && !_autoSyncEnabled;
+          SendToDbBtn.Visibility = showSend ? Visibility.Visible : Visibility.Collapsed;
+        }
+      }
+      catch
+      {
+        // ignore
+      }
+    }
+
+    private void ApplyAutoSyncIntervalFromSettings()
+    {
+      SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
+      EnsureAutoSyncTimer();
+      if (_autoSyncTimer != null)
+        _autoSyncTimer.Interval = TimeSpan.FromSeconds(settings.SyncIntervalSeconds);
+    }
+
+    private void EnsureAutoSyncTimer()
+    {
+      if (_autoSyncTimer != null)
+      {
+        UpdateAutoSyncTimerState();
+        return;
+      }
+
+      SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
+      _autoSyncTimer = new DispatcherTimer
+      {
+        Interval = TimeSpan.FromSeconds(settings.SyncIntervalSeconds)
+      };
+      _autoSyncTimer.Tick += async (s, e) =>
+      {
+        if (_isAutoSyncing)
+          return;
+        BcfFile bcf = SelectedBcf();
+        if (bcf == null || !bcf.IsFromServer || !_autoSyncEnabled)
+          return;
+        _isAutoSyncing = true;
+        try
+        {
+          await SpBcfSyncService.SyncAsync(bcf, interactive: false).ConfigureAwait(true);
+        }
+        catch
+        {
+          // silent in auto mode
+        }
+        finally
+        {
+          _isAutoSyncing = false;
+        }
+      };
+      UpdateAutoSyncTimerState();
+    }
+
+    private void UpdateAutoSyncTimerState()
+    {
+      if (_autoSyncTimer == null)
+        return;
+      BcfFile bcf = SelectedBcf();
+      bool run = bcf != null && bcf.IsFromServer && _autoSyncEnabled;
+      if (run && !_autoSyncTimer.IsEnabled)
+        _autoSyncTimer.Start();
+      else if (!run && _autoSyncTimer.IsEnabled)
+        _autoSyncTimer.Stop();
+    }
+
+    #endregion
   }
 }

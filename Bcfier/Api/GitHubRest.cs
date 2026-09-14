@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using RestSharp;
 using DataFormat = RestSharp.DataFormat;
+using Bcfier.Data.Utils;
 
 namespace Bcfier.Api
 {
@@ -71,7 +72,7 @@ namespace Bcfier.Api
       }
       catch (Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
       return true;
     }

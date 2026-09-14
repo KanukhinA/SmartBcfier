@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TreatAsLocalProperty>Platform</TreatAsLocalProperty>
+    <Platform Condition="'$(Platform)' == 'Any CPU' Or '$(Platform)' == ''">AnyCPU</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Bcfier.Revit.Standalone</RootNamespace>
+    <AssemblyName>BCFier.Revit.Addin</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\AssemblyVersionInfo.cs" Link="AssemblyVersionInfo.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Bcfier.Revit\Bcfier.Revit.csproj">
+      <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
+      <SetPlatform>Platform=AnyCPU</SetPlatform>
+      <SetTargetFramework Condition="'$(Configuration)' == 'R2025' Or '$(Configuration)' == 'R2026'">TargetFramework=net8.0-windows</SetTargetFramework>
+      <SetTargetFramework Condition="'$(Configuration)' != 'R2025' And '$(Configuration)' != 'R2026'">TargetFramework=net48</SetTargetFramework>
+    </ProjectReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="@(RevitApiReference)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="BCFier.addin" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Assets\SP_BCFier16.png" LogicalName="Bcfier.Revit.Standalone.Assets.SP_BCFier16.png" />
+    <EmbeddedResource Include="Assets\SP_BCFier32.png" LogicalName="Bcfier.Revit.Standalone.Assets.SP_BCFier32.png" />
+  </ItemGroup>
+
+  <!--
+    По умолчанию НЕ копируем в %AppData%\...\Addins: иначе при запущенном Revit
+    файлы залочены, а для Addin Manager нужна неизменная установка в Addins.
+    Артефакты всегда в bin\R{год}\{tfm}\ — оттуда же берёт SP (ProjectReference).
+    Установка в Revit: -p:DeployToRevit=true или dist\R*\Install-Standalone.ps1
+  -->
+  <PropertyGroup>
+    <DeployToRevit Condition="'$(DeployToRevit)' == ''">false</DeployToRevit>
+  </PropertyGroup>
+
+  <Target Name="DeployRevitAddin" AfterTargets="Build"
+          Condition="'$(DeployToRevit)' == 'true' And '$(TargetFramework)' != '' And Exists('$(TargetDir)Bcfier.Revit.dll') And (
+            (('$(Configuration)' == 'R2022' Or '$(Configuration)' == 'R2023') And '$(TargetFramework)' == 'net48') Or
+            (('$(Configuration)' == 'R2025' Or '$(Configuration)' == 'R2026') And '$(TargetFramework)' == 'net8.0-windows')
+          )">
+    <PropertyGroup>
+      <RevitAddinsDir>$(APPDATA)\Autodesk\Revit\Addins\$(RevitVersion)</RevitAddinsDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <_DeployFiles Include="$(TargetPath)" />
+      <_DeployFiles Include="$(TargetDir)Bcfier.Revit.dll" />
+      <_DeployFiles Include="$(TargetDir)Bcfier.dll" />
+      <_DeployFiles Include="$(TargetDir)GongSolutions.Wpf.DragDrop.dll" Condition="Exists('$(TargetDir)GongSolutions.Wpf.DragDrop.dll')" />
+      <_DeployFiles Include="$(TargetDir)System.Configuration.ConfigurationManager.dll" Condition="Exists('$(TargetDir)System.Configuration.ConfigurationManager.dll')" />
+      <!-- Excel-экспорт (ClosedXML и зависимости) -->
+      <_DeployFiles Include="$(TargetDir)ClosedXML.dll" Condition="Exists('$(TargetDir)ClosedXML.dll')" />
+      <_DeployFiles Include="$(TargetDir)ClosedXML.Parser.dll" Condition="Exists('$(TargetDir)ClosedXML.Parser.dll')" />
+      <_DeployFiles Include="$(TargetDir)DocumentFormat.OpenXml.dll" Condition="Exists('$(TargetDir)DocumentFormat.OpenXml.dll')" />
+      <_DeployFiles Include="$(TargetDir)DocumentFormat.OpenXml.Framework.dll" Condition="Exists('$(TargetDir)DocumentFormat.OpenXml.Framework.dll')" />
+      <_DeployFiles Include="$(TargetDir)ExcelNumberFormat.dll" Condition="Exists('$(TargetDir)ExcelNumberFormat.dll')" />
+      <_DeployFiles Include="$(TargetDir)SixLabors.Fonts.dll" Condition="Exists('$(TargetDir)SixLabors.Fonts.dll')" />
+      <_DeployFiles Include="$(TargetDir)RBush.dll" Condition="Exists('$(TargetDir)RBush.dll')" />
+      <_DeployFiles Include="$(TargetDir)Microsoft.Bcl.HashCode.dll" Condition="Exists('$(TargetDir)Microsoft.Bcl.HashCode.dll')" />
+      <_DeployFiles Include="$(TargetDir)System.Buffers.dll" Condition="Exists('$(TargetDir)System.Buffers.dll')" />
+      <_DeployFiles Include="$(TargetDir)System.Memory.dll" Condition="Exists('$(TargetDir)System.Memory.dll')" />
+      <_DeployFiles Include="$(TargetDir)System.Numerics.Vectors.dll" Condition="Exists('$(TargetDir)System.Numerics.Vectors.dll')" />
+      <_DeployFiles Include="$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(TargetDir)System.Runtime.CompilerServices.Unsafe.dll')" />
+      <_DeployFiles Include="$(TargetDir)System.Security.Cryptography.ProtectedData.dll" Condition="Exists('$(TargetDir)System.Security.Cryptography.ProtectedData.dll')" />
+      <_DeployFiles Include="$(ProjectDir)BCFier.addin" />
+    </ItemGroup>
+    <MakeDir Directories="$(RevitAddinsDir)" />
+    <Copy SourceFiles="@(_DeployFiles)" DestinationFolder="$(RevitAddinsDir)" SkipUnchangedFiles="false" ContinueOnError="WarnAndContinue" />
+    <MakeDir Directories="$(RevitAddinsDir)\ru-RU" Condition="Exists('$(TargetDir)ru-RU\Bcfier.resources.dll')" />
+    <Copy SourceFiles="$(TargetDir)ru-RU\Bcfier.resources.dll"
+          DestinationFolder="$(RevitAddinsDir)\ru-RU"
+          Condition="Exists('$(TargetDir)ru-RU\Bcfier.resources.dll')"
+          SkipUnchangedFiles="true"
+          ContinueOnError="WarnAndContinue" />
+    <Message Importance="high" Text="Standalone BCFier ($(TargetFramework)) → $(RevitAddinsDir)" />
+  </Target>
+</Project>

@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="SettingsTitle" xml:space="preserve"><value>Settings</value></data>
+  <data name="Save" xml:space="preserve"><value>Save</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="AddIssue" xml:space="preserve"><value>Add Issue</value></data>
+  <data name="BatchAdd" xml:space="preserve"><value>Batch Add</value></data>
+  <data name="OpenBcf" xml:space="preserve"><value>Open BCF</value></data>
+  <data name="SaveBcf" xml:space="preserve"><value>Save BCF</value></data>
+  <data name="SaveAs" xml:space="preserve"><value>Save as...</value></data>
+  <data name="NewBcf" xml:space="preserve"><value>New BCF</value></data>
+  <data name="Merge" xml:space="preserve"><value>Merge...</value></data>
+  <data name="Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="Help" xml:space="preserve"><value>Help</value></data>
+  <data name="Language" xml:space="preserve"><value>Language</value></data>
+  <data name="CreationAuthor" xml:space="preserve"><value>Author</value></data>
+  <data name="AssignedTo" xml:space="preserve"><value>Assigned to</value></data>
+  <data name="DueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="Priority" xml:space="preserve"><value>Priority</value></data>
+  <data name="Labels" xml:space="preserve"><value>Labels</value></data>
+  <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="DeselectAll" xml:space="preserve"><value>Deselect all</value></data>
+  <data name="ElementsList" xml:space="preserve"><value>Elements</value></data>
+  <data name="SelectInModel" xml:space="preserve"><value>Select in model</value></data>
+  <data name="SelectAllInModel" xml:space="preserve"><value>Select all</value></data>
+  <data name="SelectInModelTip" xml:space="preserve"><value>Select in model. Ctrl+click adds to the current selection</value></data>
+  <data name="SelectAllInModelTip" xml:space="preserve"><value>Select all elements of this view in the model</value></data>
+  <data name="TooManyComponents" xml:space="preserve"><value>More than 1000 components selected. Reduce selection for better performance.</value></data>
+  <data name="TooManyViewElements" xml:space="preserve"><value>More than 100 elements in the visible screenshot area. Enter element Id(s) manually.</value></data>
+  <data name="ManualElementIdsHint" xml:space="preserve"><value>Element Id(s), separated by space, comma or semicolon</value></data>
+  <data name="TopicStatuses" xml:space="preserve"><value>Topic Statuses:</value></data>
+  <data name="StatusNameColumn" xml:space="preserve"><value>Name</value></data>
+  <data name="StatusColorColumn" xml:space="preserve"><value>Color</value></data>
+  <data name="PickStatusColorTip" xml:space="preserve"><value>Swatch opens the palette; paste a #RRGGBB code in the field</value></data>
+  <data name="AddStatus" xml:space="preserve"><value>Add</value></data>
+  <data name="RemoveStatus" xml:space="preserve"><value>Remove</value></data>
+  <data name="NewStatusName" xml:space="preserve"><value>New status</value></data>
+  <data name="TopicTypes" xml:space="preserve"><value>Topic Types:</value></data>
+  <data name="PrioritiesList" xml:space="preserve"><value>Priorities:</value></data>
+  <data name="LabelsList" xml:space="preserve"><value>Labels:</value></data>
+  <data name="AssigneesList" xml:space="preserve"><value>Assignees:</value></data>
+  <data name="SearchIssues" xml:space="preserve"><value>Search issues...</value></data>
+  <data name="SearchIssuesTip" xml:space="preserve"><value>Search within title, description and comments...</value></data>
+  <data name="ActiveDocumentIssuesOnly" xml:space="preserve"><value>Issues only for active document</value></data>
+  <data name="NewIssue" xml:space="preserve"><value>New Issue</value></data>
+  <data name="IssueTitle" xml:space="preserve"><value>Issue title</value></data>
+  <data name="IssueTitleRequired" xml:space="preserve"><value>Issue Title (required)</value></data>
+  <data name="Description" xml:space="preserve"><value>Description</value></data>
+  <data name="AddComment" xml:space="preserve"><value>Add Comment</value></data>
+  <data name="AddCommentPlaceholder" xml:space="preserve"><value>Message...</value></data>
+  <data name="AddView" xml:space="preserve"><value>Add View</value></data>
+  <data name="EditView" xml:space="preserve"><value>Edit view</value></data>
+  <data name="EditViewTip" xml:space="preserve"><value>Edit snapshot and linked elements</value></data>
+  <data name="ViewEditSnapshotComment" xml:space="preserve"><value>{0} changed the view snapshot</value></data>
+  <data name="ViewEditElementsComment" xml:space="preserve"><value>{0} changed the linked elements of the view</value></data>
+  <data name="ViewEditSnapshotAndElementsComment" xml:space="preserve"><value>{0} changed the view snapshot and linked elements</value></data>
+  <data name="DeleteSelected" xml:space="preserve"><value>Delete selected</value></data>
+  <data name="Browse" xml:space="preserve"><value>Browse...</value></data>
+  <data name="Annotate" xml:space="preserve"><value>Annotate</value></data>
+  <data name="AnnotateSnapshot" xml:space="preserve"><value>Annotate Snapshot</value></data>
+  <data name="Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="CommaSeparated" xml:space="preserve"><value>Comma separated</value></data>
+  <data name="Russian" xml:space="preserve"><value>Russian</value></data>
+  <data name="EmptyBcf" xml:space="preserve"><value>The current BCF report is empty.</value></data>
+  <data name="NoIssue" xml:space="preserve"><value>No Issue</value></data>
+  <data name="BcfWriteVersion" xml:space="preserve"><value>BCF version (save)</value></data>
+  <data name="English" xml:space="preserve"><value>English</value></data>
+  <data name="AuthorName" xml:space="preserve"><value>Author Name:</value></data>
+  <data name="Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="MaybeLater" xml:space="preserve"><value>Maybe later</value></data>
+  <data name="OnlyVisible" xml:space="preserve"><value>Only visible</value></data>
+  <data name="OnlySelected" xml:space="preserve"><value>Only selected (default)</value></data>
+  <data name="None" xml:space="preserve"><value>None</value></data>
+  <data name="TabGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="GroupBcf" xml:space="preserve"><value>BCF</value></data>
+  <data name="GroupSnapshot" xml:space="preserve"><value>Snapshot</value></data>
+  <data name="TabRevit" xml:space="preserve"><value>Autodesk Revit</value></data>
+  <data name="GroupView" xml:space="preserve"><value>View</value></data>
+  <data name="FirstAndLast" xml:space="preserve"><value>First and Last</value></data>
+  <data name="SnapshotsEditor" xml:space="preserve"><value>Snapshots editor:</value></data>
+  <data name="BrowseDoubleClick" xml:space="preserve"><value>Double-click to browse...</value></data>
+  <data name="SnapshotEditorTip" xml:space="preserve"><value>Select an app to edit Snapshot files&#x0a;or MS Paint will be used by default.</value></data>
+  <data name="UseDefaultViewer" xml:space="preserve"><value>Use default image viewer to open snapshots (.png)</value></data>
+  <data name="UseDefaultViewerTip" xml:space="preserve"><value>Will open Snapshots with the application associated&#x0a;with PNG files in Windows.</value></data>
+  <data name="AlwaysNewRevitView" xml:space="preserve"><value>Always create a new Revit view when opening Views</value></data>
+  <data name="BcfCoordinateMode" xml:space="preserve"><value>BCF coordinate system</value></data>
+  <data name="BcfCoordinateModeRevitZUp" xml:space="preserve"><value>Revit / Z-up</value></data>
+  <data name="BcfCoordinateModeSourceYUp" xml:space="preserve"><value>External BCF / Y-up</value></data>
+  <data name="BcfCoordinateModeSourceXUp" xml:space="preserve"><value>External BCF / X-up</value></data>
+  <data name="AttachElements" xml:space="preserve"><value>Attach elements to view</value></data>
+  <data name="LoadLocalImage" xml:space="preserve"><value>Load a local image as Snapshot</value></data>
+  <data name="SelectLocalImage" xml:space="preserve"><value>Select a local image to load:</value></data>
+  <data name="Path" xml:space="preserve"><value>Path</value></data>
+  <data name="CommentOptional" xml:space="preserve"><value>Comment (optional)</value></data>
+  <data name="VerbalStatusOptional" xml:space="preserve"><value>Note</value></data>
+  <data name="IncludeComment" xml:space="preserve"><value>Include Comment</value></data>
+  <data name="BrowseOrDropImage" xml:space="preserve"><value>Browse or drag&amp;drop a local image, no 3D information will be included in the viewpoint</value></data>
+  <data name="ViewElements" xml:space="preserve"><value>View elements</value></data>
+  <data name="OriginatingSystemLabel" xml:space="preserve"><value>Originating system</value></data>
+  <data name="SelectModelElements" xml:space="preserve"><value>Select elements</value></data>
+  <data name="SelectModelElementsPrompt" xml:space="preserve"><value>Select model elements to link with the issue</value></data>
+  <data name="ViewHas3dInfo" xml:space="preserve"><value>3D/2D information of the current view will be included in the viewpoint</value></data>
+  <data name="OpenViewTip" xml:space="preserve"><value>Open view »</value></data>
+  <data name="OpenViewIsolatedTip" xml:space="preserve"><value>Open isolated 3D view »</value></data>
+  <data name="OpenViewButton" xml:space="preserve"><value>3D</value></data>
+  <data name="OpenViewIsolatedButton" xml:space="preserve"><value>3D with isolate</value></data>
+  <data name="EnlargeView" xml:space="preserve"><value>Enlarge view</value></data>
+  <data name="DeleteView" xml:space="preserve"><value>Delete view</value></data>
+  <data name="DeleteComment" xml:space="preserve"><value>Delete</value></data>
+  <data name="EditComment" xml:space="preserve"><value>Edit</value></data>
+  <data name="CommentEdited" xml:space="preserve"><value>(edited)</value></data>
+  <data name="CommentDeletedFormat" xml:space="preserve"><value>Comment was deleted {0}</value></data>
+  <data name="CopyComment" xml:space="preserve"><value>Copy comment</value></data>
+  <data name="CopyCommentTip" xml:space="preserve"><value>Select text or right-click to copy</value></data>
+  <data name="GeneralComments" xml:space="preserve"><value>General Comments</value></data>
+  <data name="Status" xml:space="preserve"><value>Status</value></data>
+  <data name="Error" xml:space="preserve"><value>Error</value></data>
+  <data name="Warning" xml:space="preserve"><value>Warning!</value></data>
+  <data name="DragDropHint" xml:space="preserve"><value>Drag&amp;Drop one&#x0a;or more BCF files&#x0a;to open them</value></data>
+  <data name="OpenBcfFilter" xml:space="preserve"><value>BIM Collaboration Format (*.bcf;*.bcfzip)|*.bcf;*.bcfzip</value></data>
+  <data name="OpenImageFilter" xml:space="preserve"><value>Image Files(*.jpg; *.jpeg; *.gif; *.bmp; *.png)|*.jpg; *.jpeg; *.gif; *.bmp; *.png</value></data>
+  <data name="OpenExeFilter" xml:space="preserve"><value>Executable (*.exe)|*.exe</value></data>
+  <data name="NewBcfReport" xml:space="preserve"><value>New BCF Report</value></data>
+  <data name="SaveReportTitle" xml:space="preserve"><value>Save Report?</value></data>
+  <data name="SaveReportMessage" xml:space="preserve"><value>{0} has been modified.&#x0a;Do you want to save changes?</value></data>
+  <data name="NoIssueSelected" xml:space="preserve"><value>No Issue selected</value></data>
+  <data name="NoCommentSelected" xml:space="preserve"><value>No Comment selected</value></data>
+  <data name="NoViewSelected" xml:space="preserve"><value>No View selected</value></data>
+  <data name="DeleteIssuesTitle" xml:space="preserve"><value>Delete Issue?</value></data>
+  <data name="TableRowDeleteIssue" xml:space="preserve"><value>Delete issue</value></data>
+  <data name="DeleteIssuesTitlePlural" xml:space="preserve"><value>Delete Issues?</value></data>
+  <data name="DeleteIssuesMessage" xml:space="preserve"><value>Are you sure you want to delete {0} Issue?&#x0a;{1}</value></data>
+  <data name="DeleteIssuesMessagePlural" xml:space="preserve"><value>Are you sure you want to delete {0} Issues?&#x0a;{1}</value></data>
+  <data name="DeleteCommentTitle" xml:space="preserve"><value>Delete Comment?</value></data>
+  <data name="DeleteCommentMessage" xml:space="preserve"><value>Are you sure you want to&#x0a;Delete this comment?</value></data>
+  <data name="DeleteViewpointCommentsTitle" xml:space="preserve"><value>Delete Viewpoint's Comments?</value></data>
+  <data name="DeleteViewpointCommentsMessage" xml:space="preserve"><value>Do you also want to delete the comments linked to the selected viewpoint?</value></data>
+  <data name="SnapshotMissing" xml:space="preserve"><value>The selected Snapshot does not exist</value></data>
+  <data name="ViewpointNull" xml:space="preserve"><value>The selected viewpoint has no camera data (viewpoint file is missing or corrupted)</value></data>
+  <data name="InvalidSnapshot" xml:space="preserve"><value>Snapshot is not a valid image, please try again.</value></data>
+  <data name="TitleRequired" xml:space="preserve"><value>Title required</value></data>
+  <data name="TitleRequiredMessage" xml:space="preserve"><value>Please insert an Issue Title.</value></data>
+  <data name="ProductName" xml:space="preserve"><value>BCF Issues</value></data>
+  <data name="PanelLongDescription" xml:space="preserve"><value>Opens the BCF Remarks panel to create, view, and exchange BCF issues (BCF 3.0).</value></data>
+  <data name="ScheduleSnapshotWarning" xml:space="preserve"><value>BCF Remarks can't take snapshots of schedules.</value></data>
+  <data name="PerspectiveViewWarning" xml:space="preserve"><value>This operation is not allowed in a Perspective View.&#x0a;Please close the current window(s) and retry.</value></data>
+  <data name="UnknownFilename" xml:space="preserve"><value>Unknown</value></data>
+  <data name="NoneLower" xml:space="preserve"><value>none</value></data>
+  <data name="NewVersionTitle" xml:space="preserve"><value>A new version of BCF Remarks is available!</value></data>
+  <data name="RibbonPanel" xml:space="preserve"><value>BCF Remarks</value></data>
+  <data name="RibbonButton" xml:space="preserve"><value>BCF&#x0a;Remarks</value></data>
+  <data name="RibbonTooltip" xml:space="preserve"><value>BCF Remarks — create, view, and coordinate BCF issues</value></data>
+  <data name="ColumnId" xml:space="preserve"><value>ID</value></data>
+  <data name="ColumnIfcGuid" xml:space="preserve"><value>IfcGuid</value></data>
+  <data name="ComponentsNotFoundTitle" xml:space="preserve"><value>Elements not found</value></data>
+  <data name="ComponentsNotFoundMessage" xml:space="preserve"><value>Could not match {0} element(s) by IfcGuid or by Id in the name (after a colon):&#x0a;{1}</value></data>
+  <data name="ColumnFamily" xml:space="preserve"><value>Family</value></data>
+  <data name="ColumnType" xml:space="preserve"><value>Type</value></data>
+  <data name="SelectedElements" xml:space="preserve"><value>Selected elements</value></data>
+  <data name="OtherElements" xml:space="preserve"><value>Other elements</value></data>
+  <data name="AvailableOnView" xml:space="preserve"><value>Available on view</value></data>
+  <data name="MoveToSelected" xml:space="preserve"><value>Add to selected</value></data>
+  <data name="MoveToAvailable" xml:space="preserve"><value>Remove from selected</value></data>
+  <data name="MoveAllToSelected" xml:space="preserve"><value>Add all to selected</value></data>
+  <data name="MoveAllToAvailable" xml:space="preserve"><value>Remove all from selected</value></data>
+  <data name="PlaceholderStatuses" xml:space="preserve"><value>Open, In Progress, Resolved, Closed</value></data>
+  <data name="PlaceholderTypes" xml:space="preserve"><value>Architecture, Structure, MEP, Coordination</value></data>
+  <data name="PlaceholderPriorities" xml:space="preserve"><value>Low, Normal, High, Critical</value></data>
+  <data name="PlaceholderLabels" xml:space="preserve"><value>Clash, Request, Info</value></data>
+  <data name="PlaceholderAssignees" xml:space="preserve"><value>user@company.com</value></data>
+  <data name="CountViewpoints_one" xml:space="preserve"><value>{0} Viewpoint</value></data>
+  <data name="CountViewpoints_few" xml:space="preserve"><value>{0} Viewpoints</value></data>
+  <data name="CountViewpoints_many" xml:space="preserve"><value>{0} Viewpoints</value></data>
+  <data name="CountComments_one" xml:space="preserve"><value>{0} Comment</value></data>
+  <data name="CountComments_few" xml:space="preserve"><value>{0} Comments</value></data>
+  <data name="CountComments_many" xml:space="preserve"><value>{0} Comments</value></data>
+  <data name="CountIssues_one" xml:space="preserve"><value>{0} Issue</value></data>
+  <data name="CountIssues_few" xml:space="preserve"><value>{0} Issues</value></data>
+  <data name="CountIssues_many" xml:space="preserve"><value>{0} Issues</value></data>
+  <data name="CountSelected_one" xml:space="preserve"><value>{0} Selected</value></data>
+  <data name="CountSelected_few" xml:space="preserve"><value>{0} Selected</value></data>
+  <data name="CountSelected_many" xml:space="preserve"><value>{0} Selected</value></data>
+  <data name="RelativeJustNow" xml:space="preserve"><value>just now</value></data>
+  <data name="RelativeMinuteAgo" xml:space="preserve"><value>a minute ago</value></data>
+  <data name="RelativeHourAgo" xml:space="preserve"><value>an hour ago</value></data>
+  <data name="RelativeYesterday" xml:space="preserve"><value>yesterday</value></data>
+  <data name="RelativeSeconds_one" xml:space="preserve"><value>{0} second ago</value></data>
+  <data name="RelativeSeconds_few" xml:space="preserve"><value>{0} seconds ago</value></data>
+  <data name="RelativeSeconds_many" xml:space="preserve"><value>{0} seconds ago</value></data>
+  <data name="RelativeMinutes_one" xml:space="preserve"><value>{0} minute ago</value></data>
+  <data name="RelativeMinutes_few" xml:space="preserve"><value>{0} minutes ago</value></data>
+  <data name="RelativeMinutes_many" xml:space="preserve"><value>{0} minutes ago</value></data>
+  <data name="RelativeHours_one" xml:space="preserve"><value>{0} hour ago</value></data>
+  <data name="RelativeHours_few" xml:space="preserve"><value>{0} hours ago</value></data>
+  <data name="RelativeHours_many" xml:space="preserve"><value>{0} hours ago</value></data>
+  <data name="RelativeDays_one" xml:space="preserve"><value>{0} day ago</value></data>
+  <data name="RelativeDays_few" xml:space="preserve"><value>{0} days ago</value></data>
+  <data name="RelativeDays_many" xml:space="preserve"><value>{0} days ago</value></data>
+  <data name="RelativeYears_one" xml:space="preserve"><value>{0} year ago</value></data>
+  <data name="RelativeYears_few" xml:space="preserve"><value>{0} years ago</value></data>
+  <data name="RelativeYears_many" xml:space="preserve"><value>{0} years ago</value></data>
+  <data name="TabServer" xml:space="preserve"><value>Server</value></data>
+  <data name="TabCustomFields" xml:space="preserve"><value>Custom fields</value></data>
+  <data name="CustomFieldsCatalogHint" xml:space="preserve"><value>Define field names available when adding custom fields to the report. Values are stored in Documents/custom-fields.xml inside the BCF.</value></data>
+  <data name="CustomFieldName" xml:space="preserve"><value>Name</value></data>
+  <data name="CustomFieldType" xml:space="preserve"><value>Type</value></data>
+  <data name="CustomFieldTypeText" xml:space="preserve"><value>Text</value></data>
+  <data name="CustomFieldTypeDate" xml:space="preserve"><value>Date</value></data>
+  <data name="CustomFieldDuplicateName" xml:space="preserve"><value>A field named "{0}" already exists in the catalog. Rename one of them — names must be unique.</value></data>
+  <data name="CustomFieldsAddDefinition" xml:space="preserve"><value>Add field</value></data>
+  <data name="CustomFieldsRemoveDefinition" xml:space="preserve"><value>Remove</value></data>
+  <data name="CustomFieldsAddToTopic" xml:space="preserve"><value>Add custom fields</value></data>
+  <data name="CustomFieldsAddTitle" xml:space="preserve"><value>Add custom fields</value></data>
+  <data name="CustomFieldsManageTitle" xml:space="preserve"><value>Custom fields</value></data>
+  <data name="CustomFieldsAddHint" xml:space="preserve"><value>Select the fields from the catalog you want to add to the report. You can fill in the values in the main panel.</value></data>
+  <data name="CustomFieldsAddHintReport" xml:space="preserve"><value>Select the fields from the catalog you want to add to the report. You can fill in the values in the main panel.</value></data>
+  <data name="CustomFieldsManageHint" xml:space="preserve"><value>Checked fields are included in the report. Uncheck a field to remove it. Values are edited in the main panel.</value></data>
+  <data name="CustomFieldsGroupTitle" xml:space="preserve"><value>Custom fields</value></data>
+  <data name="CustomFieldsPrompt" xml:space="preserve"><value>This report contains custom fields in Documents. Show them?</value></data>
+  <data name="CustomFieldsPreviewTitle" xml:space="preserve"><value>Custom fields preview</value></data>
+  <data name="CustomFieldsPreviewHint" xml:space="preserve"><value>Review the report fields found in Documents. Choose whether to show them in the UI.</value></data>
+  <data name="CustomFieldsPreviewScope" xml:space="preserve"><value>Scope</value></data>
+  <data name="CustomFieldsPreviewShow" xml:space="preserve"><value>Show in UI</value></data>
+  <data name="CustomFieldsPreviewHide" xml:space="preserve"><value>Do not show</value></data>
+  <data name="CustomFieldsNoneSelected" xml:space="preserve"><value>Custom fields apply to the whole report.</value></data>
+  <data name="CustomFieldsNoDefinitions" xml:space="preserve"><value>No field definitions in settings. Add them under Settings → Custom fields.</value></data>
+  <data name="CustomFieldsValue" xml:space="preserve"><value>Value</value></data>
+  <data name="CustomFieldsReportLevel" xml:space="preserve"><value>Report</value></data>
+  <data name="GroupSpService" xml:space="preserve"><value>SP-Service connection</value></data>
+  <data name="SpServiceBaseUrl" xml:space="preserve"><value>Server address</value></data>
+  <data name="SpServiceLogin" xml:space="preserve"><value>Login</value></data>
+  <data name="SpServicePassword" xml:space="preserve"><value>Password</value></data>
+  <data name="SpServiceProject" xml:space="preserve"><value>Project</value></data>
+  <data name="SpServiceModel" xml:space="preserve"><value>Model</value></data>
+  <data name="SpServiceSyncInterval" xml:space="preserve"><value>Sync interval</value></data>
+  <data name="SpServiceSyncIntervalUnit" xml:space="preserve"><value>seconds</value></data>
+  <data name="SpServiceTestConnection" xml:space="preserve"><value>Test connection</value></data>
+  <data name="SpServiceTestHint" xml:space="preserve"><value>Test the connection, then choose a project. The model is assigned automatically on export.</value></data>
+  <data name="SpServiceTesting" xml:space="preserve"><value>Testing...</value></data>
+  <data name="SpServiceTestOk" xml:space="preserve"><value>Signed in as {0}. Projects: {1}.</value></data>
+  <data name="SpServiceTestError" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="SpServiceSavedProject" xml:space="preserve"><value>Saved project</value></data>
+  <data name="SpServiceSavedModel" xml:space="preserve"><value>Saved model</value></data>
+  <data name="SpServiceNotConfigured" xml:space="preserve"><value>Configure SP-Service connection in Settings.</value></data>
+  <data name="SpServiceModelRequired" xml:space="preserve"><value>Select a model in Settings before opening from the database.</value></data>
+  <data name="OpenFromDb" xml:space="preserve"><value>Open from DB</value></data>
+  <data name="SendToDb" xml:space="preserve"><value>Send to DB</value></data>
+  <data name="AutoSyncWithDb" xml:space="preserve"><value>Automatically sync with DB</value></data>
+  <data name="AutoSyncWithDbTip" xml:space="preserve"><value>Push local changes and pull server updates on the interval from Settings.</value></data>
+  <data name="SpServicePickTitle" xml:space="preserve"><value>BCF files on server</value></data>
+  <data name="SpServicePickHint" xml:space="preserve"><value>Select a BCF report to open.</value></data>
+  <data name="SpServiceSelectBcfFile" xml:space="preserve"><value>Select a BCF file.</value></data>
+  <data name="SpServiceConflictMessage" xml:space="preserve"><value>This issue was changed on the server. Yes = keep local, No = take server, Cancel = abort.</value></data>
+  <data name="SpServiceNoBcfFiles" xml:space="preserve"><value>No BCF files for the selected model.</value></data>
+  <data name="SpServiceOpenError" xml:space="preserve"><value>Failed to open BCF from database: {0}</value></data>
+  <data name="SpServiceSyncError" xml:space="preserve"><value>Sync failed: {0}</value></data>
+  <data name="SpServiceSyncOk" xml:space="preserve"><value>Changes sent to the database.</value></data>
+  <data name="TableMode" xml:space="preserve"><value>Table</value></data>
+  <data name="TableModeTip" xml:space="preserve"><value>Switch to table view</value></data>
+  <data name="ClassicMode" xml:space="preserve"><value>Cards</value></data>
+  <data name="ClassicModeTip" xml:space="preserve"><value>Switch to classic two-pane view</value></data>
+  <data name="TableReportLabel" xml:space="preserve"><value>Report</value></data>
+  <data name="TableReportRenameTip" xml:space="preserve"><value>Report name — type a new one to rename it (display only, the file on disk is not renamed)</value></data>
+  <data name="TableColumns" xml:space="preserve"><value>Columns</value></data>
+  <data name="TableColumnsTip" xml:space="preserve"><value>Choose and rename visible columns</value></data>
+  <data name="TableColumnsTitle" xml:space="preserve"><value>Table columns</value></data>
+  <data name="TableColumnsHint" xml:space="preserve"><value>Select columns to show. Optional custom name overrides the default header. Choose text alignment per column. Row numbers (#) are always first and centered.</value></data>
+  <data name="TableColumnMoveUp" xml:space="preserve"><value>Up</value></data>
+  <data name="TableColumnMoveDown" xml:space="preserve"><value>Down</value></data>
+  <data name="TableColumnCustomName" xml:space="preserve"><value>Custom name</value></data>
+  <data name="TableColumnCustomNameTip" xml:space="preserve"><value>Leave empty to use the default column name</value></data>
+  <data name="TableColumnVisibleHeader" xml:space="preserve"><value>Show</value></data>
+  <data name="TableColumnDefaultHeader" xml:space="preserve"><value>Column</value></data>
+  <data name="TableExportExcel" xml:space="preserve"><value>Excel</value></data>
+  <data name="TableExportExcelTip" xml:space="preserve"><value>Export the table to Excel (.xlsx)</value></data>
+  <data name="TableExportHtml" xml:space="preserve"><value>HTML</value></data>
+  <data name="TableExportHtmlTip" xml:space="preserve"><value>Export the table to HTML</value></data>
+  <data name="TableExportExcelFilter" xml:space="preserve"><value>Excel workbook (*.xlsx)|*.xlsx</value></data>
+  <data name="TableExportHtmlFilter" xml:space="preserve"><value>HTML (*.html)|*.html</value></data>
+  <data name="TableExportPdf" xml:space="preserve"><value>Export PDF</value></data>
+  <data name="TableExportPdfTip" xml:space="preserve"><value>Export the table to PDF</value></data>
+  <data name="TableExportPdfFilter" xml:space="preserve"><value>PDF (*.pdf)|*.pdf</value></data>
+  <data name="TableExportEmpty" xml:space="preserve"><value>Nothing to export. Open a BCF report with issues first.</value></data>
+  <data name="TableEmptyHint" xml:space="preserve"><value>Open or create a BCF report to see issues in the table.</value></data>
+  <data name="TableColStage" xml:space="preserve"><value>Stage</value></data>
+  <data name="TableColCreationDate" xml:space="preserve"><value>Created</value></data>
+  <data name="TableColModifiedAuthor" xml:space="preserve"><value>Modified by</value></data>
+  <data name="TableColModifiedDate" xml:space="preserve"><value>Modified</value></data>
+  <data name="TableColIndex" xml:space="preserve"><value>Index</value></data>
+  <data name="TableColGuid" xml:space="preserve"><value>GUID</value></data>
+  <data name="TableColDescriptionAndSnapshot" xml:space="preserve"><value>Description + snapshot</value></data>
+  <data name="TableColTitleAndSnapshot" xml:space="preserve"><value>Title + snapshot</value></data>
+  <data name="TableCommentUserColumn" xml:space="preserve"><value>Comments (user)</value></data>
+  <data name="TableCommentGroupColumn" xml:space="preserve"><value>Comments (group)</value></data>
+  <data name="TableCommentScopeAll" xml:space="preserve"><value>All</value></data>
+  <data name="TableCommentScopeUser" xml:space="preserve"><value>User</value></data>
+  <data name="TableCommentScopeGroup" xml:space="preserve"><value>Group</value></data>
+  <data name="TableCommentDuplicateColumn" xml:space="preserve"><value>Duplicate comment column</value></data>
+  <data name="TableCommentRemoveColumn" xml:space="preserve"><value>Remove comment column</value></data>
+  <data name="TableCommentGroupsTitle" xml:space="preserve"><value>User groups</value></data>
+  <data name="TableCommentGroupsHint" xml:space="preserve"><value>Create groups to show one comments column for several authors. Members are matched by author name (case-insensitive).</value></data>
+  <data name="TableCommentAddGroup" xml:space="preserve"><value>Add group</value></data>
+  <data name="TableCommentDeleteGroup" xml:space="preserve"><value>Delete group</value></data>
+  <data name="TableCommentGroupName" xml:space="preserve"><value>Group name</value></data>
+  <data name="TableCommentMembers" xml:space="preserve"><value>Members</value></data>
+  <data name="TableCommentAddPlaceholder" xml:space="preserve"><value>Add comment…</value></data>
+  <data name="TableAlignLeft" xml:space="preserve"><value>Left</value></data>
+  <data name="TableAlignCenter" xml:space="preserve"><value>Center</value></data>
+  <data name="TableAlignRight" xml:space="preserve"><value>Right</value></data>
+  <data name="TableAlignColumn" xml:space="preserve"><value>Align</value></data>
+  <data name="ExcelImport" xml:space="preserve"><value>Import</value></data>
+  <data name="ExcelImportTip" xml:space="preserve"><value>Import issues from an Excel file</value></data>
+  <data name="ExcelImportTitle" xml:space="preserve"><value>Import from Excel</value></data>
+  <data name="ExcelImportSheet" xml:space="preserve"><value>Sheet</value></data>
+  <data name="ExcelImportHasHeaderRow" xml:space="preserve"><value>First row is headers</value></data>
+  <data name="ExcelImportMappingHint" xml:space="preserve"><value>Map BCF fields to Excel columns. Title is required. Empty title rows are skipped.</value></data>
+  <data name="ExcelImportNotMapped" xml:space="preserve"><value>(not mapped)</value></data>
+  <data name="ExcelImportResult" xml:space="preserve"><value>Created: {0}. Skipped: {1}.</value></data>
+  <data name="ExcelImportFilter" xml:space="preserve"><value>Excel workbook (*.xlsx)|*.xlsx</value></data>
+  <data name="ExcelImportFileMissing" xml:space="preserve"><value>Select an existing Excel file.</value></data>
+  <data name="ExcelImportSheetEmpty" xml:space="preserve"><value>The sheet is empty or was not found.</value></data>
+  <data name="ExcelImportReadError" xml:space="preserve"><value>Failed to read Excel: {0}</value></data>
+  <data name="ExcelImportColumnN" xml:space="preserve"><value>Column {0}</value></data>
+  <data name="ExcelImportNoReport" xml:space="preserve"><value>Open or create a BCF report first.</value></data>
+  <data name="ExcelImportNoRows" xml:space="preserve"><value>No data rows to import.</value></data>
+  <data name="ExcelImportWorking" xml:space="preserve"><value>Importing…</value></data>
+</root>

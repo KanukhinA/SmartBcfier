@@ -1,8 +1,116 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-  <Brush x:Key="PrimaryLight">#4DBFF5</Brush>
-  <Brush x:Key="PrimaryDark">#34A6DC</Brush>
-  <Brush x:Key="SecondaryLight">#14324A</Brush>
-  <Brush x:Key="SecondaryDark">#0F2636</Brush>
-  <Brush x:Key="BackgroundLight">#F5F6FA</Brush>
-  <Brush x:Key="BackgroundDark">#E0E7ED</Brush>
+  <!-- Палитра SP (SpSettingsTheme): Primary #005E96 / Accent #0DA9CA, soft neumorphism -->
+  <Color x:Key="SpColor.Primary">#FF005E96</Color>
+  <Color x:Key="SpColor.Accent">#FF0DA9CA</Color>
+  <Color x:Key="SpColor.AccentDeep">#FF128085</Color>
+  <Color x:Key="SpColor.OnPrimary">#FFFFFFFF</Color>
+  <Color x:Key="SpColor.Surface">#FFE4E8EF</Color>
+  <Color x:Key="SpColor.Card">#FFF3F5F8</Color>
+  <Color x:Key="SpColor.Inset">#FFD5DBE5</Color>
+  <Color x:Key="SpColor.Field">#FFFFFFFF</Color>
+  <Color x:Key="SpColor.Highlight">#FFFFFFFF</Color>
+  <Color x:Key="SpColor.Shadow">#FF7A8496</Color>
+  <Color x:Key="SpColor.Foreground">#FF1A2330</Color>
+  <Color x:Key="SpColor.Muted">#FF5A6570</Color>
+  <Color x:Key="SpColor.Border">#FFC5CCD8</Color>
+  <Color x:Key="SpColor.BorderSubtle">#FFD0D6E0</Color>
+  <Color x:Key="SpColor.Destructive">#FFDC2626</Color>
+  <Color x:Key="SpColor.Focus">#FF005E96</Color>
+  <Color x:Key="SpColor.ScrollThumb">#AAB0BCCC</Color>
+  <Color x:Key="SpColor.ButtonSolidEdge">#FF004A78</Color>
+
+  <!-- Legacy aliases: старые ключи BCFier / IdsCheck -->
+  <Color x:Key="SpAccentColor">#FF0DA9CA</Color>
+  <Color x:Key="SpAccentDarkColor">#FF128085</Color>
+  <Color x:Key="SpAccentHoverColor">#FF0DA9CA</Color>
+  <Color x:Key="SpAccentHoverBorderColor">#FF128085</Color>
+  <Color x:Key="SpShellColor">#FFE4E8EF</Color>
+  <Color x:Key="SpBorderColor">#FFC5CCD8</Color>
+  <Color x:Key="SpBorderLightColor">#FFD0D6E0</Color>
+  <Color x:Key="SpBorderPanelColor">#FFD5DBE5</Color>
+  <Color x:Key="SpTextPrimaryColor">#FF1A2330</Color>
+  <Color x:Key="SpTextSecondaryColor">#FF5A6570</Color>
+  <Color x:Key="SpTextHeaderColor">#FF1A2330</Color>
+  <Color x:Key="SpRowHoverColor">#16005E96</Color>
+  <Color x:Key="SpRowSelectedColor">#22005E96</Color>
+  <Color x:Key="SpHeaderTextColor">#FFFFFFFF</Color>
+  <Color x:Key="SpButtonBgColor">#FFFFFFFF</Color>
+
+  <SolidColorBrush x:Key="SpBrush.Primary" Color="{StaticResource SpColor.Primary}" />
+  <SolidColorBrush x:Key="SpBrush.Accent" Color="{StaticResource SpColor.Accent}" />
+  <SolidColorBrush x:Key="SpBrush.AccentDeep" Color="{StaticResource SpColor.AccentDeep}" />
+  <SolidColorBrush x:Key="SpBrush.OnPrimary" Color="{StaticResource SpColor.OnPrimary}" />
+  <SolidColorBrush x:Key="SpBrush.Surface" Color="{StaticResource SpColor.Surface}" />
+  <SolidColorBrush x:Key="SpBrush.Card" Color="{StaticResource SpColor.Card}" />
+  <SolidColorBrush x:Key="SpBrush.Inset" Color="{StaticResource SpColor.Inset}" />
+  <SolidColorBrush x:Key="SpBrush.Field" Color="{StaticResource SpColor.Field}" />
+  <SolidColorBrush x:Key="SpBrush.Highlight" Color="{StaticResource SpColor.Highlight}" />
+  <SolidColorBrush x:Key="SpBrush.Shadow" Color="{StaticResource SpColor.Shadow}" />
+  <SolidColorBrush x:Key="SpBrush.Foreground" Color="{StaticResource SpColor.Foreground}" />
+  <SolidColorBrush x:Key="SpBrush.Muted" Color="{StaticResource SpColor.Muted}" />
+  <SolidColorBrush x:Key="SpBrush.Border" Color="{StaticResource SpColor.Border}" />
+  <SolidColorBrush x:Key="SpBrush.BorderSubtle" Color="{StaticResource SpColor.BorderSubtle}" />
+  <SolidColorBrush x:Key="SpBrush.Destructive" Color="{StaticResource SpColor.Destructive}" />
+  <SolidColorBrush x:Key="SpBrush.Focus" Color="{StaticResource SpColor.Focus}" />
+  <SolidColorBrush x:Key="SpBrush.ScrollThumb" Color="{StaticResource SpColor.ScrollThumb}" />
+  <SolidColorBrush x:Key="SpBrush.Transparent" Color="#00000000" />
+  <SolidColorBrush x:Key="SpBrush.ButtonSolid" Color="{StaticResource SpColor.Primary}" />
+  <SolidColorBrush x:Key="SpBrush.ButtonSolidEdge" Color="{StaticResource SpColor.ButtonSolidEdge}" />
+  <SolidColorBrush x:Key="SpBrush.ButtonSolidHover" Color="{StaticResource SpColor.Accent}" />
+  <SolidColorBrush x:Key="SpBrush.ButtonSolidPressed" Color="{StaticResource SpColor.AccentDeep}" />
+  <SolidColorBrush x:Key="SpBrush.ButtonRaised" Color="{StaticResource SpColor.Field}" />
+
+  <!-- Chat bubbles (messenger-style comments) -->
+  <Color x:Key="SpColor.ChatMine">#FF005E96</Color>
+  <Color x:Key="SpColor.ChatOther">#FFFFFFFF</Color>
+  <SolidColorBrush x:Key="SpBrush.ChatMine" Color="{StaticResource SpColor.ChatMine}" />
+  <SolidColorBrush x:Key="SpBrush.ChatOther" Color="{StaticResource SpColor.ChatOther}" />
+  <SolidColorBrush x:Key="SpBrush.ChatMineText" Color="{StaticResource SpColor.OnPrimary}" />
+  <SolidColorBrush x:Key="SpBrush.ChatOtherText" Color="{StaticResource SpColor.Foreground}" />
+  <CornerRadius x:Key="SpRadius.Bubble">12</CornerRadius>
+  <CornerRadius x:Key="SpRadius.Compose">14</CornerRadius>
+
+  <LinearGradientBrush x:Key="SpBrush.HeaderGradient" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Offset="0" Color="{StaticResource SpColor.Primary}" />
+    <GradientStop Offset="1" Color="{StaticResource SpColor.Accent}" />
+  </LinearGradientBrush>
+  <LinearGradientBrush x:Key="SpBrush.NeoEdge" StartPoint="0,0" EndPoint="1,1">
+    <GradientStop Offset="0" Color="#99FFFFFF" />
+    <GradientStop Offset="0.5" Color="#00FFFFFF" />
+    <GradientStop Offset="1" Color="#148A94A6" />
+  </LinearGradientBrush>
+
+  <!-- Legacy brushes -->
+  <SolidColorBrush x:Key="SpAccentBrush" Color="{StaticResource SpColor.Accent}" />
+  <SolidColorBrush x:Key="SpAccentDarkBrush" Color="{StaticResource SpColor.AccentDeep}" />
+  <SolidColorBrush x:Key="SpAccentHoverBrush" Color="{StaticResource SpColor.Accent}" />
+  <SolidColorBrush x:Key="SpAccentHoverBorderBrush" Color="{StaticResource SpColor.AccentDeep}" />
+  <SolidColorBrush x:Key="SpShellBrush" Color="{StaticResource SpColor.Surface}" />
+  <SolidColorBrush x:Key="SpBorderBrush" Color="{StaticResource SpColor.Border}" />
+  <SolidColorBrush x:Key="SpBorderLightBrush" Color="{StaticResource SpColor.BorderSubtle}" />
+  <SolidColorBrush x:Key="SpBorderPanelBrush" Color="{StaticResource SpColor.Inset}" />
+  <SolidColorBrush x:Key="SpTextPrimaryBrush" Color="{StaticResource SpColor.Foreground}" />
+  <SolidColorBrush x:Key="SpTextSecondaryBrush" Color="{StaticResource SpColor.Muted}" />
+  <SolidColorBrush x:Key="SpTextHeaderBrush" Color="{StaticResource SpColor.Foreground}" />
+  <SolidColorBrush x:Key="SpRowHoverBrush" Color="{StaticResource SpRowHoverColor}" />
+  <SolidColorBrush x:Key="SpRowSelectedBrush" Color="{StaticResource SpRowSelectedColor}" />
+  <SolidColorBrush x:Key="SpHeaderTextBrush" Color="{StaticResource SpColor.OnPrimary}" />
+  <SolidColorBrush x:Key="SpPanelBrush" Color="{StaticResource SpColor.Card}" />
+  <SolidColorBrush x:Key="SpButtonBgBrush" Color="{StaticResource SpColor.Field}" />
+
+  <LinearGradientBrush x:Key="SpHeaderGradientBrush" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Offset="0" Color="{StaticResource SpColor.Primary}" />
+    <GradientStop Offset="1" Color="{StaticResource SpColor.Accent}" />
+  </LinearGradientBrush>
+
+  <!-- Совместимость со старыми ключами BCFier -->
+  <SolidColorBrush x:Key="PrimaryLight" Color="{StaticResource SpColor.Primary}" />
+  <SolidColorBrush x:Key="PrimaryDark" Color="{StaticResource SpColor.AccentDeep}" />
+  <LinearGradientBrush x:Key="SecondaryLight" StartPoint="0,0" EndPoint="1,0">
+    <GradientStop Offset="0" Color="{StaticResource SpColor.Primary}" />
+    <GradientStop Offset="1" Color="{StaticResource SpColor.Accent}" />
+  </LinearGradientBrush>
+  <SolidColorBrush x:Key="SecondaryDark" Color="{StaticResource SpColor.Foreground}" />
+  <SolidColorBrush x:Key="BackgroundLight" Color="{StaticResource SpColor.Surface}" />
+  <SolidColorBrush x:Key="BackgroundDark" Color="{StaticResource SpColor.Inset}" />
 </ResourceDictionary>

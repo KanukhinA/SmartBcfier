@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Bcfier.Localization;
 
 namespace Bcfier.Data.Utils
 {
@@ -11,61 +8,37 @@ namespace Bcfier.Data.Utils
   /// </summary>
   public static class RelativeDate
   {
-    public static string ToRelative(string DateString)
+    public static string ToRelative(string dateString)
     {
-      DateTime theDate = Convert.ToDateTime(DateString);
-      var thresholds = new Dictionary<long, string>();
-      int minute = 60;
-      int hour = 60 * minute;
-      int day = 24 * hour;
-      thresholds.Add(60, "{0} seconds ago");
-      thresholds.Add(minute * 2, "a minute ago");
-      thresholds.Add(45 * minute, "{0} minutes ago");
-      thresholds.Add(120 * minute, "an hour ago");
-      thresholds.Add(day, "{0} hours ago");
-      thresholds.Add(day * 2, "yesterday");
-      // thresholds.Add(day * 30, "{0} days ago");
-      thresholds.Add(day * 365, "{0} days ago");
-      thresholds.Add(long.MaxValue, "{0} years ago");
-
-      long since = (DateTime.Now.Ticks - theDate.Ticks) / 10000000;
-      foreach (long threshold in thresholds.Keys)
-      {
-        if (since < threshold)
-        {
-          TimeSpan t = new TimeSpan((DateTime.Now.Ticks - theDate.Ticks));
-          return string.Format(thresholds[threshold], (t.Days > 365 ? t.Days / 365 : (t.Days > 0 ? t.Days : (t.Hours > 0 ? t.Hours : (t.Minutes > 0 ? t.Minutes : (t.Seconds > 0 ? t.Seconds : 0))))).ToString());
-        }
-      }
-      return "";
+      return ToRelative(Convert.ToDateTime(dateString));
     }
+
     public static string ToRelative(DateTime theDate)
     {
+      // CreationDate создаётся в UTC; сравниваем в той же шкале времени.
+      DateTime now = theDate.Kind == DateTimeKind.Utc ? DateTime.UtcNow : DateTime.Now;
+      TimeSpan elapsed = now - theDate;
+      if (elapsed < TimeSpan.Zero)
+        elapsed = TimeSpan.Zero;
 
-      var thresholds = new Dictionary<long, string>();
-      int minute = 60;
-      int hour = 60 * minute;
-      int day = 24 * hour;
-      thresholds.Add(60, "{0} seconds ago");
-      thresholds.Add(minute * 2, "a minute ago");
-      thresholds.Add(45 * minute, "{0} minutes ago");
-      thresholds.Add(120 * minute, "an hour ago");
-      thresholds.Add(day, "{0} hours ago");
-      thresholds.Add(day * 2, "yesterday");
-      // thresholds.Add(day * 30, "{0} days ago");
-      thresholds.Add(day * 365, "{0} days ago");
-      thresholds.Add(long.MaxValue, "{0} years ago");
+      if (elapsed.TotalSeconds < 10)
+        return Loc.Get("RelativeJustNow");
+      if (elapsed.TotalSeconds < 60)
+        return Loc.Plural("RelativeSeconds", Math.Max(1, elapsed.Seconds));
+      if (elapsed.TotalMinutes < 2)
+        return Loc.Get("RelativeMinuteAgo");
+      if (elapsed.TotalMinutes < 60)
+        return Loc.Plural("RelativeMinutes", elapsed.Minutes);
+      if (elapsed.TotalHours < 2)
+        return Loc.Get("RelativeHourAgo");
+      if (elapsed.TotalHours < 24)
+        return Loc.Plural("RelativeHours", elapsed.Hours);
+      if (elapsed.TotalDays < 2)
+        return Loc.Get("RelativeYesterday");
+      if (elapsed.TotalDays < 365)
+        return Loc.Plural("RelativeDays", elapsed.Days);
 
-      long since = (DateTime.Now.Ticks - theDate.Ticks) / 10000000;
-      foreach (long threshold in thresholds.Keys)
-      {
-        if (since < threshold)
-        {
-          TimeSpan t = new TimeSpan((DateTime.Now.Ticks - theDate.Ticks));
-          return string.Format(thresholds[threshold], (t.Days > 365 ? t.Days / 365 : (t.Days > 0 ? t.Days : (t.Hours > 0 ? t.Hours : (t.Minutes > 0 ? t.Minutes : (t.Seconds > 0 ? t.Seconds : 0))))).ToString());
-        }
-      }
-      return "";
+      return Loc.Plural("RelativeYears", Math.Max(1, elapsed.Days / 365));
     }
   }
 }

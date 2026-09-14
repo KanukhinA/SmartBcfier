@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Bcfier.Tests</RootNamespace>
+    <UseWPF>false</UseWPF>
+    <ImportWindowsDesktopTargets>false</ImportWindowsDesktopTargets>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Bcfier\Bcfier.csproj">
+      <SetConfiguration>Configuration=$(Configuration)</SetConfiguration>
+      <SetPlatform>Platform=AnyCPU</SetPlatform>
+      <SetTargetFramework Condition="'$(Configuration)' == 'R2025' Or '$(Configuration)' == 'R2026'">TargetFramework=net8.0-windows</SetTargetFramework>
+      <SetTargetFramework Condition="'$(Configuration)' != 'R2025' And '$(Configuration)' != 'R2026'">TargetFramework=net48</SetTargetFramework>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

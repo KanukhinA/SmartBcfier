@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -7,31 +7,72 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Data;
 using Bcfier.Bcf.Bcf2;
+using Bcfier.Data;
 using Bcfier.Data.Utils;
+using Bcfier.Localization;
 
 namespace Bcfier.Bcf
 {
   /// <summary>
   /// View Model of a deserialized BCF
   /// </summary>
-  public class BcfFile : INotifyPropertyChanged
+  public partial class BcfFile : INotifyPropertyChanged
   {
     private Guid id;
     public string TempPath { get; set; }
     public string Fullname { get; set; }
     public Guid ProjectId { get; set; }
     public string ProjectName { get; set; }
+
+    /// <summary>
+    /// Предупреждения чтения отдельных issue/viewpoint: файл открыт, но часть данных пропущена.
+    /// </summary>
+    public List<string> ReadWarnings { get; } = new List<string>();
+
+    /// <summary>True, если в Documents есть разобранные пользовательские поля.</summary>
+    public bool HasCustomFields
+    {
+      get => _hasCustomFields;
+      set
+      {
+        if (_hasCustomFields == value)
+          return;
+        _hasCustomFields = value;
+        NotifyPropertyChanged(nameof(HasCustomFields));
+      }
+    }
+
+    /// <summary>Показывать ли пользовательские поля в UI (после ответа на вопрос).</summary>
+    public bool CustomFieldsVisible
+    {
+      get => _customFieldsVisible;
+      set
+      {
+        if (_customFieldsVisible == value)
+          return;
+        _customFieldsVisible = value;
+        NotifyPropertyChanged(nameof(CustomFieldsVisible));
+      }
+    }
+
+    /// <summary>Поля уровня отчёта из плоских XML в Documents.</summary>
+    public ObservableCollection<Bcfier.CustomFields.CustomFieldValue> ReportLevelCustomFields { get; } =
+      new ObservableCollection<Bcfier.CustomFields.CustomFieldValue>();
+
     private string _filename;
     private bool _hasBeenSaved;
+    private bool _hasCustomFields;
+    private bool _customFieldsVisible;
     private ObservableCollection<Markup> _issues;
     private Markup _selectedIssue;
     private string _textSearch;
     private ListCollectionView _view;
+    private bool _showOnlyActiveDocumentIssues;
 
     public BcfFile()
     {
       _hasBeenSaved = true;
-      Filename = "New BCF Report";
+      Filename = Loc.Get("NewBcfReport");
       Id = Guid.NewGuid();
       TempPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "BCFier", Id.ToString());
       Issues = new ObservableCollection<Markup>();
@@ -84,9 +125,57 @@ namespace Bcfier.Bcf
       set
       {
         _issues = value;
-        this._view = new ListCollectionView(this.Issues);
         NotifyPropertyChanged("Issues");
+        RefreshReportMetadata();
       }
+    }
+
+    /// <summary>
+    /// Локализованное имя выбранной системы координат для отображения в отчёте.
+    /// </summary>
+    public string CoordinateModeDisplay
+    {
+      get
+      {
+        try
+        {
+          return BcfCoordinateSettings.GetDisplayName();
+        }
+        catch
+        {
+          return string.Empty;
+        }
+      }
+      set { }
+    }
+
+    /// <summary>
+    /// Сводка originating system по компонентам всех замечаний отчёта.
+    /// Пустой set нужен: WPF Run.Text биндится TwoWay и иначе роняет Revit при открытии BCF.
+    /// </summary>
+    public string OriginatingSystemsDisplay
+    {
+      get
+      {
+        try
+        {
+          return BcfViewpointComponents.GetOriginatingSystemsSummary(Issues) ?? string.Empty;
+        }
+        catch
+        {
+          return string.Empty;
+        }
+      }
+      set { }
+    }
+
+    /// <summary>
+    /// Обновляет вычисляемые поля метаданных отчёта после загрузки или изменения настроек.
+    /// </summary>
+    public void RefreshReportMetadata()
+    {
+      NotifyPropertyChanged(nameof(CoordinateModeDisplay));
+      NotifyPropertyChanged(nameof(OriginatingSystemsDisplay));
     }
 
     public Markup SelectedIssue
@@ -108,7 +197,23 @@ namespace Bcfier.Bcf
     {
       get
       {
-        return this._view;
+        if (_view == null && _issues != null)
+          _view = new ListCollectionView(_issues);
+        return _view;
+      }
+    }
+
+    public bool ShowOnlyActiveDocumentIssues
+    {
+      get { return _showOnlyActiveDocumentIssues; }
+      set
+      {
+        if (_showOnlyActiveDocumentIssues == value)
+          return;
+
+        _showOnlyActiveDocumentIssues = value;
+        NotifyPropertyChanged("ShowOnlyActiveDocumentIssues");
+        ApplyIssueFilter();
       }
     }
 
@@ -119,12 +224,30 @@ namespace Bcfier.Bcf
       {
         _textSearch = value;
         NotifyPropertyChanged("TextSearch");
-
-        if (String.IsNullOrEmpty(value))
-          View.Filter = null;
-        else
-          View.Filter = Filter;
+        ApplyIssueFilter();
       }
+    }
+
+    /// <summary>
+    /// Применяет объединённый фильтр списка замечаний по строке поиска и активному документу.
+    /// </summary>
+    public void ApplyIssueFilter()
+    {
+      if (View == null)
+        return;
+
+      View.Filter = HasActiveIssueFilters() ? Filter : null;
+      View.Refresh();
+      EnsureSelectedIssueVisible();
+      NotifyPropertyChanged("Issues");
+    }
+
+    /// <summary>
+    /// Определяет, включён ли хотя бы один фильтр списка замечаний.
+    /// </summary>
+    private bool HasActiveIssueFilters()
+    {
+      return !string.IsNullOrWhiteSpace(TextSearch) || ShowOnlyActiveDocumentIssues;
     }
 
     private bool Filter(object o)
@@ -132,19 +255,64 @@ namespace Bcfier.Bcf
       var issue = (Markup)o;
       if (issue == null)
         return false;
-      if (issue.Topic != null && ((issue.Topic.Title != null && issue.Topic.Title.ToLowerInvariant().Contains(TextSearch.ToLowerInvariant())) ||
-          (issue.Topic.Description != null && issue.Topic.Description.ToLowerInvariant().Contains(TextSearch.ToLowerInvariant()))) ||
-         issue.Comment != null && issue.Comment.Any(x => x.Comment1.ToLowerInvariant().Contains(TextSearch.ToLowerInvariant()))
 
-          )
+      return MatchesSearch(issue) && MatchesActiveDocumentFilter(issue);
+    }
+
+    /// <summary>
+    /// Проверяет совпадение замечания с текстовым поиском.
+    /// </summary>
+    private bool MatchesSearch(Markup issue)
+    {
+      if (string.IsNullOrWhiteSpace(TextSearch))
         return true;
-      return false;
+
+      string search = TextSearch.ToLowerInvariant();
+      return issue.Topic != null && (
+               (issue.Topic.Title != null && issue.Topic.Title.ToLowerInvariant().Contains(search))
+            || (issue.Topic.Description != null && issue.Topic.Description.ToLowerInvariant().Contains(search)))
+          || issue.Comment != null && issue.Comment.Any(x => (x.Comment1 ?? string.Empty).ToLowerInvariant().Contains(search));
+    }
+
+    /// <summary>
+    /// Оставляет только замечания, у которых есть хотя бы один найденный элемент в активном документе.
+    /// Пустые замечания без компонентов не скрываются, чтобы их можно было редактировать и дополнять.
+    /// </summary>
+    private bool MatchesActiveDocumentFilter(Markup issue)
+    {
+      if (!ShowOnlyActiveDocumentIssues)
+        return true;
+
+      bool hasAnyComponents = false;
+      foreach (Bcfier.Bcf.Bcf2.Component component in BcfViewpointComponents.EnumerateIssueComponents(issue))
+      {
+        hasAnyComponents = true;
+        if (BcfViewpointComponents.HasActiveDocumentLink(component))
+          return true;
+      }
+
+      return !hasAnyComponents;
+    }
+
+    /// <summary>
+    /// Переводит выбор на первое видимое замечание, если текущее отфильтровано.
+    /// </summary>
+    private void EnsureSelectedIssueVisible()
+    {
+      if (View == null)
+        return;
+
+      if (SelectedIssue != null && View.Cast<object>().Contains(SelectedIssue))
+        return;
+
+      SelectedIssue = View.Cast<Markup>().FirstOrDefault();
     }
 
     public void RemoveIssues(IEnumerable<Markup> selectetitems)
     {
       foreach (var item in selectetitems)
       {
+        QueueServerTopicDelete(item);
         Utils.DeleteDirectory(Path.Combine(TempPath, item.Topic.Guid));
         Issues.Remove(item);
       }
@@ -155,12 +323,14 @@ namespace Bcfier.Bcf
     {
       foreach (var item in selectetitems)
       {
+        QueueServerCommentDelete(issue, item);
         issue.Comment.Remove(item);
       }
       HasBeenSaved = false;
     }
     public void RemoveComment(Comment comment, Markup issue)
     {
+      QueueServerCommentDelete(issue, comment);
       issue.Comment.Remove(comment);
       HasBeenSaved = false;
     }
@@ -282,7 +452,7 @@ namespace Bcfier.Bcf
       }
       catch (System.Exception ex1)
       {
-        MessageBox.Show("exception: " + ex1);
+        ExceptionUi.Show(ex1);
       }
 
     }
