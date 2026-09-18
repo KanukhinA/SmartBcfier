@@ -28,6 +28,44 @@
         <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/Generic.xaml" />
       </ResourceDictionary.MergedDictionaries>
       <src:BoolVisibConverter x:Key="BoolVisibConverter" />
+      <!-- Ячейка цвета: квадрат + #RRGGBB (статусы / типы / приоритеты / метки) -->
+      <DataTemplate x:Key="NamedColorCellTemplate">
+        <DockPanel Margin="2,1" LastChildFill="True">
+          <Button
+            DockPanel.Dock="Left"
+            Width="28"
+            Height="22"
+            Margin="0,0,6,0"
+            Padding="0"
+            VerticalAlignment="Center"
+            Background="{Binding ColorBrush}"
+            BorderBrush="{StaticResource SpBrush.Border}"
+            BorderThickness="1"
+            Cursor="Hand"
+            Click="NamedColor_Click"
+            ToolTip="{x:Static loc:Loc.PickStatusColorTip}">
+            <Button.Template>
+              <ControlTemplate TargetType="Button">
+                <Border
+                  Background="{TemplateBinding Background}"
+                  BorderBrush="{TemplateBinding BorderBrush}"
+                  BorderThickness="{TemplateBinding BorderThickness}"
+                  CornerRadius="3"
+                  SnapsToDevicePixels="True" />
+              </ControlTemplate>
+            </Button.Template>
+          </Button>
+          <TextBox
+            MinHeight="22"
+            Padding="0,2"
+            VerticalContentAlignment="Center"
+            FontSize="11.5"
+            FontWeight="Normal"
+            Style="{StaticResource SpSettingsTextBox}"
+            Text="{Binding Color, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+            ToolTip="{x:Static loc:Loc.PickStatusColorTip}" />
+        </DockPanel>
+      </DataTemplate>
     </ResourceDictionary>
   </Window.Resources>
   <Border
@@ -75,28 +113,20 @@
           Style="{StaticResource SpTabControl}">
           <TabItem Header="{x:Static loc:Loc.TabGeneral}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-              <Grid Margin="{StaticResource SpSpace.Sm}">
-                <Grid.RowDefinitions>
-                  <RowDefinition Height="Auto" />
-                  <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
+              <StackPanel Margin="{StaticResource SpSpace.Sm}">
 
                 <GroupBox
                   Margin="{StaticResource SpSpace.Sm}"
-                  Header="{x:Static loc:Loc.GroupBcf}">
+                  HorizontalAlignment="Stretch"
+                  Header="{x:Static loc:Loc.GroupApp}">
                   <Grid Margin="{StaticResource SpSpace.Sm}">
                     <Grid.RowDefinitions>
-                      <RowDefinition Height="Auto" />
-                      <RowDefinition Height="Auto" MinHeight="140" />
-                      <RowDefinition Height="Auto" />
-                      <RowDefinition Height="Auto" />
-                      <RowDefinition Height="Auto" />
                       <RowDefinition Height="Auto" />
                       <RowDefinition Height="Auto" />
                       <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="180" />
+                      <ColumnDefinition Width="220" />
                       <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
 
@@ -112,19 +142,126 @@
                       Grid.Column="1"
                       MinHeight="28"
                       Margin="{StaticResource SpSpace.Sm}"
-                      Padding="7,3"
+                      Padding="0,3"
                       HorizontalAlignment="Stretch"
                       Placeholder="{x:Static loc:Loc.FirstAndLast}" />
 
                     <Label
                       Grid.Row="1"
                       Grid.Column="0"
-                      Margin="0,8,0,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.Language}" />
+                    <ComboBox
+                      x:Name="LanguageCombo"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Style="{StaticResource SpSettingsComboBox}"
+                      SelectionChanged="LanguageCombo_SelectionChanged">
+                      <ComboBoxItem Content="{x:Static loc:Loc.Russian}" />
+                      <ComboBoxItem Content="{x:Static loc:Loc.English}" />
+                    </ComboBox>
+
+                    <Label
+                      Grid.Row="2"
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.BcfWriteVersion}" />
+                    <ComboBox
+                      x:Name="BcfWriteVersionCombo"
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Style="{StaticResource SpSettingsComboBox}">
+                      <ComboBoxItem Content="BCF 3.0" Tag="3.0" />
+                      <ComboBoxItem Content="BCF 2.1" Tag="2.1" />
+                    </ComboBox>
+                  </Grid>
+                </GroupBox>
+
+                <GroupBox
+                  Margin="{StaticResource SpSpace.Sm}"
+                  HorizontalAlignment="Stretch"
+                  Header="{x:Static loc:Loc.GroupSnapshot}">
+                  <Grid Margin="{StaticResource SpSpace.Sm}">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="220" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Label
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.SnapshotsEditor}"
+                      ToolTip="{Binding ElementName=editSnap, Path=ToolTip}"
+                      ToolTipService.InitialShowDelay="20" />
+                    <themes:TextPlaceholder
+                      x:Name="editSnap"
+                      Grid.Column="1"
+                      MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      HorizontalAlignment="Stretch"
+                      VerticalAlignment="Top"
+                      MouseDoubleClick="editphoto_MouseDoubleClick"
+                      Placeholder="{x:Static loc:Loc.BrowseDoubleClick}"
+                      ToolTip="{x:Static loc:Loc.SnapshotEditorTip}"
+                      ToolTipService.InitialShowDelay="20" />
+                    <CheckBox
+                      x:Name="useDefPhoto"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      HorizontalAlignment="Stretch"
+                      VerticalContentAlignment="Top"
+                      ToolTip="{x:Static loc:Loc.UseDefaultViewerTip}"
+                      ToolTipService.InitialShowDelay="20">
+                      <TextBlock
+                        Text="{x:Static loc:Loc.UseDefaultViewer}"
+                        TextWrapping="Wrap" />
+                    </CheckBox>
+                  </Grid>
+                </GroupBox>
+              </StackPanel>
+            </ScrollViewer>
+          </TabItem>
+
+          <TabItem Header="{x:Static loc:Loc.TabCatalog}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+              <StackPanel Margin="{StaticResource SpSpace.Sm}">
+
+                <GroupBox
+                  Margin="{StaticResource SpSpace.Sm}"
+                  HorizontalAlignment="Stretch"
+                  Header="{x:Static loc:Loc.GroupTopicLists}">
+                  <Grid Margin="{StaticResource SpSpace.Sm}">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" MinHeight="140" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="220" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Label
+                      Grid.Row="0"
+                      Grid.Column="0"
                       HorizontalAlignment="Right"
                       VerticalAlignment="Top"
                       Content="{x:Static loc:Loc.TopicStatuses}" />
                     <DockPanel
-                      Grid.Row="1"
+                      Grid.Row="0"
                       Grid.Column="1"
                       Margin="{StaticResource SpSpace.Sm}"
                       LastChildFill="True">
@@ -175,135 +312,205 @@
                           <DataGridTemplateColumn
                             Width="170"
                             MinWidth="150"
-                            Header="{x:Static loc:Loc.StatusColorColumn}">
-                            <DataGridTemplateColumn.CellTemplate>
-                              <DataTemplate>
-                                <DockPanel Margin="2,1" LastChildFill="True">
-                                  <Button
-                                    DockPanel.Dock="Left"
-                                    Width="28"
-                                    Height="22"
-                                    Margin="0,0,6,0"
-                                    Padding="0"
-                                    VerticalAlignment="Center"
-                                    Background="{Binding ColorBrush}"
-                                    BorderBrush="{StaticResource SpBrush.Border}"
-                                    BorderThickness="1"
-                                    Cursor="Hand"
-                                    Click="StatusColor_Click"
-                                    ToolTip="{x:Static loc:Loc.PickStatusColorTip}">
-                                    <Button.Template>
-                                      <ControlTemplate TargetType="Button">
-                                        <Border
-                                          Background="{TemplateBinding Background}"
-                                          BorderBrush="{TemplateBinding BorderBrush}"
-                                          BorderThickness="{TemplateBinding BorderThickness}"
-                                          CornerRadius="3"
-                                          SnapsToDevicePixels="True" />
-                                      </ControlTemplate>
-                                    </Button.Template>
-                                  </Button>
-                                  <TextBox
-                                    MinHeight="22"
-                                    Padding="6,2"
-                                    VerticalContentAlignment="Center"
-                                    FontSize="11.5"
-                                    FontWeight="Normal"
-                                    Style="{StaticResource SpSettingsTextBox}"
-                                    Text="{Binding Color, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                                    ToolTip="{x:Static loc:Loc.PickStatusColorTip}" />
-                                </DockPanel>
-                              </DataTemplate>
-                            </DataGridTemplateColumn.CellTemplate>
-                          </DataGridTemplateColumn>
+                            Header="{x:Static loc:Loc.StatusColorColumn}"
+                            CellTemplate="{StaticResource NamedColorCellTemplate}" />
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+
+                    <Label
+                      Grid.Row="1"
+                      Grid.Column="0"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Content="{x:Static loc:Loc.TopicTypes}" />
+                    <DockPanel
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      LastChildFill="True">
+                      <StackPanel
+                        Margin="0,6,0,0"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal">
+                        <Button
+                          MinWidth="90"
+                          Margin="0,0,8,0"
+                          Padding="8,3"
+                          Style="{StaticResource SpSecondaryButton}"
+                          Click="AddType_Click"
+                          Content="{x:Static loc:Loc.Add}" />
+                        <Button
+                          MinWidth="90"
+                          Padding="8,3"
+                          Style="{StaticResource SpSecondaryButton}"
+                          Click="RemoveType_Click"
+                          Content="{x:Static loc:Loc.Remove}" />
+                      </StackPanel>
+                      <DataGrid
+                        x:Name="TypesGrid"
+                        MinHeight="80"
+                        MaxHeight="140"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        HeadersVisibility="Column"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        GridLinesVisibility="Horizontal"
+                        Background="{StaticResource SpBrush.Field}"
+                        BorderBrush="{StaticResource SpBrush.Border}"
+                        BorderThickness="1"
+                        RowBackground="{StaticResource SpBrush.Field}"
+                        AlternatingRowBackground="{StaticResource SpBrush.Card}">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn
+                            Width="*"
+                            MinWidth="140"
+                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            Header="{x:Static loc:Loc.StatusNameColumn}" />
+                          <DataGridTemplateColumn
+                            Width="170"
+                            MinWidth="150"
+                            Header="{x:Static loc:Loc.StatusColorColumn}"
+                            CellTemplate="{StaticResource NamedColorCellTemplate}" />
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+
+                    <Label
+                      Grid.Row="2"
+                      Grid.Column="0"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Content="{x:Static loc:Loc.PrioritiesList}" />
+                    <DockPanel
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      LastChildFill="True">
+                      <StackPanel
+                        Margin="0,6,0,0"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal">
+                        <Button
+                          MinWidth="90"
+                          Margin="0,0,8,0"
+                          Padding="8,3"
+                          Style="{StaticResource SpSecondaryButton}"
+                          Click="AddPriority_Click"
+                          Content="{x:Static loc:Loc.Add}" />
+                        <Button
+                          MinWidth="90"
+                          Padding="8,3"
+                          Style="{StaticResource SpSecondaryButton}"
+                          Click="RemovePriority_Click"
+                          Content="{x:Static loc:Loc.Remove}" />
+                      </StackPanel>
+                      <DataGrid
+                        x:Name="PrioritiesGrid"
+                        MinHeight="80"
+                        MaxHeight="140"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        HeadersVisibility="Column"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        GridLinesVisibility="Horizontal"
+                        Background="{StaticResource SpBrush.Field}"
+                        BorderBrush="{StaticResource SpBrush.Border}"
+                        BorderThickness="1"
+                        RowBackground="{StaticResource SpBrush.Field}"
+                        AlternatingRowBackground="{StaticResource SpBrush.Card}">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn
+                            Width="*"
+                            MinWidth="140"
+                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            Header="{x:Static loc:Loc.StatusNameColumn}" />
+                          <DataGridTemplateColumn
+                            Width="170"
+                            MinWidth="150"
+                            Header="{x:Static loc:Loc.StatusColorColumn}"
+                            CellTemplate="{StaticResource NamedColorCellTemplate}" />
+                        </DataGrid.Columns>
+                      </DataGrid>
+                    </DockPanel>
+
+                    <Label
+                      Grid.Row="3"
+                      Grid.Column="0"
+                      Margin="0,8,0,0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Content="{x:Static loc:Loc.LabelsList}" />
+                    <DockPanel
+                      Grid.Row="3"
+                      Grid.Column="1"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      LastChildFill="True">
+                      <StackPanel
+                        Margin="0,6,0,0"
+                        DockPanel.Dock="Bottom"
+                        Orientation="Horizontal">
+                        <Button
+                          MinWidth="90"
+                          Margin="0,0,8,0"
+                          Padding="8,3"
+                          Style="{StaticResource SpSecondaryButton}"
+                          Click="AddLabel_Click"
+                          Content="{x:Static loc:Loc.Add}" />
+                        <Button
+                          MinWidth="90"
+                          Padding="8,3"
+                          Style="{StaticResource SpSecondaryButton}"
+                          Click="RemoveLabel_Click"
+                          Content="{x:Static loc:Loc.Remove}" />
+                      </StackPanel>
+                      <DataGrid
+                        x:Name="LabelsGrid"
+                        MinHeight="80"
+                        MaxHeight="140"
+                        AutoGenerateColumns="False"
+                        CanUserAddRows="False"
+                        CanUserDeleteRows="False"
+                        CanUserReorderColumns="False"
+                        CanUserResizeRows="False"
+                        HeadersVisibility="Column"
+                        SelectionMode="Single"
+                        SelectionUnit="FullRow"
+                        GridLinesVisibility="Horizontal"
+                        Background="{StaticResource SpBrush.Field}"
+                        BorderBrush="{StaticResource SpBrush.Border}"
+                        BorderThickness="1"
+                        RowBackground="{StaticResource SpBrush.Field}"
+                        AlternatingRowBackground="{StaticResource SpBrush.Card}">
+                        <DataGrid.Columns>
+                          <DataGridTextColumn
+                            Width="*"
+                            MinWidth="140"
+                            Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                            Header="{x:Static loc:Loc.StatusNameColumn}" />
+                          <DataGridTemplateColumn
+                            Width="170"
+                            MinWidth="150"
+                            Header="{x:Static loc:Loc.StatusColorColumn}"
+                            CellTemplate="{StaticResource NamedColorCellTemplate}" />
                         </DataGrid.Columns>
                       </DataGrid>
                     </DockPanel>
 
                     <StackPanel
-                      Grid.Row="2"
-                      Grid.Column="0"
-                      HorizontalAlignment="Right"
-                      Orientation="Vertical">
-                      <Label
-                        HorizontalAlignment="Right"
-                        Content="{x:Static loc:Loc.TopicTypes}" />
-                      <TextBlock
-                        HorizontalAlignment="Right"
-                        Foreground="{StaticResource SpTextSecondaryBrush}"
-                        Text="{x:Static loc:Loc.CommaSeparated}"
-                        TextAlignment="Right"
-                        TextWrapping="Wrap" />
-                    </StackPanel>
-                    <themes:TextPlaceholder
-                      x:Name="Types"
-                      Grid.Row="2"
-                      Grid.Column="1"
-                      MinHeight="36"
-                      MaxHeight="56"
-                      Height="44"
-                      Margin="{StaticResource SpSpace.Sm}"
-                      Padding="7,3"
-                      AcceptsReturn="True"
-                      TextWrapping="Wrap"
-                      VerticalScrollBarVisibility="Auto"
-                      Placeholder="{x:Static loc:Loc.PlaceholderTypes}" />
-
-                    <StackPanel
-                      Grid.Row="3"
-                      Grid.Column="0"
-                      HorizontalAlignment="Right"
-                      Orientation="Vertical">
-                      <Label
-                        HorizontalAlignment="Right"
-                        Content="{x:Static loc:Loc.PrioritiesList}" />
-                      <TextBlock
-                        HorizontalAlignment="Right"
-                        Foreground="{StaticResource SpTextSecondaryBrush}"
-                        Text="{x:Static loc:Loc.CommaSeparated}" />
-                    </StackPanel>
-                    <themes:TextPlaceholder
-                      x:Name="Priorities"
-                      Grid.Row="3"
-                      Grid.Column="1"
-                      MinHeight="28"
-                      Height="36"
-                      Margin="{StaticResource SpSpace.Sm}"
-                      Padding="7,3"
-                      AcceptsReturn="True"
-                      TextWrapping="Wrap"
-                      VerticalScrollBarVisibility="Auto"
-                      Placeholder="{x:Static loc:Loc.PlaceholderPriorities}" />
-
-                    <StackPanel
                       Grid.Row="4"
                       Grid.Column="0"
-                      HorizontalAlignment="Right"
-                      Orientation="Vertical">
-                      <Label
-                        HorizontalAlignment="Right"
-                        Content="{x:Static loc:Loc.LabelsList}" />
-                      <TextBlock
-                        HorizontalAlignment="Right"
-                        Foreground="{StaticResource SpTextSecondaryBrush}"
-                        Text="{x:Static loc:Loc.CommaSeparated}" />
-                    </StackPanel>
-                    <themes:TextPlaceholder
-                      x:Name="Labels"
-                      Grid.Row="4"
-                      Grid.Column="1"
-                      MinHeight="28"
-                      Height="36"
-                      Margin="{StaticResource SpSpace.Sm}"
-                      Padding="7,3"
-                      AcceptsReturn="True"
-                      TextWrapping="Wrap"
-                      VerticalScrollBarVisibility="Auto"
-                      Placeholder="{x:Static loc:Loc.PlaceholderLabels}" />
-
-                    <StackPanel
-                      Grid.Row="5"
-                      Grid.Column="0"
+                      Margin="0,8,0,0"
                       HorizontalAlignment="Right"
                       Orientation="Vertical">
                       <Label
@@ -316,298 +523,311 @@
                     </StackPanel>
                     <themes:TextPlaceholder
                       x:Name="Assignees"
-                      Grid.Row="5"
+                      Grid.Row="4"
                       Grid.Column="1"
                       MinHeight="28"
                       Height="36"
                       Margin="{StaticResource SpSpace.Sm}"
-                      Padding="7,3"
+                      Padding="0,3"
                       AcceptsReturn="True"
                       TextWrapping="Wrap"
                       VerticalScrollBarVisibility="Auto"
                       Placeholder="{x:Static loc:Loc.PlaceholderAssignees}" />
-
-                    <Label
-                      Grid.Row="6"
-                      Grid.Column="0"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Center"
-                      Content="{x:Static loc:Loc.Language}" />
-                    <ComboBox
-                      x:Name="LanguageCombo"
-                      Grid.Row="6"
-                      Grid.Column="1"
-                      MinHeight="28"
-                      Margin="{StaticResource SpSpace.Sm}"
-                      SelectionChanged="LanguageCombo_SelectionChanged">
-                      <ComboBoxItem Content="{x:Static loc:Loc.Russian}" />
-                      <ComboBoxItem Content="{x:Static loc:Loc.English}" />
-                    </ComboBox>
-
-                    <Label
-                      Grid.Row="7"
-                      Grid.Column="0"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Center"
-                      Content="{x:Static loc:Loc.BcfWriteVersion}" />
-                    <ComboBox
-                      x:Name="BcfWriteVersionCombo"
-                      Grid.Row="7"
-                      Grid.Column="1"
-                      MinHeight="28"
-                      Margin="{StaticResource SpSpace.Sm}">
-                      <ComboBoxItem Content="BCF 3.0" Tag="3.0" />
-                      <ComboBoxItem Content="BCF 2.1" Tag="2.1" />
-                    </ComboBox>
                   </Grid>
                 </GroupBox>
 
                 <GroupBox
-                  Grid.Row="1"
                   Margin="{StaticResource SpSpace.Sm}"
-                  Header="{x:Static loc:Loc.GroupSnapshot}">
-                  <Grid Margin="{StaticResource SpSpace.Sm}">
-                    <Grid.RowDefinitions>
-                      <RowDefinition Height="Auto" />
-                      <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="180" />
-                      <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Label
-                      Grid.Column="0"
-                      HorizontalAlignment="Right"
-                      VerticalAlignment="Center"
-                      Content="{x:Static loc:Loc.SnapshotsEditor}"
-                      ToolTip="{Binding ElementName=editSnap, Path=ToolTip}"
-                      ToolTipService.InitialShowDelay="20" />
-                    <themes:TextPlaceholder
-                      x:Name="editSnap"
-                      Grid.Column="1"
-                      MinHeight="28"
-                      Margin="{StaticResource SpSpace.Sm}"
-                      HorizontalAlignment="Stretch"
-                      VerticalAlignment="Top"
-                      MouseDoubleClick="editphoto_MouseDoubleClick"
-                      Placeholder="{x:Static loc:Loc.BrowseDoubleClick}"
-                      ToolTip="{x:Static loc:Loc.SnapshotEditorTip}"
-                      ToolTipService.InitialShowDelay="20" />
-                    <CheckBox
-                      x:Name="useDefPhoto"
-                      Grid.Row="1"
-                      Grid.Column="1"
-                      Margin="{StaticResource SpSpace.Sm}"
-                      HorizontalAlignment="Left"
-                      Content="{x:Static loc:Loc.UseDefaultViewer}"
-                      ToolTip="{x:Static loc:Loc.UseDefaultViewerTip}"
-                      ToolTipService.InitialShowDelay="20" />
-                  </Grid>
+                  HorizontalAlignment="Stretch"
+                  Header="{x:Static loc:Loc.CustomFieldsManageTitle}">
+                  <DockPanel Margin="{StaticResource SpSpace.Sm}" LastChildFill="True">
+                    <TextBlock
+                      x:Name="CustomFieldsCatalogHintText"
+                      DockPanel.Dock="Top"
+                      Margin="0,0,0,8"
+                      Foreground="{StaticResource SpBrush.Muted}"
+                      TextWrapping="Wrap" />
+                    <StackPanel
+                      DockPanel.Dock="Bottom"
+                      Margin="0,8,0,0"
+                      Orientation="Horizontal">
+                      <Button
+                        MinWidth="120"
+                        Padding="8,3"
+                        Style="{StaticResource SpSecondaryButton}"
+                        Content="{x:Static loc:Loc.CustomFieldsAddDefinition}"
+                        Click="AddCustomFieldDef_Click" />
+                      <Button
+                        MinWidth="100"
+                        Margin="8,0,0,0"
+                        Padding="8,3"
+                        Style="{StaticResource SpSecondaryButton}"
+                        Content="{x:Static loc:Loc.CustomFieldsRemoveDefinition}"
+                        Click="RemoveCustomFieldDef_Click" />
+                    </StackPanel>
+                    <DataGrid
+                      x:Name="CustomFieldsDefsGrid"
+                      MinHeight="180"
+                      AutoGenerateColumns="False"
+                      CanUserAddRows="False"
+                      CanUserDeleteRows="False"
+                      HeadersVisibility="Column"
+                      SelectionMode="Single">
+                      <DataGrid.Columns>
+                        <DataGridTextColumn
+                          Width="*"
+                          MinWidth="160"
+                          Header="{x:Static loc:Loc.CustomFieldName}"
+                          Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        <DataGridComboBoxColumn
+                          Width="120"
+                          Header="{x:Static loc:Loc.CustomFieldType}" />
+                      </DataGrid.Columns>
+                    </DataGrid>
+                  </DockPanel>
                 </GroupBox>
-              </Grid>
+              </StackPanel>
             </ScrollViewer>
           </TabItem>
 
           <TabItem
             Header="{x:Static loc:Loc.TabRevit}"
             Visibility="{Binding Source={x:Static data:BcfHostCapabilities.SupportsRevitSettings}, Converter={StaticResource BoolVisibConverter}}">
-            <Grid Margin="{StaticResource SpSpace.Sm}">
-              <GroupBox
-                Margin="{StaticResource SpSpace.Sm}"
-                VerticalAlignment="Top"
-                Header="{x:Static loc:Loc.GroupView}">
-                <CheckBox
-                  x:Name="alwaysNewView"
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+              <StackPanel Margin="{StaticResource SpSpace.Sm}">
+                <GroupBox
                   Margin="{StaticResource SpSpace.Sm}"
-                  HorizontalAlignment="Left"
-                  VerticalAlignment="Top">
-                  <TextBlock
-                    Text="{x:Static loc:Loc.AlwaysNewRevitView}"
-                    TextWrapping="Wrap" />
-                </CheckBox>
-              </GroupBox>
-            </Grid>
+                  HorizontalAlignment="Stretch"
+                  VerticalAlignment="Top"
+                  Header="{x:Static loc:Loc.GroupView}">
+                  <CheckBox
+                    x:Name="alwaysNewView"
+                    Margin="{StaticResource SpSpace.Sm}"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Top">
+                    <TextBlock
+                      Text="{x:Static loc:Loc.AlwaysNewRevitView}"
+                      TextWrapping="Wrap" />
+                  </CheckBox>
+                </GroupBox>
+              </StackPanel>
+            </ScrollViewer>
           </TabItem>
 
           <TabItem Header="{x:Static loc:Loc.TabServer}">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-              <GroupBox
-                Margin="{StaticResource SpSpace.Sm}"
-                Header="{x:Static loc:Loc.GroupSpService}">
-                <Grid Margin="{StaticResource SpSpace.Sm}">
-                  <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                  </Grid.RowDefinitions>
-                  <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="180" />
-                    <ColumnDefinition Width="*" />
-                  </Grid.ColumnDefinitions>
+              <StackPanel Margin="{StaticResource SpSpace.Sm}">
+                <GroupBox
+                  Margin="{StaticResource SpSpace.Sm}"
+                  HorizontalAlignment="Stretch"
+                  Header="{x:Static loc:Loc.GroupSpService}">
+                  <Grid Margin="{StaticResource SpSpace.Sm}">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="220" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                  <Label
-                    Grid.Row="0"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Content="{x:Static loc:Loc.SpServiceBaseUrl}" />
-                  <TextBox
-                    x:Name="SpServiceBaseUrlBox"
-                    Grid.Row="0"
-                    Grid.Column="1"
-                    MinHeight="28"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    Style="{StaticResource SpSettingsTextBox}" />
-
-                  <Label
-                    Grid.Row="1"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Content="{x:Static loc:Loc.SpServiceLogin}" />
-                  <TextBox
-                    x:Name="SpServiceLoginBox"
-                    Grid.Row="1"
-                    Grid.Column="1"
-                    MinHeight="28"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    Style="{StaticResource SpSettingsTextBox}" />
-
-                  <Label
-                    Grid.Row="2"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Content="{x:Static loc:Loc.SpServicePassword}" />
-                  <PasswordBox
-                    x:Name="SpServicePasswordBox"
-                    Grid.Row="2"
-                    Grid.Column="1"
-                    MinHeight="28"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    Style="{StaticResource SpSettingsPasswordBox}" />
-
-                  <Label
-                    Grid.Row="3"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Content="{x:Static loc:Loc.SpServiceSyncInterval}" />
-                  <DockPanel
-                    Grid.Row="3"
-                    Grid.Column="1"
-                    Margin="{StaticResource SpSpace.Sm}">
-                    <TextBlock
-                      DockPanel.Dock="Right"
-                      Margin="8,0,0,0"
+                    <Label
+                      Grid.Row="0"
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
                       VerticalAlignment="Center"
-                      Foreground="{StaticResource SpBrush.Muted}"
-                      Text="{x:Static loc:Loc.SpServiceSyncIntervalUnit}" />
+                      Content="{x:Static loc:Loc.SpServiceBaseUrl}" />
+                    <TextBox
+                      x:Name="SpServiceBaseUrlBox"
+                      Grid.Row="0"
+                      Grid.Column="1"
+                      MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Style="{StaticResource SpSettingsTextBox}" />
+
+                    <Label
+                      Grid.Row="1"
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.SpServiceLogin}" />
+                    <TextBox
+                      x:Name="SpServiceLoginBox"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Style="{StaticResource SpSettingsTextBox}" />
+
+                    <Label
+                      Grid.Row="2"
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.SpServicePassword}" />
+                    <PasswordBox
+                      x:Name="SpServicePasswordBox"
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Style="{StaticResource SpSettingsPasswordBox}" />
+
+                    <Label
+                      Grid.Row="3"
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.SpServiceSyncInterval}" />
                     <TextBox
                       x:Name="SpServiceSyncIntervalBox"
+                      Grid.Row="3"
+                      Grid.Column="1"
                       MinHeight="28"
+                      Margin="{StaticResource SpSpace.Sm}"
                       Style="{StaticResource SpSettingsTextBox}" />
-                  </DockPanel>
 
-                  <TextBlock
-                    Grid.Row="4"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    Foreground="{StaticResource SpBrush.Muted}"
-                    Text="{x:Static loc:Loc.SpServiceTestHint}"
-                    TextWrapping="Wrap" />
+                    <TextBlock
+                      Grid.Row="4"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Foreground="{StaticResource SpBrush.Muted}"
+                      Text="{x:Static loc:Loc.SpServiceTestHint}"
+                      TextWrapping="Wrap" />
 
-                  <Button
-                    x:Name="SpServiceTestConnection"
-                    Grid.Row="5"
-                    Grid.Column="1"
-                    MinWidth="140"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    HorizontalAlignment="Left"
-                    Padding="10,4"
-                    Style="{StaticResource SpSecondaryButton}"
-                    Click="SpServiceTestConnection_Click"
-                    Content="{x:Static loc:Loc.SpServiceTestConnection}" />
+                    <Button
+                      x:Name="SpServiceTestConnection"
+                      Grid.Row="5"
+                      Grid.Column="1"
+                      MinWidth="140"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      HorizontalAlignment="Left"
+                      Padding="10,4"
+                      Style="{StaticResource SpSecondaryButton}"
+                      Click="SpServiceTestConnection_Click"
+                      Content="{x:Static loc:Loc.SpServiceTestConnection}" />
 
-                  <Label
-                    Grid.Row="6"
-                    Grid.Column="0"
-                    HorizontalAlignment="Right"
-                    VerticalAlignment="Center"
-                    Content="{x:Static loc:Loc.SpServiceProject}" />
-                  <ComboBox
-                    x:Name="SpServiceProjectCombo"
-                    Grid.Row="6"
-                    Grid.Column="1"
-                    MinHeight="28"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    DisplayMemberPath="Name"
-                    SelectionChanged="SpServiceProjectCombo_SelectionChanged" />
+                    <TextBlock
+                      x:Name="SpServiceStatusText"
+                      Grid.Row="6"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Foreground="{StaticResource SpBrush.Muted}"
+                      TextWrapping="Wrap" />
+                  </Grid>
+                </GroupBox>
 
-                  <TextBlock
-                    x:Name="SpServiceStatusText"
-                    Grid.Row="7"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="2"
-                    Margin="{StaticResource SpSpace.Sm}"
-                    Foreground="{StaticResource SpBrush.Muted}"
-                    TextWrapping="Wrap" />
-                </Grid>
-              </GroupBox>
-            </ScrollViewer>
-          </TabItem>
+                <GroupBox
+                  x:Name="GoogleSheetsGroup"
+                  Margin="{StaticResource SpSpace.Sm}"
+                  HorizontalAlignment="Stretch"
+                  Visibility="Collapsed"
+                  Header="{x:Static loc:Loc.GroupGoogleSheets}">
+                  <Grid Margin="{StaticResource SpSpace.Sm}">
+                    <Grid.RowDefinitions>
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                      <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="220" />
+                      <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-          <TabItem Header="{x:Static loc:Loc.TabCustomFields}">
-            <DockPanel Margin="{StaticResource SpSpace.Sm}">
-              <TextBlock
-                DockPanel.Dock="Top"
-                Margin="0,0,0,8"
-                Foreground="{StaticResource SpBrush.Muted}"
-                TextWrapping="Wrap"
-                Text="{x:Static loc:Loc.CustomFieldsCatalogHint}" />
-              <StackPanel
-                DockPanel.Dock="Bottom"
-                Margin="0,8,0,0"
-                Orientation="Horizontal">
-                <Button
-                  MinWidth="120"
-                  Padding="8,3"
-                  Style="{StaticResource SpSecondaryButton}"
-                  Content="{x:Static loc:Loc.CustomFieldsAddDefinition}"
-                  Click="AddCustomFieldDef_Click" />
-                <Button
-                  MinWidth="100"
-                  Margin="8,0,0,0"
-                  Padding="8,3"
-                  Style="{StaticResource SpSecondaryButton}"
-                  Content="{x:Static loc:Loc.CustomFieldsRemoveDefinition}"
-                  Click="RemoveCustomFieldDef_Click" />
+                    <TextBlock
+                      Grid.Row="0"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Foreground="{StaticResource SpBrush.Muted}"
+                      Text="{x:Static loc:Loc.GoogleSheetsHint}"
+                      TextWrapping="Wrap" />
+
+                    <CheckBox
+                      x:Name="GoogleSheetsEnabledBox"
+                      Grid.Row="1"
+                      Grid.Column="1"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      VerticalAlignment="Center"
+                      Content="{x:Static loc:Loc.GoogleSheetsEnabled}" />
+
+                    <Label
+                      Grid.Row="2"
+                      Grid.Column="0"
+                      HorizontalAlignment="Right"
+                      VerticalAlignment="Top"
+                      Margin="0,8,0,0"
+                      Content="{x:Static loc:Loc.GoogleSheetsServiceAccountJson}" />
+                    <TextBox
+                      x:Name="GoogleSheetsJsonBox"
+                      Grid.Row="2"
+                      Grid.Column="1"
+                      MinHeight="120"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      AcceptsReturn="True"
+                      TextWrapping="Wrap"
+                      VerticalScrollBarVisibility="Auto"
+                      Style="{StaticResource SpSettingsTextBox}" />
+
+                    <TextBlock
+                      x:Name="GoogleSheetsEmailText"
+                      Grid.Row="3"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Foreground="{StaticResource SpBrush.Muted}"
+                      TextWrapping="Wrap" />
+
+                    <StackPanel
+                      Grid.Row="4"
+                      Grid.Column="1"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Orientation="Horizontal">
+                      <Button
+                        MinWidth="140"
+                        Margin="0,0,8,0"
+                        Padding="10,4"
+                        Style="{StaticResource SpSecondaryButton}"
+                        Click="GoogleSheetsLoad_Click"
+                        Content="{x:Static loc:Loc.GoogleSheetsLoad}" />
+                      <Button
+                        MinWidth="140"
+                        Margin="0,0,8,0"
+                        Padding="10,4"
+                        Style="{StaticResource SpSecondaryButton}"
+                        Click="GoogleSheetsTest_Click"
+                        Content="{x:Static loc:Loc.GoogleSheetsTest}" />
+                      <Button
+                        MinWidth="140"
+                        Padding="10,4"
+                        Style="{StaticResource SpAccentButton}"
+                        Click="GoogleSheetsSave_Click"
+                        Content="{x:Static loc:Loc.GoogleSheetsSave}" />
+                    </StackPanel>
+
+                    <TextBlock
+                      x:Name="GoogleSheetsStatusText"
+                      Grid.Row="5"
+                      Grid.Column="0"
+                      Grid.ColumnSpan="2"
+                      Margin="{StaticResource SpSpace.Sm}"
+                      Foreground="{StaticResource SpBrush.Muted}"
+                      TextWrapping="Wrap" />
+                  </Grid>
+                </GroupBox>
               </StackPanel>
-              <DataGrid
-                x:Name="CustomFieldsDefsGrid"
-                AutoGenerateColumns="False"
-                CanUserAddRows="False"
-                CanUserDeleteRows="False"
-                HeadersVisibility="Column"
-                SelectionMode="Single">
-                <DataGrid.Columns>
-                  <DataGridTextColumn
-                    Width="*"
-                    MinWidth="160"
-                    Header="{x:Static loc:Loc.CustomFieldName}"
-                    Binding="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
-                  <DataGridComboBoxColumn
-                    Width="120"
-                    Header="{x:Static loc:Loc.CustomFieldType}" />
-                </DataGrid.Columns>
-              </DataGrid>
-            </DockPanel>
+            </ScrollViewer>
           </TabItem>
         </TabControl>
 

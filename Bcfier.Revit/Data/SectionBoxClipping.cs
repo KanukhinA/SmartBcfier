@@ -24,8 +24,15 @@ namespace Bcfier.Revit.Data
       if (doc == null || view == null || !view.IsSectionBoxActive)
         return null;
 
-      BoundingBoxXYZ box = view.GetSectionBox();
-      if (box == null)
+      return TryFromBoundingBox(doc, view.GetSectionBox());
+    }
+
+    /// <summary>
+    /// Экспорт произвольного BoundingBoxXYZ (в т.ч. из модельного вида) в 6 ClippingPlanes.
+    /// </summary>
+    public static ClippingPlane[] TryFromBoundingBox(Document doc, BoundingBoxXYZ box)
+    {
+      if (doc == null || box == null)
         return null;
 
       Transform t = box.Transform ?? Transform.Identity;

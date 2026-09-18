@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -18,10 +18,10 @@
   <data name="Merge" xml:space="preserve"><value>Merge...</value></data>
   <data name="Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Help" xml:space="preserve"><value>Help</value></data>
-  <data name="Language" xml:space="preserve"><value>Language</value></data>
-  <data name="CreationAuthor" xml:space="preserve"><value>Author</value></data>
-  <data name="AssignedTo" xml:space="preserve"><value>Assigned to</value></data>
-  <data name="DueDate" xml:space="preserve"><value>Due date</value></data>
+  <data name="Language" xml:space="preserve"><value>Language:</value></data>
+  <data name="CreationAuthor" xml:space="preserve"><value>Author:</value></data>
+  <data name="AssignedTo" xml:space="preserve"><value>Assigned to:</value></data>
+  <data name="DueDate" xml:space="preserve"><value>Due date:</value></data>
   <data name="Priority" xml:space="preserve"><value>Priority</value></data>
   <data name="Labels" xml:space="preserve"><value>Labels</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Select all</value></data>
@@ -41,6 +41,9 @@
   <data name="AddStatus" xml:space="preserve"><value>Add</value></data>
   <data name="RemoveStatus" xml:space="preserve"><value>Remove</value></data>
   <data name="NewStatusName" xml:space="preserve"><value>New status</value></data>
+  <data name="NewTypeName" xml:space="preserve"><value>New type</value></data>
+  <data name="NewPriorityName" xml:space="preserve"><value>New priority</value></data>
+  <data name="NewLabelName" xml:space="preserve"><value>New label</value></data>
   <data name="TopicTypes" xml:space="preserve"><value>Topic Types:</value></data>
   <data name="PrioritiesList" xml:space="preserve"><value>Priorities:</value></data>
   <data name="LabelsList" xml:space="preserve"><value>Labels:</value></data>
@@ -69,7 +72,7 @@
   <data name="Russian" xml:space="preserve"><value>Russian</value></data>
   <data name="EmptyBcf" xml:space="preserve"><value>The current BCF report is empty.</value></data>
   <data name="NoIssue" xml:space="preserve"><value>No Issue</value></data>
-  <data name="BcfWriteVersion" xml:space="preserve"><value>BCF version (save)</value></data>
+  <data name="BcfWriteVersion" xml:space="preserve"><value>BCF version (save):</value></data>
   <data name="English" xml:space="preserve"><value>English</value></data>
   <data name="AuthorName" xml:space="preserve"><value>Author Name:</value></data>
   <data name="Yes" xml:space="preserve"><value>Yes</value></data>
@@ -78,7 +81,10 @@
   <data name="OnlySelected" xml:space="preserve"><value>Only selected (default)</value></data>
   <data name="None" xml:space="preserve"><value>None</value></data>
   <data name="TabGeneral" xml:space="preserve"><value>General</value></data>
+  <data name="TabCatalog" xml:space="preserve"><value>Catalog</value></data>
+  <data name="GroupApp" xml:space="preserve"><value>Application</value></data>
   <data name="GroupBcf" xml:space="preserve"><value>BCF</value></data>
+  <data name="GroupTopicLists" xml:space="preserve"><value>Issue lists</value></data>
   <data name="GroupSnapshot" xml:space="preserve"><value>Snapshot</value></data>
   <data name="TabRevit" xml:space="preserve"><value>Autodesk Revit</value></data>
   <data name="GroupView" xml:space="preserve"><value>View</value></data>
@@ -120,6 +126,7 @@
   <data name="CopyCommentTip" xml:space="preserve"><value>Select text or right-click to copy</value></data>
   <data name="GeneralComments" xml:space="preserve"><value>General Comments</value></data>
   <data name="Status" xml:space="preserve"><value>Status</value></data>
+  <data name="TopicType" xml:space="preserve"><value>Type</value></data>
   <data name="Error" xml:space="preserve"><value>Error</value></data>
   <data name="Warning" xml:space="preserve"><value>Warning!</value></data>
   <data name="DragDropHint" xml:space="preserve"><value>Drag&amp;Drop one&#x0a;or more BCF files&#x0a;to open them</value></data>
@@ -134,6 +141,26 @@
   <data name="NoViewSelected" xml:space="preserve"><value>No View selected</value></data>
   <data name="DeleteIssuesTitle" xml:space="preserve"><value>Delete Issue?</value></data>
   <data name="TableRowDeleteIssue" xml:space="preserve"><value>Delete issue</value></data>
+  <data name="TableRowNumberHeader" xml:space="preserve"><value>No.</value></data>
+  <data name="TableAddSnapshotLink" xml:space="preserve"><value>+ image</value></data>
+  <data name="TableAddIssueLink" xml:space="preserve"><value>+ issue</value></data>
+  <data name="TableOpenSnapshot" xml:space="preserve"><value>Open image</value></data>
+  <data name="TableDocument" xml:space="preserve"><value>Layout</value></data>
+  <data name="TableDocumentTip" xml:space="preserve"><value>Protocol layout for HTML and PDF export</value></data>
+  <data name="DocumentWindowTitle" xml:space="preserve"><value>Protocol layout</value></data>
+  <data name="DocumentHint" xml:space="preserve"><value>These settings shape the HTML and PDF export: heading lines, then custom field blocks, then the issue table.</value></data>
+  <data name="DocumentTitleLabel" xml:space="preserve"><value>Document heading:</value></data>
+  <data name="DocumentTitleHint" xml:space="preserve"><value>Leave empty to use the report name</value></data>
+  <data name="DocumentSubtitleLabel" xml:space="preserve"><value>Second heading line:</value></data>
+  <data name="DocumentSubtitleHint" xml:space="preserve"><value>Optional, for example: on interior works</value></data>
+  <data name="DocumentShowFieldBlocks" xml:space="preserve"><value>Export custom fields above the table</value></data>
+  <data name="DocumentShowRowNumbers" xml:space="preserve"><value>Row number column</value></data>
+  <data name="DocumentFieldsTitle" xml:space="preserve"><value>Heading fields</value></data>
+  <data name="DocumentFieldsHint" xml:space="preserve"><value>Fields are printed above the table in this order. A block name groups consecutive fields under a bold heading, for example "Participants:". Leave it empty for the first block without a heading.</value></data>
+  <data name="DocumentFieldName" xml:space="preserve"><value>Field</value></data>
+  <data name="DocumentFieldValue" xml:space="preserve"><value>Value</value></data>
+  <data name="DocumentFieldSection" xml:space="preserve"><value>Block</value></data>
+  <data name="DocumentNoFields" xml:space="preserve"><value>No custom fields yet. Add them with the "Custom fields" button.</value></data>
   <data name="DeleteIssuesTitlePlural" xml:space="preserve"><value>Delete Issues?</value></data>
   <data name="DeleteIssuesMessage" xml:space="preserve"><value>Are you sure you want to delete {0} Issue?&#x0a;{1}</value></data>
   <data name="DeleteIssuesMessagePlural" xml:space="preserve"><value>Are you sure you want to delete {0} Issues?&#x0a;{1}</value></data>
@@ -143,6 +170,8 @@
   <data name="DeleteViewpointCommentsMessage" xml:space="preserve"><value>Do you also want to delete the comments linked to the selected viewpoint?</value></data>
   <data name="SnapshotMissing" xml:space="preserve"><value>The selected Snapshot does not exist</value></data>
   <data name="ViewpointNull" xml:space="preserve"><value>The selected viewpoint has no camera data (viewpoint file is missing or corrupted)</value></data>
+  <data name="SheetViewNotInModelTitle" xml:space="preserve"><value>View not in this model</value></data>
+  <data name="SheetViewNotInModelMessage" xml:space="preserve"><value>View "{0}" was not found in the current model.&#x0a;Open this sheet or 2D view in the model where it was created.</value></data>
   <data name="InvalidSnapshot" xml:space="preserve"><value>Snapshot is not a valid image, please try again.</value></data>
   <data name="TitleRequired" xml:space="preserve"><value>Title required</value></data>
   <data name="TitleRequiredMessage" xml:space="preserve"><value>Please insert an Issue Title.</value></data>
@@ -233,31 +262,58 @@
   <data name="CustomFieldsValue" xml:space="preserve"><value>Value</value></data>
   <data name="CustomFieldsReportLevel" xml:space="preserve"><value>Report</value></data>
   <data name="GroupSpService" xml:space="preserve"><value>SP-Service connection</value></data>
-  <data name="SpServiceBaseUrl" xml:space="preserve"><value>Server address</value></data>
-  <data name="SpServiceLogin" xml:space="preserve"><value>Login</value></data>
-  <data name="SpServicePassword" xml:space="preserve"><value>Password</value></data>
-  <data name="SpServiceProject" xml:space="preserve"><value>Project</value></data>
-  <data name="SpServiceModel" xml:space="preserve"><value>Model</value></data>
-  <data name="SpServiceSyncInterval" xml:space="preserve"><value>Sync interval</value></data>
-  <data name="SpServiceSyncIntervalUnit" xml:space="preserve"><value>seconds</value></data>
+  <data name="SpServiceBaseUrl" xml:space="preserve"><value>Server address:</value></data>
+  <data name="SpServiceLogin" xml:space="preserve"><value>Login:</value></data>
+  <data name="SpServicePassword" xml:space="preserve"><value>Password:</value></data>
+  <data name="SpServiceProject" xml:space="preserve"><value>Project:</value></data>
+  <data name="SpServiceModel" xml:space="preserve"><value>Model:</value></data>
+  <data name="SpServiceSyncInterval" xml:space="preserve"><value>Sync interval (sec):</value></data>
   <data name="SpServiceTestConnection" xml:space="preserve"><value>Test connection</value></data>
-  <data name="SpServiceTestHint" xml:space="preserve"><value>Test the connection, then choose a project. The model is assigned automatically on export.</value></data>
+  <data name="SpServiceTestHint" xml:space="preserve"><value>Test the connection. The project is chosen when you send to the database or open from DB.</value></data>
+  <data name="TabGoogleSheets" xml:space="preserve"><value>Google Sheets</value></data>
+  <data name="GroupGoogleSheets" xml:space="preserve"><value>Google Sheets API</value></data>
+  <data name="GoogleSheetsHint" xml:space="preserve"><value>Moderator/Admin only. Paste the Service Account JSON. Share target spreadsheets with the service account email.</value></data>
+  <data name="GoogleSheetsEnabled" xml:space="preserve"><value>Enable Google Sheets sync</value></data>
+  <data name="GoogleSheetsServiceAccountJson" xml:space="preserve"><value>Service Account JSON:</value></data>
+  <data name="GoogleSheetsLoad" xml:space="preserve"><value>Load</value></data>
+  <data name="GoogleSheetsTest" xml:space="preserve"><value>Test</value></data>
+  <data name="GoogleSheetsSave" xml:space="preserve"><value>Save to server</value></data>
+  <data name="GoogleSheetsNeedProject" xml:space="preserve"><value>Choose a project via Send to DB or Open from DB first.</value></data>
+  <data name="GoogleSheetsConfiguredAs" xml:space="preserve"><value>Configured as {0}</value></data>
+  <data name="GoogleSheetsNotConfigured" xml:space="preserve"><value>Service Account is not configured.</value></data>
+  <data name="TableExportGoogleSheets" xml:space="preserve"><value>Sheets</value></data>
+  <data name="TableExportGoogleSheetsTip" xml:space="preserve"><value>Export and link the table to Google Sheets (column headers must match)</value></data>
+  <data name="GoogleSheetsExportTitle" xml:space="preserve"><value>Link Google Sheets</value></data>
+  <data name="GoogleSheetsSpreadsheetId" xml:space="preserve"><value>Spreadsheet ID (empty = create new):</value></data>
+  <data name="GoogleSheetsSheetName" xml:space="preserve"><value>Sheet name:</value></data>
+  <data name="GoogleSheetsCreateNew" xml:space="preserve"><value>Create new spreadsheet</value></data>
+  <data name="GoogleSheetsExportOk" xml:space="preserve"><value>Linked to Google Sheets:\n{0}</value></data>
+  <data name="GoogleSheetsExportNeedServer" xml:space="preserve"><value>Open a BCF report from the server to link Google Sheets.</value></data>
+  <data name="GoogleSheetsExportNeedModerator" xml:space="preserve"><value>Google Sheets export requires Moderator or Admin role.</value></data>
   <data name="SpServiceTesting" xml:space="preserve"><value>Testing...</value></data>
   <data name="SpServiceTestOk" xml:space="preserve"><value>Signed in as {0}. Projects: {1}.</value></data>
   <data name="SpServiceTestError" xml:space="preserve"><value>Error: {0}</value></data>
   <data name="SpServiceSavedProject" xml:space="preserve"><value>Saved project</value></data>
   <data name="SpServiceSavedModel" xml:space="preserve"><value>Saved model</value></data>
   <data name="SpServiceNotConfigured" xml:space="preserve"><value>Configure SP-Service connection in Settings.</value></data>
+  <data name="SpServiceNoProjects" xml:space="preserve"><value>No projects available for this account.</value></data>
+  <data name="SpServicePickProjectTitle" xml:space="preserve"><value>Select project</value></data>
+  <data name="SpServicePickProjectHint" xml:space="preserve"><value>Choose the project to send or open the report in.</value></data>
+  <data name="SpServiceSelectProject" xml:space="preserve"><value>Select a project.</value></data>
+  <data name="SpServicePickProjectConfirm" xml:space="preserve"><value>Select</value></data>
+  <data name="SpServiceReportName" xml:space="preserve"><value>Report name:</value></data>
+  <data name="SpServiceReportNameRequired" xml:space="preserve"><value>Enter a report name.</value></data>
+  <data name="SpServicePublishSaveFailed" xml:space="preserve"><value>Could not prepare the BCF file for upload. Add at least one issue or try again.</value></data>
+  <data name="SpServicePickHint" xml:space="preserve"><value>Reports for the current model are marked with ● and listed first. You can also open reports from other models in this project.</value></data>
   <data name="SpServiceModelRequired" xml:space="preserve"><value>Select a model in Settings before opening from the database.</value></data>
   <data name="OpenFromDb" xml:space="preserve"><value>Open from DB</value></data>
   <data name="SendToDb" xml:space="preserve"><value>Send to DB</value></data>
   <data name="AutoSyncWithDb" xml:space="preserve"><value>Automatically sync with DB</value></data>
   <data name="AutoSyncWithDbTip" xml:space="preserve"><value>Push local changes and pull server updates on the interval from Settings.</value></data>
   <data name="SpServicePickTitle" xml:space="preserve"><value>BCF files on server</value></data>
-  <data name="SpServicePickHint" xml:space="preserve"><value>Select a BCF report to open.</value></data>
   <data name="SpServiceSelectBcfFile" xml:space="preserve"><value>Select a BCF file.</value></data>
   <data name="SpServiceConflictMessage" xml:space="preserve"><value>This issue was changed on the server. Yes = keep local, No = take server, Cancel = abort.</value></data>
-  <data name="SpServiceNoBcfFiles" xml:space="preserve"><value>No BCF files for the selected model.</value></data>
+  <data name="SpServiceNoBcfFiles" xml:space="preserve"><value>No BCF reports in this project yet. Send a report to the database first.</value></data>
   <data name="SpServiceOpenError" xml:space="preserve"><value>Failed to open BCF from database: {0}</value></data>
   <data name="SpServiceSyncError" xml:space="preserve"><value>Sync failed: {0}</value></data>
   <data name="SpServiceSyncOk" xml:space="preserve"><value>Changes sent to the database.</value></data>
@@ -283,7 +339,7 @@
   <data name="TableExportHtmlTip" xml:space="preserve"><value>Export the table to HTML</value></data>
   <data name="TableExportExcelFilter" xml:space="preserve"><value>Excel workbook (*.xlsx)|*.xlsx</value></data>
   <data name="TableExportHtmlFilter" xml:space="preserve"><value>HTML (*.html)|*.html</value></data>
-  <data name="TableExportPdf" xml:space="preserve"><value>Export PDF</value></data>
+  <data name="TableExportPdf" xml:space="preserve"><value>PDF</value></data>
   <data name="TableExportPdfTip" xml:space="preserve"><value>Export the table to PDF</value></data>
   <data name="TableExportPdfFilter" xml:space="preserve"><value>PDF (*.pdf)|*.pdf</value></data>
   <data name="TableExportEmpty" xml:space="preserve"><value>Nothing to export. Open a BCF report with issues first.</value></data>
@@ -307,7 +363,7 @@
   <data name="TableCommentGroupsHint" xml:space="preserve"><value>Create groups to show one comments column for several authors. Members are matched by author name (case-insensitive).</value></data>
   <data name="TableCommentAddGroup" xml:space="preserve"><value>Add group</value></data>
   <data name="TableCommentDeleteGroup" xml:space="preserve"><value>Delete group</value></data>
-  <data name="TableCommentGroupName" xml:space="preserve"><value>Group name</value></data>
+  <data name="TableCommentGroupName" xml:space="preserve"><value>Group name:</value></data>
   <data name="TableCommentMembers" xml:space="preserve"><value>Members</value></data>
   <data name="TableCommentAddPlaceholder" xml:space="preserve"><value>Add comment…</value></data>
   <data name="TableAlignLeft" xml:space="preserve"><value>Left</value></data>

@@ -9,17 +9,17 @@
   </ResourceDictionary.MergedDictionaries>
 
   <Style x:Key="{x:Type themes:TextPlaceholder}" TargetType="{x:Type themes:TextPlaceholder}" BasedOn="{StaticResource SpTextBox}">
-    <Setter Property="Background" Value="{StaticResource SpBrush.Field}" />
+    <Setter Property="Background" Value="Transparent" />
     <Setter Property="BorderBrush" Value="{StaticResource SpBrush.Border}" />
     <Setter Property="Foreground" Value="{StaticResource SpBrush.Foreground}" />
     <Setter Property="BorderThickness" Value="1" />
-    <Setter Property="Padding" Value="7,3" />
+    <Setter Property="Padding" Value="6,3" />
     <Setter Property="MinHeight" Value="28" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
     <Setter Property="SnapsToDevicePixels" Value="True" />
     <Setter Property="Placeholder" Value="Search" />
     <Setter Property="FocusVisualStyle" Value="{x:Null}" />
-    <Setter Property="PlaceholderColor" Value="{StaticResource SpBrush.Muted}" />
+    <Setter Property="PlaceholderColor" Value="{StaticResource SpBrush.Foreground}" />
     <Setter Property="FontFamily" Value="{StaticResource SpFont.Ui}" />
     <Setter Property="FontSize" Value="12.5" />
     <Setter Property="FontWeight" Value="Normal" />
@@ -54,12 +54,13 @@
           </Border>
           <ControlTemplate.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-              <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+              <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource SpBrush.Border}" />
+              <Setter TargetName="Border" Property="Background" Value="{StaticResource SpBrush.Field}" />
               <Setter Property="Cursor" Value="IBeam" />
             </Trigger>
             <Trigger Property="IsKeyboardFocusWithin" Value="True">
               <Setter TargetName="Border" Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
-              <Setter TargetName="Border" Property="Background" Value="#FFF7FAFD" />
+              <Setter TargetName="Border" Property="Background" Value="{StaticResource SpBrush.Field}" />
             </Trigger>
             <Trigger Property="HasText" Value="True">
               <Setter TargetName="Placeholder" Property="Visibility" Value="Hidden" />
@@ -69,6 +70,70 @@
               <Setter Property="Opacity" Value="0.7" />
             </Trigger>
           </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- Alias на ghost TextPlaceholder (раньше был boxed search) -->
+  <Style x:Key="SpBoxedTextPlaceholder" TargetType="{x:Type themes:TextPlaceholder}" BasedOn="{StaticResource {x:Type themes:TextPlaceholder}}" />
+
+  <!-- Без chrome: compose/чат внутри уже оформленного контейнера -->
+  <Style x:Key="SpFlatTextPlaceholder" TargetType="{x:Type themes:TextPlaceholder}" BasedOn="{StaticResource {x:Type themes:TextPlaceholder}}">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="{x:Type themes:TextPlaceholder}">
+          <Border
+            x:Name="Border"
+            Padding="{TemplateBinding Padding}"
+            Background="Transparent"
+            BorderThickness="0"
+            SnapsToDevicePixels="True">
+            <Grid>
+              <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+              <TextBlock
+                x:Name="Placeholder"
+                Margin="0"
+                Padding="{StaticResource SpSpace.TextBoxViewInset}"
+                FontFamily="{TemplateBinding FontFamily}"
+                FontSize="{TemplateBinding FontSize}"
+                FontWeight="{TemplateBinding FontWeight}"
+                Foreground="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=PlaceholderColor}"
+                IsHitTestVisible="False"
+                Text="{Binding RelativeSource={RelativeSource TemplatedParent}, Path=Placeholder}"
+                TextWrapping="{TemplateBinding TextWrapping}" />
+            </Grid>
+          </Border>
+          <ControlTemplate.Triggers>
+            <Trigger Property="HasText" Value="True">
+              <Setter TargetName="Placeholder" Property="Visibility" Value="Hidden" />
+            </Trigger>
+            <Trigger Property="IsEnabled" Value="False">
+              <Setter Property="Opacity" Value="0.7" />
+            </Trigger>
+          </ControlTemplate.Triggers>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <Style x:Key="SpFlatTextBox" TargetType="TextBox" BasedOn="{StaticResource SpTextBox}">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderBrush" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="TextBox">
+          <Border
+            Padding="{TemplateBinding Padding}"
+            Background="Transparent"
+            BorderThickness="0"
+            SnapsToDevicePixels="True">
+            <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+          </Border>
         </ControlTemplate>
       </Setter.Value>
     </Setter>

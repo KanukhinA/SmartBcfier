@@ -127,8 +127,9 @@
                 DockPanel.Dock="Top"
                 MinHeight="28"
                 Margin="0,0,0,8"
-                Padding="6,3"
+                Padding="0,3"
                 VerticalContentAlignment="Center"
+                Style="{StaticResource SpSettingsTextBox}"
                 TextChanged="GroupNameBox_TextChanged" />
               <TextBlock
                 DockPanel.Dock="Top"
@@ -216,15 +217,16 @@
                       Grid.Column="2"
                       MinHeight="26"
                       Margin="0,0,8,0"
-                      Padding="6,3"
+                      Padding="0,3"
                       VerticalContentAlignment="Center"
+                      Style="{StaticResource SpSettingsTextBox}"
                       Tag="{x:Static loc:Loc.TableColumnCustomName}"
                       Text="{Binding DisplayName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       ToolTip="{x:Static loc:Loc.TableColumnCustomNameTip}" />
                     <ComboBox
                       Grid.Column="3"
                       MinHeight="26"
-                      Style="{StaticResource SpComboBox}"
+                      Style="{StaticResource SpSettingsComboBox}"
                       SelectedValue="{Binding TextAlign, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                       SelectedValuePath="Tag"
                       ToolTip="{x:Static loc:Loc.TableAlignColumn}">

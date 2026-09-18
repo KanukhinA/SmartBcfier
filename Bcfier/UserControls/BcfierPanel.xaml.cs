@@ -93,6 +93,7 @@ namespace Bcfier.UserControls
           foreach (BcfFile bcf in _bcf.BcfFiles)
             bcf?.RefreshReportMetadata();
           ApplyAutoSyncIntervalFromSettings();
+          UpdateServerSyncUi();
         }
 
       };
@@ -1129,26 +1130,42 @@ namespace Bcfier.UserControls
           return;
         }
 
+        Guid? projectId = await PickAndRememberProjectAsync(settings).ConfigureAwait(true);
+        if (projectId == null)
+          return;
+
         ShowLoadingOverlay(Loc.Get("OpenFromDb"));
         using var client = new SpBcfServiceClient(settings.BaseUrl);
         await client.LoginAsync(settings.Login, settings.Password).ConfigureAwait(true);
-        IReadOnlyList<SpBcfServiceClient.BcfApiProject> projects =
-          await client.GetBcfApiProjectsAsync().ConfigureAwait(true);
+        IReadOnlyList<SpBcfServiceClient.ProjectBcfFileItem> files =
+          await client.ListProjectBcfFilesAsync(projectId.Value).ConfigureAwait(true);
 
-        if (projects == null || projects.Count == 0)
+        if (files == null || files.Count == 0)
         {
           HideLoadingOverlay();
           MessageBox.Show(Loc.Get("SpServiceNoBcfFiles"), Loc.Warning, MessageBoxButton.OK, MessageBoxImage.Information);
           return;
         }
 
-        var items = projects
-          .Where(p => p.ParsedId != null)
-          .Select(p => new SpBcfServiceClient.BcfFileItem
+        string currentModel = ResolveActiveModelName(null);
+        var items = files
+          .Select(f =>
           {
-            Id = p.ParsedId.Value,
-            Name = p.Name ?? p.ProjectId
+            bool match = !string.IsNullOrWhiteSpace(currentModel)
+              && string.Equals(f.ModelName, currentModel, StringComparison.OrdinalIgnoreCase);
+            return new SpBcfServiceClient.BcfFileItem
+            {
+              Id = f.Id,
+              Name = f.Name,
+              ModelName = f.ModelName,
+              MatchesCurrentModel = match,
+              BcfVersion = f.BcfVersion,
+              UpdatedAt = f.UpdatedAt
+            };
           })
+          .OrderByDescending(i => i.MatchesCurrentModel)
+          .ThenBy(i => i.ModelName, StringComparer.OrdinalIgnoreCase)
+          .ThenBy(i => i.Name, StringComparer.OrdinalIgnoreCase)
           .ToList();
 
         HideLoadingOverlay();
@@ -1183,10 +1200,36 @@ namespace Bcfier.UserControls
       try
       {
         BcfFile bcf = SelectedBcf();
-        if (bcf == null || !bcf.IsFromServer)
+        if (bcf == null)
           return;
-        ShowLoadingOverlay(Loc.Get("SendToDb"));
-        await SpBcfSyncService.SyncAsync(bcf, interactive).ConfigureAwait(true);
+
+        SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
+        if (!settings.HasConnection)
+        {
+          if (interactive)
+            MessageBox.Show(Loc.Get("SpServiceNotConfigured"), Loc.Error, MessageBoxButton.OK, MessageBoxImage.Warning);
+          return;
+        }
+
+        if (bcf.IsFromServer && bcf.ServerBcfFileId != null)
+        {
+          ShowLoadingOverlay(Loc.Get("SendToDb"));
+          await SpBcfSyncService.SyncAsync(bcf, interactive).ConfigureAwait(true);
+        }
+        else
+        {
+          Guid? projectId = await PickAndRememberProjectAsync(
+            settings,
+            requireReportName: IsUnsetReportName(bcf.Filename),
+            initialReportName: bcf.Filename,
+            onReportName: name => bcf.Filename = name).ConfigureAwait(true);
+          if (projectId == null)
+            return;
+
+          ShowLoadingOverlay(Loc.Get("SendToDb"));
+          await PublishNewBcfToDatabaseAsync(bcf, settings, projectId.Value).ConfigureAwait(true);
+        }
+
         if (interactive)
           MessageBox.Show(Loc.Get("SpServiceSyncOk"), Loc.ProductName, MessageBoxButton.OK, MessageBoxImage.Information);
         UpdateServerSyncUi();
@@ -1202,17 +1245,176 @@ namespace Bcfier.UserControls
       }
     }
 
+    /// <summary>Показывает выбор проекта и запоминает его как последний использованный.</summary>
+    private async Task<Guid?> PickAndRememberProjectAsync(
+      SpBcfServiceSettings settings,
+      bool requireReportName = false,
+      string initialReportName = null,
+      Action<string> onReportName = null)
+    {
+      ShowLoadingOverlay(Loc.Get("SpServicePickProjectTitle"));
+      IReadOnlyList<SpBcfServiceClient.ProjectItem> projects;
+      try
+      {
+        using var client = new SpBcfServiceClient(settings.BaseUrl);
+        await client.LoginAsync(settings.Login, settings.Password).ConfigureAwait(true);
+        projects = await client.GetProjectsAsync().ConfigureAwait(true);
+      }
+      finally
+      {
+        HideLoadingOverlay();
+      }
+
+      if (projects == null || projects.Count == 0)
+      {
+        MessageBox.Show(Loc.Get("SpServiceNoProjects"), Loc.Warning, MessageBoxButton.OK, MessageBoxImage.Information);
+        return null;
+      }
+
+      Guid? preselect = Guid.TryParse(settings.ProjectId, out Guid saved) ? saved : (Guid?)null;
+      string seedName = requireReportName && !IsUnsetReportName(initialReportName)
+        ? initialReportName
+        : string.Empty;
+      var pick = new SpProjectPickWindow(projects, preselect, requireReportName, seedName)
+      {
+        Owner = Window.GetWindow(this)
+      };
+      if (pick.ShowDialog() != true || pick.SelectedProject == null)
+        return null;
+
+      if (requireReportName && !string.IsNullOrWhiteSpace(pick.SelectedReportName))
+        onReportName?.Invoke(pick.SelectedReportName.Trim());
+
+      settings.ProjectId = pick.SelectedProject.Id.ToString("D");
+      SpBcfServiceSettingsStore.Save(settings);
+      return pick.SelectedProject.Id;
+    }
+
+    /// <summary>Имя не задано: пустое или стандартное «Новый BCF-отчёт».</summary>
+    private static bool IsUnsetReportName(string name)
+    {
+      if (string.IsNullOrWhiteSpace(name))
+        return true;
+
+      string trimmed = name.Trim();
+      if (string.Equals(trimmed, Loc.Get("NewBcfReport"), StringComparison.OrdinalIgnoreCase))
+        return true;
+
+      // На случай смены языка после создания файла
+      return string.Equals(trimmed, "New BCF Report", StringComparison.OrdinalIgnoreCase)
+             || string.Equals(trimmed, "Новый BCF-отчёт", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task PublishNewBcfToDatabaseAsync(BcfFile bcf, SpBcfServiceSettings settings, Guid projectId)
+    {
+      string modelName = ResolveActiveModelName(bcf);
+      if (string.IsNullOrWhiteSpace(modelName))
+        modelName = "Model";
+
+      string pathName = string.Empty;
+      try
+      {
+        if (ComponentListHost.GetActiveDocumentInfo != null)
+          pathName = ComponentListHost.GetActiveDocumentInfo().PathName ?? string.Empty;
+      }
+      catch
+      {
+        pathName = string.Empty;
+      }
+
+      string pathHash = null;
+      if (!string.IsNullOrWhiteSpace(pathName))
+      {
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        byte[] hash = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(pathName));
+        pathHash = BitConverter.ToString(hash).Replace("-", string.Empty);
+      }
+
+      string bcfName = string.IsNullOrWhiteSpace(bcf.Filename)
+        ? "BCF"
+        : Path.GetFileNameWithoutExtension(bcf.Filename);
+
+      string tempPath = null;
+      try
+      {
+        if (bcf.Issues != null && bcf.Issues.Count > 0)
+        {
+          tempPath = Path.Combine(
+            Path.GetTempPath(),
+            "BCFier",
+            "publish-" + Guid.NewGuid().ToString("N") + ".bcf");
+          Directory.CreateDirectory(Path.GetDirectoryName(tempPath) ?? Path.GetTempPath());
+          if (!BcfWriter.Save(bcf, tempPath))
+            throw new InvalidOperationException(Loc.Get("SpServicePublishSaveFailed"));
+        }
+
+        using var client = new SpBcfServiceClient(settings.BaseUrl);
+        await client.LoginAsync(settings.Login, settings.Password).ConfigureAwait(true);
+        SpBcfServiceClient.ProjectBcfFileItem created = await client.PublishBcfAsync(
+          projectId,
+          modelName,
+          bcfName,
+          modelName,
+          pathHash,
+          null,
+          tempPath).ConfigureAwait(true);
+
+        bcf.IsFromServer = true;
+        bcf.ServerBcfFileId = created.Id;
+        bcf.ServerRevision = created.Revision;
+        bcf.ServerBcfVersion = created.BcfVersion ?? "3.0";
+        bcf.HasBeenSaved = true;
+        bcf.Filename = created.Name ?? bcf.Filename;
+        _autoSyncEnabled = true;
+        if (AutoSyncCheckBox != null)
+          AutoSyncCheckBox.IsChecked = true;
+        EnsureAutoSyncTimer();
+      }
+      finally
+      {
+        if (!string.IsNullOrWhiteSpace(tempPath))
+        {
+          try { File.Delete(tempPath); } catch { /* ignore */ }
+        }
+      }
+    }
+
+    private static string ResolveActiveModelName(BcfFile bcf)
+    {
+      try
+      {
+        if (ComponentListHost.GetActiveDocumentInfo != null)
+        {
+          (string title, _) = ComponentListHost.GetActiveDocumentInfo();
+          if (!string.IsNullOrWhiteSpace(title))
+            return title.Trim();
+        }
+      }
+      catch
+      {
+        // ignore
+      }
+
+      if (bcf != null && !string.IsNullOrWhiteSpace(bcf.Filename))
+        return Path.GetFileNameWithoutExtension(bcf.Filename);
+
+      return string.Empty;
+    }
+
     private void UpdateServerSyncUi()
     {
       try
       {
         BcfFile bcf = SelectedBcf();
+        SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
         bool fromServer = bcf != null && bcf.IsFromServer;
+        bool canSend = bcf != null && settings.HasConnection;
         if (AutoSyncCheckBox != null)
           AutoSyncCheckBox.Visibility = fromServer ? Visibility.Visible : Visibility.Collapsed;
         if (SendToDbBtn != null)
         {
-          bool showSend = fromServer && !_autoSyncEnabled;
+          // Для серверного файла — только без автосинка; для локального — при настроенном подключении.
+          bool showSend = canSend && (!fromServer || !_autoSyncEnabled);
           SendToDbBtn.Visibility = showSend ? Visibility.Visible : Visibility.Collapsed;
         }
       }

@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
-using System.Windows;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Bcfier.Bcf.Bcf2;
+using Bcfier.Data;
 using Bcfier.Data.Utils;
 using Bcfier.Localization;
 using Bcfier.Revit.Data;
@@ -52,6 +50,26 @@ namespace Bcfier.Revit.Entry
           return;
         }
 
+        bool hasSheetCamera = viewpoint.SheetCamera != null;
+        bool sheetViewFound = hasSheetCamera
+          && TryFindSheetView(doc, viewpoint.SheetCamera, out _);
+        ViewpointOpenAction openAction = ViewpointOpenStrategy.Resolve(
+          hasSheetCamera,
+          sheetViewFound,
+          viewpoint.OrthogonalCamera != null,
+          viewpoint.PerspectiveCamera != null);
+
+        if (openAction == ViewpointOpenAction.NotifySheetViewMissing)
+        {
+          string viewName = string.IsNullOrWhiteSpace(viewpoint.SheetCamera?.SheetName)
+            ? viewpoint.SheetCamera?.SheetID.ToString() ?? string.Empty
+            : viewpoint.SheetCamera.SheetName;
+          RevitExceptionUi.Show(
+            Loc.Format("SheetViewNotInModelMessage", viewName),
+            Loc.Get("SheetViewNotInModelTitle"));
+          return;
+        }
+
         // Один общий 3D-вид пользователя; uniqueView оставляем для отладки.
         bool uniqueView = false;
 
@@ -89,8 +107,14 @@ namespace Bcfier.Revit.Entry
         bool cameraViewOpened = false;
         View3D openedView3D = null;
 
+        // Сначала исходный 2D/лист в этой модели (dual-write: Ortho тоже может быть).
+        if (openAction == ViewpointOpenAction.OpenSheetView
+            && TryOpenSheetView(uidoc, doc, viewpoint.SheetCamera))
+        {
+          cameraViewOpened = true;
+        }
         // IS ORTHOGONAL (приоритетнее perspective)
-        if (viewpoint.OrthogonalCamera != null)
+        else if (viewpoint.OrthogonalCamera != null)
         {
           ViewOrientation3D orthoOrient = null;
           if (TryGetCameraVectors(
@@ -231,11 +255,6 @@ namespace Bcfier.Revit.Entry
               uidoc.ShowElements(sectionBoxTargets);
           }
           }
-        }
-        //sheet
-        else if (TryOpenSheetView(uidoc, doc, viewpoint.SheetCamera))
-        {
-          cameraViewOpened = true;
         }
         // Камера не задана — открываем 3D и зумим к рамке / точке из BCF (элементы — только при изоляции)
         else if (TryOpenFallback3DView(
@@ -417,28 +436,41 @@ namespace Bcfier.Revit.Entry
     }
 
     /// <summary>
-    /// Открывает лист с зумом, если в BCF заданы координаты SheetCamera.
+    /// Открывает лист с зумом, если в BCF заданы координаты SheetCamera и вид есть в документе.
     /// </summary>
     private static bool TryOpenSheetView(UIDocument uidoc, Document doc, SheetCamera sheetCamera)
     {
-      if (sheetCamera == null || !HasValidSheetZoomCorners(sheetCamera))
+      if (!TryFindSheetView(doc, sheetCamera, out View sheetView))
+        return false;
+
+      uidoc.ActiveView = sheetView;
+      try { uidoc.RefreshActiveView(); } catch { /* не во всех версиях Revit */ }
+
+      if (HasValidSheetZoomCorners(sheetCamera))
+      {
+        XYZ m_xyzTl = new XYZ(sheetCamera.TopLeft.X, sheetCamera.TopLeft.Y, sheetCamera.TopLeft.Z);
+        XYZ m_xyzBr = new XYZ(sheetCamera.BottomRight.X, sheetCamera.BottomRight.Y, sheetCamera.BottomRight.Z);
+        ZoomUiView(uidoc, sheetView.Id, m_xyzTl, m_xyzBr);
+      }
+
+      return true;
+    }
+
+    /// <summary>
+    /// Ищет вид по SheetID / имени SheetCamera в активном документе.
+    /// </summary>
+    private static bool TryFindSheetView(Document doc, SheetCamera sheetCamera, out View sheetView)
+    {
+      sheetView = null;
+      if (doc == null || sheetCamera == null)
         return false;
 
       IEnumerable<View> viewcollectorSheet = getSheets(doc, sheetCamera.SheetID, sheetCamera.SheetName);
       if (!viewcollectorSheet.Any())
-      {
-        MessageBox.Show("View " + sheetCamera.SheetName + " with Id=" + sheetCamera.SheetID + " not found.");
         return false;
-      }
 
-      View sheetView = viewcollectorSheet.First();
-      uidoc.ActiveView = sheetView;
-      try { uidoc.RefreshActiveView(); } catch { /* не во всех версиях Revit */ }
-
-      XYZ m_xyzTl = new XYZ(sheetCamera.TopLeft.X, sheetCamera.TopLeft.Y, sheetCamera.TopLeft.Z);
-      XYZ m_xyzBr = new XYZ(sheetCamera.BottomRight.X, sheetCamera.BottomRight.Y, sheetCamera.BottomRight.Z);
-      ZoomUiView(uidoc, sheetView.Id, m_xyzTl, m_xyzBr);
-      return true;
+      sheetView = viewcollectorSheet.First();
+      return sheetView != null;
     }
 
     /// <summary>

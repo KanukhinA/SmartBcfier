@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -18,10 +18,10 @@
   <data name="Merge" xml:space="preserve"><value>Объединить...</value></data>
   <data name="Settings" xml:space="preserve"><value>Настройки</value></data>
   <data name="Help" xml:space="preserve"><value>Справка</value></data>
-  <data name="Language" xml:space="preserve"><value>Язык</value></data>
-  <data name="CreationAuthor" xml:space="preserve"><value>Автор</value></data>
-  <data name="AssignedTo" xml:space="preserve"><value>Ответственный</value></data>
-  <data name="DueDate" xml:space="preserve"><value>Срок выполнения</value></data>
+  <data name="Language" xml:space="preserve"><value>Язык:</value></data>
+  <data name="CreationAuthor" xml:space="preserve"><value>Автор:</value></data>
+  <data name="AssignedTo" xml:space="preserve"><value>Ответственный:</value></data>
+  <data name="DueDate" xml:space="preserve"><value>Срок выполнения:</value></data>
   <data name="Priority" xml:space="preserve"><value>Приоритет</value></data>
   <data name="Labels" xml:space="preserve"><value>Метки</value></data>
   <data name="SelectAll" xml:space="preserve"><value>Выбрать все</value></data>
@@ -41,6 +41,9 @@
   <data name="AddStatus" xml:space="preserve"><value>Добавить</value></data>
   <data name="RemoveStatus" xml:space="preserve"><value>Удалить</value></data>
   <data name="NewStatusName" xml:space="preserve"><value>Новый статус</value></data>
+  <data name="NewTypeName" xml:space="preserve"><value>Новый тип</value></data>
+  <data name="NewPriorityName" xml:space="preserve"><value>Новый приоритет</value></data>
+  <data name="NewLabelName" xml:space="preserve"><value>Новая метка</value></data>
   <data name="TopicTypes" xml:space="preserve"><value>Типы замечаний:</value></data>
   <data name="PrioritiesList" xml:space="preserve"><value>Приоритеты:</value></data>
   <data name="LabelsList" xml:space="preserve"><value>Метки:</value></data>
@@ -69,7 +72,7 @@
   <data name="Russian" xml:space="preserve"><value>Русский</value></data>
   <data name="EmptyBcf" xml:space="preserve"><value>Текущий BCF-отчёт пуст.</value></data>
   <data name="NoIssue" xml:space="preserve"><value>Нет замечаний</value></data>
-  <data name="BcfWriteVersion" xml:space="preserve"><value>Версия BCF (сохранение)</value></data>
+  <data name="BcfWriteVersion" xml:space="preserve"><value>Версия BCF (сохранение):</value></data>
   <data name="English" xml:space="preserve"><value>English</value></data>
   <data name="AuthorName" xml:space="preserve"><value>Имя автора:</value></data>
   <data name="Yes" xml:space="preserve"><value>Да</value></data>
@@ -78,7 +81,10 @@
   <data name="OnlySelected" xml:space="preserve"><value>Только выделенные (по умолчанию)</value></data>
   <data name="None" xml:space="preserve"><value>Нет</value></data>
   <data name="TabGeneral" xml:space="preserve"><value>Общие</value></data>
+  <data name="TabCatalog" xml:space="preserve"><value>Справочники</value></data>
+  <data name="GroupApp" xml:space="preserve"><value>Приложение</value></data>
   <data name="GroupBcf" xml:space="preserve"><value>BCF</value></data>
+  <data name="GroupTopicLists" xml:space="preserve"><value>Списки замечаний</value></data>
   <data name="GroupSnapshot" xml:space="preserve"><value>Снимок</value></data>
   <data name="TabRevit" xml:space="preserve"><value>Autodesk Revit</value></data>
   <data name="GroupView" xml:space="preserve"><value>Вид</value></data>
@@ -120,6 +126,7 @@
   <data name="CopyCommentTip" xml:space="preserve"><value>Выделите текст или щёлкните правой кнопкой, чтобы скопировать</value></data>
   <data name="GeneralComments" xml:space="preserve"><value>Общие комментарии</value></data>
   <data name="Status" xml:space="preserve"><value>Статус</value></data>
+  <data name="TopicType" xml:space="preserve"><value>Тип</value></data>
   <data name="Error" xml:space="preserve"><value>Ошибка</value></data>
   <data name="Warning" xml:space="preserve"><value>Внимание!</value></data>
   <data name="DragDropHint" xml:space="preserve"><value>Перетащите один&#x0a;или несколько BCF-файлов,&#x0a;чтобы открыть</value></data>
@@ -134,6 +141,26 @@
   <data name="NoViewSelected" xml:space="preserve"><value>Не выбран вид</value></data>
   <data name="DeleteIssuesTitle" xml:space="preserve"><value>Удалить замечание?</value></data>
   <data name="TableRowDeleteIssue" xml:space="preserve"><value>Удалить замечание</value></data>
+  <data name="TableRowNumberHeader" xml:space="preserve"><value>№ п/п</value></data>
+  <data name="TableAddSnapshotLink" xml:space="preserve"><value>+ изображение</value></data>
+  <data name="TableAddIssueLink" xml:space="preserve"><value>+ замечание</value></data>
+  <data name="TableOpenSnapshot" xml:space="preserve"><value>Открыть изображение</value></data>
+  <data name="TableDocument" xml:space="preserve"><value>Оформление</value></data>
+  <data name="TableDocumentTip" xml:space="preserve"><value>Оформление протокола для экспорта в HTML и PDF</value></data>
+  <data name="DocumentWindowTitle" xml:space="preserve"><value>Оформление протокола</value></data>
+  <data name="DocumentHint" xml:space="preserve"><value>Настройки задают вид экспорта в HTML и PDF: строки заголовка, затем блоки пользовательских полей, затем таблица замечаний.</value></data>
+  <data name="DocumentTitleLabel" xml:space="preserve"><value>Заголовок документа:</value></data>
+  <data name="DocumentTitleHint" xml:space="preserve"><value>Пусто — подставится имя отчёта</value></data>
+  <data name="DocumentSubtitleLabel" xml:space="preserve"><value>Вторая строка заголовка:</value></data>
+  <data name="DocumentSubtitleHint" xml:space="preserve"><value>Необязательно, например: совещания по отделке объекта</value></data>
+  <data name="DocumentShowFieldBlocks" xml:space="preserve"><value>Выводить пользовательские поля над таблицей</value></data>
+  <data name="DocumentShowRowNumbers" xml:space="preserve"><value>Колонка «№ п/п»</value></data>
+  <data name="DocumentFieldsTitle" xml:space="preserve"><value>Поля шапки</value></data>
+  <data name="DocumentFieldsHint" xml:space="preserve"><value>Поля выводятся над таблицей в этом порядке. Название блока объединяет идущие подряд поля под жирным заголовком — например «Участники:». Пусто — первый блок без заголовка.</value></data>
+  <data name="DocumentFieldName" xml:space="preserve"><value>Поле</value></data>
+  <data name="DocumentFieldValue" xml:space="preserve"><value>Значение</value></data>
+  <data name="DocumentFieldSection" xml:space="preserve"><value>Блок</value></data>
+  <data name="DocumentNoFields" xml:space="preserve"><value>Пользовательские поля не добавлены. Добавьте их кнопкой «Пользовательские поля».</value></data>
   <data name="DeleteIssuesTitlePlural" xml:space="preserve"><value>Удалить замечания?</value></data>
   <data name="DeleteIssuesMessage" xml:space="preserve"><value>Удалить {0} замечание?&#x0a;{1}</value></data>
   <data name="DeleteIssuesMessagePlural" xml:space="preserve"><value>Удалить {0} замечаний?&#x0a;{1}</value></data>
@@ -143,6 +170,8 @@
   <data name="DeleteViewpointCommentsMessage" xml:space="preserve"><value>Также удалить комментарии, связанные с выбранным видом?</value></data>
   <data name="SnapshotMissing" xml:space="preserve"><value>Выбранный снимок не существует</value></data>
   <data name="ViewpointNull" xml:space="preserve"><value>У выбранного вида нет данных камеры (файл viewpoint отсутствует или повреждён)</value></data>
+  <data name="SheetViewNotInModelTitle" xml:space="preserve"><value>Вид не в этой модели</value></data>
+  <data name="SheetViewNotInModelMessage" xml:space="preserve"><value>Вид «{0}» не найден в текущей модели.&#x0a;Откройте этот лист или 2D-вид в модели, где он был создан.</value></data>
   <data name="InvalidSnapshot" xml:space="preserve"><value>Снимок не является корректным изображением, попробуйте снова.</value></data>
   <data name="TitleRequired" xml:space="preserve"><value>Нужен заголовок</value></data>
   <data name="TitleRequiredMessage" xml:space="preserve"><value>Укажите заголовок замечания.</value></data>
@@ -233,31 +262,58 @@
   <data name="CustomFieldsValue" xml:space="preserve"><value>Значение</value></data>
   <data name="CustomFieldsReportLevel" xml:space="preserve"><value>Отчёт</value></data>
   <data name="GroupSpService" xml:space="preserve"><value>Подключение к SP-Service</value></data>
-  <data name="SpServiceBaseUrl" xml:space="preserve"><value>Адрес сервера</value></data>
-  <data name="SpServiceLogin" xml:space="preserve"><value>Логин</value></data>
-  <data name="SpServicePassword" xml:space="preserve"><value>Пароль</value></data>
-  <data name="SpServiceProject" xml:space="preserve"><value>Проект</value></data>
-  <data name="SpServiceModel" xml:space="preserve"><value>Модель</value></data>
-  <data name="SpServiceSyncInterval" xml:space="preserve"><value>Интервал синхронизации</value></data>
-  <data name="SpServiceSyncIntervalUnit" xml:space="preserve"><value>секунд</value></data>
+  <data name="SpServiceBaseUrl" xml:space="preserve"><value>Адрес сервера:</value></data>
+  <data name="SpServiceLogin" xml:space="preserve"><value>Логин:</value></data>
+  <data name="SpServicePassword" xml:space="preserve"><value>Пароль:</value></data>
+  <data name="SpServiceProject" xml:space="preserve"><value>Проект:</value></data>
+  <data name="SpServiceModel" xml:space="preserve"><value>Модель:</value></data>
+  <data name="SpServiceSyncInterval" xml:space="preserve"><value>Интервал синхронизации (сек):</value></data>
   <data name="SpServiceTestConnection" xml:space="preserve"><value>Проверить подключение</value></data>
-  <data name="SpServiceTestHint" xml:space="preserve"><value>Проверьте подключение, затем выберите проект. Модель назначается автоматически при экспорте.</value></data>
+  <data name="SpServiceTestHint" xml:space="preserve"><value>Проверьте подключение. Проект выбирается при отправке в БД или открытии из БД.</value></data>
+  <data name="TabGoogleSheets" xml:space="preserve"><value>Google Sheets</value></data>
+  <data name="GroupGoogleSheets" xml:space="preserve"><value>API Google Sheets</value></data>
+  <data name="GoogleSheetsHint" xml:space="preserve"><value>Только модератор/администратор. Вставьте JSON Service Account. Расшарьте таблицы на email сервисного аккаунта.</value></data>
+  <data name="GoogleSheetsEnabled" xml:space="preserve"><value>Включить синхронизацию Google Sheets</value></data>
+  <data name="GoogleSheetsServiceAccountJson" xml:space="preserve"><value>JSON Service Account:</value></data>
+  <data name="GoogleSheetsLoad" xml:space="preserve"><value>Загрузить</value></data>
+  <data name="GoogleSheetsTest" xml:space="preserve"><value>Проверить</value></data>
+  <data name="GoogleSheetsSave" xml:space="preserve"><value>Сохранить на сервер</value></data>
+  <data name="GoogleSheetsNeedProject" xml:space="preserve"><value>Сначала выберите проект через «Отправить в БД» или «Открыть из БД».</value></data>
+  <data name="GoogleSheetsConfiguredAs" xml:space="preserve"><value>Настроено как {0}</value></data>
+  <data name="GoogleSheetsNotConfigured" xml:space="preserve"><value>Service Account не настроен.</value></data>
+  <data name="TableExportGoogleSheets" xml:space="preserve"><value>Sheets</value></data>
+  <data name="TableExportGoogleSheetsTip" xml:space="preserve"><value>Выгрузить и связать таблицу с Google Sheets (заголовки колонок должны совпадать)</value></data>
+  <data name="GoogleSheetsExportTitle" xml:space="preserve"><value>Связь с Google Sheets</value></data>
+  <data name="GoogleSheetsSpreadsheetId" xml:space="preserve"><value>ID таблицы (пусто = создать новую):</value></data>
+  <data name="GoogleSheetsSheetName" xml:space="preserve"><value>Имя листа:</value></data>
+  <data name="GoogleSheetsCreateNew" xml:space="preserve"><value>Создать новую таблицу</value></data>
+  <data name="GoogleSheetsExportOk" xml:space="preserve"><value>Связано с Google Sheets:\n{0}</value></data>
+  <data name="GoogleSheetsExportNeedServer" xml:space="preserve"><value>Откройте BCF-отчёт с сервера, чтобы связать Google Sheets.</value></data>
+  <data name="GoogleSheetsExportNeedModerator" xml:space="preserve"><value>Выгрузка в Google Sheets доступна модератору или администратору.</value></data>
   <data name="SpServiceTesting" xml:space="preserve"><value>Проверка...</value></data>
   <data name="SpServiceTestOk" xml:space="preserve"><value>Вход выполнен: {0}. Проектов: {1}.</value></data>
   <data name="SpServiceTestError" xml:space="preserve"><value>Ошибка: {0}</value></data>
   <data name="SpServiceSavedProject" xml:space="preserve"><value>Сохранённый проект</value></data>
   <data name="SpServiceSavedModel" xml:space="preserve"><value>Сохранённая модель</value></data>
   <data name="SpServiceNotConfigured" xml:space="preserve"><value>Настройте подключение к SP-Service в настройках.</value></data>
+  <data name="SpServiceNoProjects" xml:space="preserve"><value>Для этой учётной записи нет доступных проектов.</value></data>
+  <data name="SpServicePickProjectTitle" xml:space="preserve"><value>Выбор проекта</value></data>
+  <data name="SpServicePickProjectHint" xml:space="preserve"><value>Выберите проект, в который отправить или из которого открыть отчёт.</value></data>
+  <data name="SpServiceSelectProject" xml:space="preserve"><value>Выберите проект.</value></data>
+  <data name="SpServicePickProjectConfirm" xml:space="preserve"><value>Выбрать</value></data>
+  <data name="SpServiceReportName" xml:space="preserve"><value>Название отчёта:</value></data>
+  <data name="SpServiceReportNameRequired" xml:space="preserve"><value>Укажите название отчёта.</value></data>
+  <data name="SpServicePublishSaveFailed" xml:space="preserve"><value>Не удалось подготовить BCF для загрузки. Добавьте хотя бы одно замечание или попробуйте снова.</value></data>
+  <data name="SpServicePickHint" xml:space="preserve"><value>Отчёты текущей модели отмечены ● и идут первыми. Можно открыть и отчёты других моделей этого проекта.</value></data>
   <data name="SpServiceModelRequired" xml:space="preserve"><value>Выберите модель в настройках перед открытием из БД.</value></data>
   <data name="OpenFromDb" xml:space="preserve"><value>Открыть из БД</value></data>
   <data name="SendToDb" xml:space="preserve"><value>Отправить в БД</value></data>
   <data name="AutoSyncWithDb" xml:space="preserve"><value>Автоматически синхронизироваться с БД</value></data>
   <data name="AutoSyncWithDbTip" xml:space="preserve"><value>Отправка локальных изменений и получение обновлений с сервера с интервалом из настроек.</value></data>
   <data name="SpServicePickTitle" xml:space="preserve"><value>BCF-файлы на сервере</value></data>
-  <data name="SpServicePickHint" xml:space="preserve"><value>Выберите BCF-отчёт для открытия.</value></data>
   <data name="SpServiceSelectBcfFile" xml:space="preserve"><value>Выберите BCF-файл.</value></data>
   <data name="SpServiceConflictMessage" xml:space="preserve"><value>Замечание изменено на сервере. Да = оставить локальное, Нет = взять серверное, Отмена = прервать.</value></data>
-  <data name="SpServiceNoBcfFiles" xml:space="preserve"><value>Для выбранной модели нет BCF-файлов.</value></data>
+  <data name="SpServiceNoBcfFiles" xml:space="preserve"><value>В этом проекте ещё нет BCF-отчётов. Сначала отправьте отчёт в БД.</value></data>
   <data name="SpServiceOpenError" xml:space="preserve"><value>Не удалось открыть BCF из БД: {0}</value></data>
   <data name="SpServiceSyncError" xml:space="preserve"><value>Ошибка синхронизации: {0}</value></data>
   <data name="SpServiceSyncOk" xml:space="preserve"><value>Изменения отправлены в БД.</value></data>
@@ -283,7 +339,7 @@
   <data name="TableExportHtmlTip" xml:space="preserve"><value>Экспорт таблицы в HTML</value></data>
   <data name="TableExportExcelFilter" xml:space="preserve"><value>Книга Excel (*.xlsx)|*.xlsx</value></data>
   <data name="TableExportHtmlFilter" xml:space="preserve"><value>HTML (*.html)|*.html</value></data>
-  <data name="TableExportPdf" xml:space="preserve"><value>Экспорт PDF</value></data>
+  <data name="TableExportPdf" xml:space="preserve"><value>PDF</value></data>
   <data name="TableExportPdfTip" xml:space="preserve"><value>Экспортировать таблицу в PDF</value></data>
   <data name="TableExportPdfFilter" xml:space="preserve"><value>PDF (*.pdf)|*.pdf</value></data>
   <data name="TableExportEmpty" xml:space="preserve"><value>Нечего экспортировать. Сначала откройте BCF-отчёт с замечаниями.</value></data>
@@ -307,7 +363,7 @@
   <data name="TableCommentGroupsHint" xml:space="preserve"><value>Создайте группы, чтобы показывать одну колонку комментариев для нескольких авторов. Имена сравниваются без учёта регистра.</value></data>
   <data name="TableCommentAddGroup" xml:space="preserve"><value>Добавить группу</value></data>
   <data name="TableCommentDeleteGroup" xml:space="preserve"><value>Удалить группу</value></data>
-  <data name="TableCommentGroupName" xml:space="preserve"><value>Имя группы</value></data>
+  <data name="TableCommentGroupName" xml:space="preserve"><value>Имя группы:</value></data>
   <data name="TableCommentMembers" xml:space="preserve"><value>Участники</value></data>
   <data name="TableCommentAddPlaceholder" xml:space="preserve"><value>Добавить комментарий…</value></data>
   <data name="TableAlignLeft" xml:space="preserve"><value>Слева</value></data>

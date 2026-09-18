@@ -90,10 +90,12 @@
                       <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
                           <Setter TargetName="ToggleBd" Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                          <Setter TargetName="ToggleBd" Property="Background" Value="{StaticResource SpBrush.Card}" />
                           <Setter TargetName="Arrow" Property="Stroke" Value="{StaticResource SpBrush.Primary}" />
                         </Trigger>
                         <Trigger Property="IsChecked" Value="True">
                           <Setter TargetName="ToggleBd" Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                          <Setter TargetName="ToggleBd" Property="Background" Value="#FFF7FAFD" />
                           <Setter TargetName="Arrow" Property="Stroke" Value="{StaticResource SpBrush.Primary}" />
                         </Trigger>
                       </ControlTemplate.Triggers>
@@ -135,7 +137,7 @@
                   x:Name="PlaceholderText"
                   Margin="6,4,22,4"
                   VerticalAlignment="Center"
-                  Foreground="{StaticResource SpBrush.Muted}"
+                  Foreground="{StaticResource SpBrush.Foreground}"
                   IsHitTestVisible="False"
                   Text="{TemplateBinding Tag}"
                   TextTrimming="CharacterEllipsis"
@@ -172,8 +174,13 @@
                 <Trigger Property="IsEnabled" Value="False">
                   <Setter Property="Opacity" Value="0.55" />
                 </Trigger>
+                <Trigger Property="IsMouseOver" Value="True">
+                  <Setter Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                  <Setter Property="Background" Value="{StaticResource SpBrush.Card}" />
+                </Trigger>
                 <Trigger Property="IsKeyboardFocusWithin" Value="True">
                   <Setter Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+                  <Setter Property="Background" Value="#FFF7FAFD" />
                 </Trigger>
                 <Trigger Property="IsEditable" Value="True">
                   <Setter Property="IsTabStop" Value="False" />
@@ -210,7 +217,7 @@
       </Style>
       <Style x:Key="TableCellTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource SpTextBox}">
         <Setter Property="MinHeight" Value="26" />
-        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Padding" Value="0,3" />
         <Setter Property="FontSize" Value="12" />
         <Setter Property="Margin" Value="4,2" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
@@ -236,24 +243,39 @@
         </Setter>
       </Style>
 
-      <!-- Компактная иконка-«+» вместо текстовой кнопки — не растягивает пустую ячейку по высоте -->
-      <Style x:Key="TableAddSnapshotButton" TargetType="themes:ButtonIcon" BasedOn="{StaticResource OverlayIconButton}">
-        <Setter Property="HorizontalAlignment" Value="Left" />
-        <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="Margin" Value="0" />
-      </Style>
+      <!--
+        Инлайн-добавление снимка в ячейке: текстовая ссылка, без raised-кнопки.
+        TableAddSnapshotLink / TableAddIssueLink — в ButtonStyles.xaml.
+      -->
 
-      <!-- Миниатюра без рамки/фона — только картинка + курсор "рука" -->
+      <!--
+        Миниатюра без рамки/фона — только картинка + курсор "рука".
+        Клик как в карточках: в Revit переходит к виду в модели, в Windows Viewer (модели нет) —
+        открывает изображение. Увеличение снимка в Revit доступно через контекстное меню.
+      -->
       <Style x:Key="TableSnapshotThumbButton" TargetType="Button">
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="ToolTip" Value="{x:Static loc:Loc.EnlargeView}" />
+        <Setter Property="Command" Value="{x:Static data:Commands.OpenSnapshot}" />
+        <Setter Property="ToolTip" Value="{x:Static loc:Loc.TableOpenSnapshot}" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
           <Setter.Value>
             <ControlTemplate TargetType="Button">
-              <ContentPresenter />
+              <ContentPresenter
+                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
             </ControlTemplate>
           </Setter.Value>
         </Setter>
+        <Style.Triggers>
+          <DataTrigger
+            Binding="{Binding Source={x:Static data:BcfHostCapabilities.SupportsOpenViewInModel}}"
+            Value="True">
+            <Setter Property="Command" Value="{x:Static data:Commands.OpenView}" />
+            <Setter Property="ToolTip" Value="{x:Static loc:Loc.OpenViewTip}" />
+          </DataTrigger>
+        </Style.Triggers>
       </Style>
 
       <!--
@@ -261,38 +283,75 @@
         поэтому показываем миниатюры всех (не только первого) + кнопку добавления ещё одного.
       -->
       <DataTemplate x:Key="SnapshotGalleryTemplate">
-        <WrapPanel Orientation="Horizontal">
+        <StackPanel Orientation="Vertical">
           <ItemsControl ItemsSource="{Binding Issue.Viewpoints}">
-            <ItemsControl.ItemsPanel>
-              <ItemsPanelTemplate>
-                <WrapPanel Orientation="Horizontal" />
-              </ItemsPanelTemplate>
-            </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
               <DataTemplate>
+                <!-- Снимок на всю ширину колонки: Uniform масштабирует по ширине, высота идёт за
+                     пропорцией, MaxHeight страхует от гигантских строк у вертикальных картинок. -->
                 <Border
-                  Width="72"
-                  Height="52"
-                  Margin="0,0,6,6"
+                  Margin="0,0,0,6"
+                  MaxHeight="200"
                   CornerRadius="4"
                   ClipToBounds="True"
+                  HorizontalAlignment="Stretch"
                   Visibility="{Binding HasSnapshot, Converter={StaticResource BoolVisibConverter}}">
+                  <!-- ПКМ по снимку — те же действия с видом, что и в режиме карточек.
+                       DataContext у ContextMenu не наследуется, берём его у PlacementTarget. -->
+                  <Border.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                      <MenuItem
+                        Header="{x:Static loc:Loc.OpenViewButton}"
+                        Command="{x:Static data:Commands.OpenView}"
+                        CommandParameter="{Binding}"
+                        CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        Visibility="{Binding Source={x:Static data:BcfHostCapabilities.SupportsOpenViewInModel}, Converter={StaticResource BoolVisibConverter}}" />
+                      <MenuItem
+                        Header="{x:Static loc:Loc.OpenViewIsolatedButton}"
+                        Command="{x:Static data:Commands.OpenViewIsolated}"
+                        CommandParameter="{Binding}"
+                        CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        Visibility="{Binding Source={x:Static data:BcfHostCapabilities.SupportsOpenViewInModel}, Converter={StaticResource BoolVisibConverter}}" />
+                      <MenuItem
+                        Header="{x:Static loc:Loc.SelectAllInModel}"
+                        Command="{x:Static data:Commands.SelectViewpointComponents}"
+                        CommandParameter="{Binding}"
+                        CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                        Visibility="{Binding Source={x:Static data:BcfHostCapabilities.SupportsSelectInModel}, Converter={StaticResource BoolVisibConverter}}" />
+                      <Separator Visibility="{Binding Source={x:Static data:BcfHostCapabilities.SupportsOpenViewInModel}, Converter={StaticResource BoolVisibConverter}}" />
+                      <MenuItem
+                        Header="{x:Static loc:Loc.TableOpenSnapshot}"
+                        Command="{x:Static data:Commands.OpenSnapshot}"
+                        CommandParameter="{Binding}"
+                        CommandTarget="{Binding PlacementTarget, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                      <MenuItem
+                        Header="{x:Static loc:Loc.EditView}"
+                        Click="EditViewMenuItem_Click" />
+                      <MenuItem
+                        Header="{x:Static loc:Loc.DeleteView}"
+                        Click="DeleteViewMenuItem_Click" />
+                    </ContextMenu>
+                  </Border.ContextMenu>
+                  <!-- Command задаётся стилем: зависит от того, есть ли у хоста модель -->
                   <Button
                     Style="{StaticResource TableSnapshotThumbButton}"
-                    Command="data:Commands.OpenSnapshot"
                     CommandParameter="{Binding}">
-                    <Image Stretch="UniformToFill" Source="{Binding SnapshotPath, Converter={StaticResource PathToImageConv}}" />
+                    <Image
+                      Stretch="Uniform"
+                      HorizontalAlignment="Stretch"
+                      Source="{Binding SnapshotPath, Converter={StaticResource PathToImageConv}}" />
                   </Button>
                 </Border>
               </DataTemplate>
             </ItemsControl.ItemTemplate>
           </ItemsControl>
-          <themes:ButtonIcon
-            Style="{StaticResource TableAddSnapshotButton}"
-            IconPath="{StaticResource IconAdd}"
+          <Button
+            x:Name="AddSnapshotLink"
+            Style="{StaticResource TableAddSnapshotLink}"
+            Content="{x:Static loc:Loc.TableAddSnapshotLink}"
             ToolTip="{x:Static loc:Loc.TableAddSnapshot}"
             Click="AddSnapshot_Click" />
-        </WrapPanel>
+        </StackPanel>
       </DataTemplate>
 
       <DataTemplate x:Key="SnapshotOnlyCellTemplate">
@@ -355,7 +414,22 @@
           Style="{StaticResource TableCompactComboBoxStyle}"
           ItemsSource="{Binding Issue.Topic.TopicTypesCollection}"
           SelectedItem="{Binding Issue.Topic.TopicType, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          SelectionChanged="TableCombo_SelectionChanged" />
+          SelectionChanged="TableCombo_SelectionChanged">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <Border
+                  Width="10"
+                  Height="10"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  Background="{Binding Converter={StaticResource StatusToBrushConverter}, ConverterParameter=type}"
+                  CornerRadius="2" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding}" TextWrapping="Wrap" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
       </DataTemplate>
 
       <DataTemplate x:Key="PriorityCellTemplate">
@@ -363,7 +437,22 @@
           Style="{StaticResource TableCompactComboBoxStyle}"
           ItemsSource="{Binding Issue.Topic.PrioritiesCollection}"
           SelectedItem="{Binding Issue.Topic.Priority, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-          SelectionChanged="TableCombo_SelectionChanged" />
+          SelectionChanged="TableCombo_SelectionChanged">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <Border
+                  Width="10"
+                  Height="10"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  Background="{Binding Converter={StaticResource StatusToBrushConverter}, ConverterParameter=priority}"
+                  CornerRadius="2" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding}" TextWrapping="Wrap" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
       </DataTemplate>
 
       <DataTemplate x:Key="AssignedToCellTemplate">
@@ -382,7 +471,22 @@
           Style="{StaticResource TableCompactComboBoxStyle}"
           ItemsSource="{Binding Issue.Topic.LabelsCollection}"
           Loaded="TableLabelsCombo_Loaded"
-          SelectionChanged="TableLabelsCombo_SelectionChanged" />
+          SelectionChanged="TableLabelsCombo_SelectionChanged">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <Border
+                  Width="10"
+                  Height="10"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  Background="{Binding Converter={StaticResource StatusToBrushConverter}, ConverterParameter=label}"
+                  CornerRadius="2" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding}" TextWrapping="Wrap" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
       </DataTemplate>
 
       <DataTemplate x:Key="DueDateCellTemplate">
@@ -410,6 +514,8 @@
         MinHeight="30"
         HorizontalAlignment="Stretch"
         VerticalAlignment="Center"
+        FontWeight="Bold"
+        FontSize="14"
         IsEditable="True"
         IsTextSearchEnabled="False"
         ToolTip="{x:Static loc:Loc.TableReportRenameTip}"
@@ -433,13 +539,6 @@
             Orientation="Horizontal"
             VerticalAlignment="Center">
             <themes:ButtonIcon
-              x:Name="AddIssueBtn"
-              Style="{StaticResource SpReportTableToolButton}"
-              Content="{x:Static loc:Loc.AddIssue}"
-              IconPath="{StaticResource IconAdd}"
-              ToolTip="{x:Static loc:Loc.AddIssue}"
-              Command="data:Commands.AddIssue" />
-            <themes:ButtonIcon
               x:Name="ColumnsBtn"
               Style="{StaticResource SpReportTableToolButton}"
               Content="{x:Static loc:Loc.TableColumns}"
@@ -447,12 +546,26 @@
               ToolTip="{x:Static loc:Loc.TableColumnsTip}"
               Click="ColumnsBtn_Click" />
             <themes:ButtonIcon
+              x:Name="DocumentBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableDocument}"
+              IconPath="{StaticResource IconNewFile}"
+              ToolTip="{x:Static loc:Loc.TableDocumentTip}"
+              Click="DocumentBtn_Click" />
+            <themes:ButtonIcon
               x:Name="ExportExcelBtn"
               Style="{StaticResource SpReportTableToolButton}"
               Content="{x:Static loc:Loc.TableExportExcel}"
               IconPath="{StaticResource IconUploadFile}"
               ToolTip="{x:Static loc:Loc.TableExportExcelTip}"
               Click="ExportExcelBtn_Click" />
+            <themes:ButtonIcon
+              x:Name="ExportGoogleSheetsBtn"
+              Style="{StaticResource SpReportTableToolButton}"
+              Content="{x:Static loc:Loc.TableExportGoogleSheets}"
+              IconPath="{StaticResource IconExternalLink}"
+              ToolTip="{x:Static loc:Loc.TableExportGoogleSheetsTip}"
+              Click="ExportGoogleSheetsBtn_Click" />
             <themes:ButtonIcon
               x:Name="ImportExcelBtn"
               Style="{StaticResource SpReportTableToolButton}"
@@ -471,7 +584,7 @@
               x:Name="ExportPdfBtn"
               Style="{StaticResource SpReportTableToolButton}"
               Content="{x:Static loc:Loc.TableExportPdf}"
-              IconPath="{StaticResource IconDownloadFile}"
+              IconPath="{StaticResource IconUploadFile}"
               ToolTip="{x:Static loc:Loc.TableExportPdfTip}"
               Click="ExportPdfBtn_Click" />
             <themes:ButtonIcon
@@ -500,36 +613,58 @@
     </Border>
 
     <Border
+      x:Name="TableHost"
       Grid.Row="3"
       Background="{StaticResource SpBrush.Field}"
       BorderBrush="{StaticResource SpBrush.Border}"
       BorderThickness="1"
       CornerRadius="{StaticResource SpRadius.Card}"
-      ClipToBounds="True">
+      ClipToBounds="True"
+      SizeChanged="TableHost_SizeChanged">
+      <!--
+        «+ замечание»: под последней строкой, если контент короче области;
+        иначе закреплена снизу, а сетка прокручивается.
+      -->
       <Grid>
-        <DataGrid
-          x:Name="IssuesGrid"
-          Style="{StaticResource SpReportDataGrid}"
-          RowStyle="{StaticResource TableIssueRowStyle}"
-          IsReadOnly="False"
-          SelectionUnit="CellOrRowHeader"
-          BorderThickness="0"
-          Background="Transparent"
-          SelectionChanged="IssuesGrid_SelectionChanged"
-          CellEditEnding="IssuesGrid_CellEditEnding" />
+        <Grid.RowDefinitions>
+          <RowDefinition x:Name="IssuesContentRow" Height="*" />
+          <RowDefinition Height="Auto" />
+          <RowDefinition x:Name="TableFillerRow" Height="0" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0" ClipToBounds="True">
+          <DataGrid
+            x:Name="IssuesGrid"
+            Style="{StaticResource SpReportDataGrid}"
+            RowStyle="{StaticResource TableIssueRowStyle}"
+            IsReadOnly="False"
+            SelectionUnit="CellOrRowHeader"
+            BorderThickness="0"
+            Background="Transparent"
+            VerticalAlignment="Top"
+            SelectionChanged="IssuesGrid_SelectionChanged"
+            CellEditEnding="IssuesGrid_CellEditEnding"
+            LoadingRow="IssuesGrid_LoadingRow" />
 
-        <TextBlock
-          x:Name="EmptyHint"
-          HorizontalAlignment="Center"
-          VerticalAlignment="Center"
-          Padding="40"
-          FontSize="13"
-          FontWeight="SemiBold"
-          Foreground="{StaticResource SpBrush.Muted}"
-          TextAlignment="Center"
-          TextWrapping="Wrap"
-          Text="{x:Static loc:Loc.TableEmptyHint}"
-          Visibility="Collapsed" />
+          <TextBlock
+            x:Name="EmptyHint"
+            HorizontalAlignment="Center"
+            VerticalAlignment="Center"
+            Padding="40"
+            FontSize="13"
+            FontWeight="SemiBold"
+            Foreground="{StaticResource SpBrush.Muted}"
+            TextAlignment="Center"
+            TextWrapping="Wrap"
+            Text="{x:Static loc:Loc.TableEmptyHint}"
+            Visibility="Collapsed" />
+        </Grid>
+        <Button
+          x:Name="AddIssueBtn"
+          Grid.Row="1"
+          Style="{StaticResource TableAddIssueLink}"
+          Content="{x:Static loc:Loc.TableAddIssueLink}"
+          ToolTip="{x:Static loc:Loc.AddIssue}"
+          Command="data:Commands.AddIssue" />
       </Grid>
     </Border>
   </Grid>

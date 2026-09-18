@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Bcfier.Bcf;
 using Bcfier.Bcf.Bcf2;
 using Bcfier.Data;
@@ -24,6 +25,8 @@ namespace Bcfier.UserControls
     private bool _suppressLabelChange;
     private bool _suppressDueDateChange;
     private bool _suppressCoordinateModeChange;
+    private bool _issueListLayoutScheduled;
+    private bool _updatingIssueListLayout;
 
     public BcfReportPanel()
     {
@@ -47,6 +50,14 @@ namespace Bcfier.UserControls
       IssueList.SetBinding(ItemsControl.ItemsSourceProperty, "View");
       ((INotifyCollectionChanged)IssueList.Items).CollectionChanged += IssueList_CollectionChanged;
       IssueList.SelectionChanged += IssueList_OnSelectionChanged;
+      IssueList.ItemContainerGenerator.StatusChanged += IssueList_GeneratorStatusChanged;
+      Loaded += (_, __) => ScheduleIssueListAddLayout();
+    }
+
+    private void IssueList_GeneratorStatusChanged(object sender, EventArgs e)
+    {
+      if (IssueList.ItemContainerGenerator.Status == System.Windows.Controls.Primitives.GeneratorStatus.ContainersGenerated)
+        ScheduleIssueListAddLayout();
     }
 
     private void IssueList_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -57,6 +68,88 @@ namespace Bcfier.UserControls
         IssueList.ScrollIntoView(e.NewItems[0]);
         TextBox_Title.Focus();
       }
+
+      ScheduleIssueListAddLayout();
+    }
+
+    private void IssueListHost_SizeChanged(object sender, SizeChangedEventArgs e) => ScheduleIssueListAddLayout();
+
+    private void ScheduleIssueListAddLayout()
+    {
+      if (_issueListLayoutScheduled)
+        return;
+      _issueListLayoutScheduled = true;
+      Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+      {
+        _issueListLayoutScheduled = false;
+        UpdateIssueListAddLayout();
+      }));
+    }
+
+    /// <summary>
+    /// Короткий список: «+ замечание» сразу под последней карточкой (по центру).
+    /// Длинный: кнопка снизу области, список со скроллом.
+    /// </summary>
+    private void UpdateIssueListAddLayout()
+    {
+      if (_updatingIssueListLayout || IssueListHost == null || IssueListContentRow == null || IssueListFillerRow == null)
+        return;
+      if (IssueListHost.ActualHeight <= 0)
+        return;
+
+      _updatingIssueListLayout = true;
+      try
+      {
+        AddIssueBtn.Measure(new Size(IssueListHost.ActualWidth, double.PositiveInfinity));
+        double buttonH = Math.Max(AddIssueBtn.DesiredSize.Height, AddIssueBtn.ActualHeight);
+        if (buttonH <= 0)
+          buttonH = 32;
+
+        double available = IssueListHost.ActualHeight;
+        double maxListH = Math.Max(0, available - buttonH);
+        double contentH = MeasureIssueListContentHeight();
+
+        if (contentH <= maxListH + 0.5)
+        {
+          IssueListContentRow.Height = new GridLength(Math.Max(contentH, 1));
+          IssueListFillerRow.Height = new GridLength(1, GridUnitType.Star);
+        }
+        else
+        {
+          IssueListContentRow.Height = new GridLength(1, GridUnitType.Star);
+          IssueListFillerRow.Height = new GridLength(0);
+        }
+      }
+      finally
+      {
+        _updatingIssueListLayout = false;
+      }
+    }
+
+    private double MeasureIssueListContentHeight()
+    {
+      int count = IssueList.Items.Count;
+      if (count == 0)
+        return 48;
+
+      double measuredSum = 0;
+      int measuredCount = 0;
+      for (int i = 0; i < count; i++)
+      {
+        if (IssueList.ItemContainerGenerator.ContainerFromIndex(i) is FrameworkElement item
+            && item.ActualHeight > 0)
+        {
+          measuredSum += item.ActualHeight;
+          measuredCount++;
+        }
+      }
+
+      const double fallbackRow = 88;
+      double avg = measuredCount > 0 ? measuredSum / measuredCount : fallbackRow;
+      if (avg < 40)
+        avg = fallbackRow;
+
+      return avg * count + 4;
     }
 
     private void IssueList_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -147,7 +240,10 @@ namespace Bcfier.UserControls
     {
       try
       {
-        Bcfier.CustomFields.CustomFieldsXmlStore.SaveCanonical(bcf.TempPath, bcf.ReportLevelCustomFields);
+        Bcfier.CustomFields.CustomFieldsXmlStore.SaveCanonical(
+          bcf.TempPath,
+          bcf.ReportLevelCustomFields,
+          bcf.DocumentSettings);
       }
       catch
       {
@@ -221,6 +317,7 @@ namespace Bcfier.UserControls
     private void BcfReportPanel_OnLoaded(object sender, RoutedEventArgs e)
     {
       SelectCoordinateMode(BcfCoordinateSettings.GetMode());
+      ScheduleIssueListAddLayout();
     }
 
     /// <summary>

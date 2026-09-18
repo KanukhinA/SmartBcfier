@@ -63,10 +63,28 @@ namespace Bcfier.CustomFields
   {
     private string _name = string.Empty;
     private string _value = string.Empty;
+    private string _section = string.Empty;
 
     public event PropertyChangedEventHandler PropertyChanged;
 
     public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Заголовок блока в экспортируемом протоколе ("Участники:"); пусто — блок без заголовка
+    /// сразу под названием документа.
+    /// </summary>
+    public string Section
+    {
+      get => _section;
+      set
+      {
+        string next = value ?? string.Empty;
+        if (string.Equals(_section, next, StringComparison.Ordinal))
+          return;
+        _section = next;
+        OnPropertyChanged();
+      }
+    }
 
     public string Name
     {

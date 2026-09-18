@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 namespace Bcfier.Data
 {
   /// <summary>
-  /// Элемент списка статусов: отображаемое имя и цвет (#RRGGBB).
+  /// Элемент цветного списка настроек (статус / тип / приоритет / метка): имя + #RRGGBB.
   /// </summary>
   public sealed class TopicStatusEntry : INotifyPropertyChanged
   {
@@ -75,7 +75,7 @@ namespace Bcfier.Data
   }
 
   /// <summary>
-  /// Сериализация списка статусов: JSON с цветами или legacy CSV без цветов.
+  /// Сериализация цветных списков: JSON с цветами или legacy CSV без цветов.
   /// </summary>
   public static class TopicStatusListCodec
   {

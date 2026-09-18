@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using Bcfier.Bcf.Bcf2;
+using Bcfier.ReportTable;
 
 namespace Bcfier.CustomFields
 {
@@ -63,7 +64,10 @@ namespace Bcfier.CustomFields
     }
 
     /// <summary>Пишет custom-fields.xml с полями проекта; пустой набор — удаляет файл.</summary>
-    public static void SaveCanonical(string tempPath, IEnumerable<CustomFieldValue> projectFields)
+    public static void SaveCanonical(
+      string tempPath,
+      IEnumerable<CustomFieldValue> projectFields,
+      ReportDocumentSettings document = null)
     {
       string docs = GetDocumentsPath(tempPath);
       string path = GetCanonicalPath(tempPath);
@@ -74,14 +78,20 @@ namespace Bcfier.CustomFields
         if (field == null || string.IsNullOrWhiteSpace(field.Name) && string.IsNullOrWhiteSpace(field.Id))
           continue;
 
-        reportEl.Add(new XElement(
+        var fieldEl = new XElement(
           "Field",
           new XAttribute("Id", field.Id ?? string.Empty),
           new XAttribute("Name", field.Name ?? string.Empty),
-          field.Value ?? string.Empty));
+          field.Value ?? string.Empty);
+
+        if (!string.IsNullOrWhiteSpace(field.Section))
+          fieldEl.SetAttributeValue("Section", field.Section);
+
+        reportEl.Add(fieldEl);
       }
 
-      if (!reportEl.HasElements)
+      bool hasDocument = document != null && !document.IsDefault;
+      if (!reportEl.HasElements && !hasDocument)
       {
         if (File.Exists(path))
           File.Delete(path);
@@ -91,7 +101,18 @@ namespace Bcfier.CustomFields
       if (!Directory.Exists(docs))
         Directory.CreateDirectory(docs);
 
-      var root = new XElement("CustomFields", reportEl);
+      var root = new XElement("CustomFields");
+      if (hasDocument)
+      {
+        root.Add(new XElement(
+          "Document",
+          new XAttribute("Title", document.Title ?? string.Empty),
+          new XAttribute("Subtitle", document.Subtitle ?? string.Empty),
+          new XAttribute("ShowFieldBlocks", document.ShowFieldBlocks),
+          new XAttribute("ShowRowNumbers", document.ShowRowNumbers)));
+      }
+
+      root.Add(reportEl);
       new XDocument(new XDeclaration("1.0", "utf-8", null), root).Save(path);
     }
 
@@ -115,6 +136,17 @@ namespace Bcfier.CustomFields
         return false;
 
       bool any = false;
+      XElement documentEl = root.Elements().FirstOrDefault(e =>
+        string.Equals(e.Name.LocalName, "Document", StringComparison.OrdinalIgnoreCase));
+      if (documentEl != null)
+      {
+        result.Document.Title = ((string)documentEl.Attribute("Title") ?? string.Empty).Trim();
+        result.Document.Subtitle = ((string)documentEl.Attribute("Subtitle") ?? string.Empty).Trim();
+        result.Document.ShowFieldBlocks = ReadBool(documentEl.Attribute("ShowFieldBlocks"), true);
+        result.Document.ShowRowNumbers = ReadBool(documentEl.Attribute("ShowRowNumbers"), true);
+        any = true;
+      }
+
       foreach (XElement reportEl in root.Elements().Where(e =>
                  string.Equals(e.Name.LocalName, "Report", StringComparison.OrdinalIgnoreCase)))
       {
@@ -165,6 +197,7 @@ namespace Bcfier.CustomFields
     {
       string id = ((string)fieldEl.Attribute("Id") ?? (string)fieldEl.Attribute("id") ?? string.Empty).Trim();
       string name = ((string)fieldEl.Attribute("Name") ?? (string)fieldEl.Attribute("name") ?? string.Empty).Trim();
+      string section = ((string)fieldEl.Attribute("Section") ?? string.Empty).Trim();
       string value = (fieldEl.Value ?? string.Empty).Trim();
       if (string.IsNullOrEmpty(name) && string.IsNullOrEmpty(id))
         return null;
@@ -173,8 +206,14 @@ namespace Bcfier.CustomFields
       {
         Id = id,
         Name = string.IsNullOrEmpty(name) ? id : name,
+        Section = section,
         Value = value
       };
+    }
+
+    private static bool ReadBool(XAttribute attribute, bool fallback)
+    {
+      return bool.TryParse((string)attribute, out bool parsed) ? parsed : fallback;
     }
 
     private static bool TryParseFlat(XElement root, out List<CustomFieldValue> fields)
@@ -228,6 +267,8 @@ namespace Bcfier.CustomFields
   {
     public ObservableCollection<CustomFieldValue> ReportLevel { get; } =
       new ObservableCollection<CustomFieldValue>();
+
+    public ReportDocumentSettings Document { get; } = new ReportDocumentSettings();
 
     public List<string> Warnings { get; } = new List<string>();
 

@@ -107,9 +107,13 @@ namespace Bcfier.ReportTable
 
     private static string FormatDueDate(Topic topic)
     {
-      if (!topic.DueDateSpecified)
+      if (!topic.DueDateSpecified || topic.DueDate == default)
         return string.Empty;
-      return FormatDate(topic.DueDate);
+
+      // Срок — календарная дата: в интерфейсе задаётся только день (DatePicker), поэтому
+      // ни времени, ни перевода часового пояса быть не должно. ToLocalTime() здесь сдвигал
+      // полночь на смещение пояса и мог увести дату на сутки назад при отрицательном UTC.
+      return topic.DueDate.ToString("d", CultureInfo.CurrentCulture);
     }
 
     private static string FormatDate(DateTime value)

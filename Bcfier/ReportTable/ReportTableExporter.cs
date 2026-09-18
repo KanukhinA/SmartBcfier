@@ -17,9 +17,9 @@ namespace Bcfier.ReportTable
     private const int ImageMaxWidthPx = 160;
 
     private const double PdfMargin = 36;
-    private const double PdfImageMaxWidth = 220;
-    private const double PdfImageMaxHeight = 140;
-    private const double PdfLineHeight = 13;
+    private const double PdfImageMaxHeight = 110;
+    private const double PdfLineHeight = 11;
+    private const double PdfCellPadding = 3;
 
     /// <summary>Сохраняет .xlsx с видимыми колонками; первый столбец — порядковый номер.</summary>
     public static void ExportExcel(
@@ -92,39 +92,68 @@ namespace Bcfier.ReportTable
       }
     }
 
-    /// <summary>Сохраняет самодостаточный HTML с base64-картинками.</summary>
+    /// <summary>Сохраняет самодостаточный HTML-протокол с base64-картинками.</summary>
     public static void ExportHtml(
       string path,
       IList<ReportTableRow> rows,
       IList<ReportTableColumnConfig> visibleColumns,
       string reportTitle,
-      IList<ReportTableUserGroup> groups = null)
+      IList<ReportTableUserGroup> groups = null,
+      ReportExportContext context = null)
     {
       if (string.IsNullOrWhiteSpace(path))
         throw new ArgumentException("path");
 
+      context = context ?? new ReportExportContext(reportTitle, null, null, groups);
+      IList<ReportTableUserGroup> commentGroups = context.Groups ?? groups;
+
       var sb = new StringBuilder();
       sb.AppendLine("<!DOCTYPE html>");
       sb.AppendLine("<html><head><meta charset=\"utf-8\"/>");
-      sb.Append("<title>").Append(HtmlEncode(reportTitle ?? "BCF")).AppendLine("</title>");
+      sb.Append("<title>").Append(HtmlEncode(context.Title)).AppendLine("</title>");
       sb.AppendLine("<style>");
-      sb.AppendLine("body{font-family:Segoe UI,Roboto,Arial,sans-serif;font-size:13px;color:#1a1d26;margin:24px;background:#f5f6f8;}");
-      sb.AppendLine("h1{font-size:18px;font-weight:600;margin:0 0 16px;}");
-      sb.AppendLine("table{border-collapse:collapse;width:100%;background:#fff;border:1px solid #d8dbe3;border-radius:8px;overflow:hidden;}");
-      sb.AppendLine("th,td{border-bottom:1px solid #e6e8ef;padding:8px 10px;vertical-align:top;}");
-      sb.AppendLine("th{background:#eef0f5;font-weight:600;font-size:12px;}");
-      sb.AppendLine("tr:nth-child(even) td{background:#fafbfc;}");
-      sb.AppendLine("td.num{width:48px;color:#6b7280;text-align:center;}");
-      sb.AppendLine("th.num{text-align:center;}");
-      sb.AppendLine("img.snap{max-width:160px;max-height:96px;display:inline-block;margin-top:6px;border-radius:4px;}");
+      sb.AppendLine("@page{size:A4;margin:18mm 14mm;}");
+      sb.AppendLine("body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000;margin:0;background:#fff;}");
+      sb.AppendLine(".doc{max-width:900px;margin:0 auto;padding:24px;}");
+      sb.AppendLine(".doc-title{text-align:center;font-weight:bold;font-size:12pt;margin:0 0 2px;}");
+      sb.AppendLine(".section{font-weight:bold;margin:14px 0 4px;}");
+      sb.AppendLine("table{border-collapse:collapse;width:100%;margin:0 0 10px;}");
+      sb.AppendLine("table.meta{margin-top:10px;}");
+      sb.AppendLine("table.meta td{border:1px solid #000;padding:3px 6px;vertical-align:top;}");
+      sb.AppendLine("table.meta td.lbl{width:34%;font-weight:bold;}");
+      sb.AppendLine("table.grid th,table.grid td{border:1px solid #000;padding:4px 6px;vertical-align:top;}");
+      sb.AppendLine("table.grid th{font-weight:bold;text-align:center;background:#e8e8e8;}");
+      sb.AppendLine("td.num{width:42px;text-align:center;}");
+      sb.AppendLine("img.snap{max-width:220px;max-height:150px;display:block;margin-top:5px;}");
       sb.AppendLine(".desc{white-space:pre-wrap;}");
       sb.AppendLine(".a-left{text-align:left;}");
       sb.AppendLine(".a-center{text-align:center;}");
       sb.AppendLine(".a-right{text-align:right;}");
-      sb.AppendLine("</style></head><body>");
-      sb.Append("<h1>").Append(HtmlEncode(reportTitle ?? "BCF")).AppendLine("</h1>");
-      sb.AppendLine("<table><thead><tr>");
-      sb.Append("<th class=\"num\">#</th>");
+      sb.AppendLine("</style></head><body><div class=\"doc\">");
+
+      if (!string.IsNullOrWhiteSpace(context.Title))
+        sb.Append("<p class=\"doc-title\">").Append(HtmlEncode(context.Title)).AppendLine("</p>");
+      if (!string.IsNullOrWhiteSpace(context.Subtitle))
+        sb.Append("<p class=\"doc-title\">").Append(HtmlEncode(context.Subtitle)).AppendLine("</p>");
+
+      foreach (ReportDocumentBlock block in context.Blocks)
+      {
+        if (!string.IsNullOrWhiteSpace(block.Heading))
+          sb.Append("<p class=\"section\">").Append(HtmlEncode(block.Heading)).AppendLine("</p>");
+
+        sb.AppendLine("<table class=\"meta\">");
+        foreach (ReportDocumentField field in block.Fields)
+        {
+          sb.Append("<tr><td class=\"lbl\">").Append(HtmlEncode(field.Label)).Append("</td><td>")
+            .Append(HtmlEncode(field.Value)).AppendLine("</td></tr>");
+        }
+
+        sb.AppendLine("</table>");
+      }
+
+      sb.AppendLine("<table class=\"grid\"><thead><tr>");
+      if (context.ShowRowNumbers)
+        sb.Append("<th class=\"num\">").Append(HtmlEncode(Loc.TableRowNumberHeader)).Append("</th>");
       foreach (ReportTableColumnConfig col in visibleColumns)
       {
         sb.Append("<th class=\"").Append(CssAlign(col.TextAlign)).Append("\">")
@@ -135,45 +164,51 @@ namespace Bcfier.ReportTable
 
       foreach (ReportTableRow row in rows ?? Array.Empty<ReportTableRow>())
       {
-        sb.Append("<tr><td class=\"num\">").Append(row.RowNumber).Append("</td>");
+        sb.Append("<tr>");
+        if (context.ShowRowNumbers)
+          sb.Append("<td class=\"num\">").Append(row.RowNumber).Append("</td>");
         foreach (ReportTableColumnConfig col in visibleColumns)
         {
           sb.Append("<td class=\"").Append(CssAlign(col.TextAlign)).Append("\">")
-            .Append(RenderHtmlCell(row, col, groups)).Append("</td>");
+            .Append(RenderHtmlCell(row, col, commentGroups)).Append("</td>");
         }
 
         sb.AppendLine("</tr>");
       }
 
-      sb.AppendLine("</tbody></table></body></html>");
+      sb.AppendLine("</tbody></table></div></body></html>");
       File.WriteAllText(path, sb.ToString(), Encoding.UTF8);
     }
 
-    /// <summary>Сохраняет PDF: один "блок" на замечание — заголовок, поля, снимок.</summary>
+    /// <summary>Сохраняет PDF-протокол: шапка, блоки полей и таблица замечаний с рамками.</summary>
     public static void ExportPdf(
       string path,
       IList<ReportTableRow> rows,
       IList<ReportTableColumnConfig> visibleColumns,
       string reportTitle,
-      IList<ReportTableUserGroup> groups = null)
+      IList<ReportTableUserGroup> groups = null,
+      ReportExportContext context = null)
     {
       if (string.IsNullOrWhiteSpace(path))
         throw new ArgumentException("path");
 
+      context = context ?? new ReportExportContext(reportTitle, null, null, groups);
+      IList<ReportTableUserGroup> commentGroups = context.Groups ?? groups;
+
       // Unicode-кодировка обязательна — иначе кириллица не отрисуется в PDF.
       var fontOptions = new XPdfFontOptions(PdfFontEncoding.Unicode);
-      var titleFont = new XFont("Arial", 16, XFontStyleEx.Bold, fontOptions);
-      var headingFont = new XFont("Arial", 12, XFontStyleEx.Bold, fontOptions);
-      var labelFont = new XFont("Arial", 9, XFontStyleEx.Bold, fontOptions);
-      var textFont = new XFont("Arial", 10, XFontStyleEx.Regular, fontOptions);
+      var titleFont = new XFont("Times New Roman", 12, XFontStyleEx.Bold, fontOptions);
+      var sectionFont = new XFont("Times New Roman", 11, XFontStyleEx.Bold, fontOptions);
+      var headFont = new XFont("Times New Roman", 9, XFontStyleEx.Bold, fontOptions);
+      var textFont = new XFont("Times New Roman", 9, XFontStyleEx.Regular, fontOptions);
+      var headerFill = new XSolidBrush(XColor.FromArgb(232, 232, 232));
 
       var document = new PdfDocument();
-      document.Info.Title = reportTitle ?? "BCF";
+      document.Info.Title = context.Title;
 
       PdfPage page = null;
       XGraphics gfx = null;
       double y = 0;
-      double pageWidth = 0;
       double pageHeight = 0;
       double contentWidth = 0;
 
@@ -183,16 +218,9 @@ namespace Bcfier.ReportTable
         page.Size = PdfSharp.PageSize.A4;
         gfx?.Dispose();
         gfx = XGraphics.FromPdfPage(page);
-        pageWidth = page.Width.Point;
         pageHeight = page.Height.Point;
-        contentWidth = pageWidth - PdfMargin * 2;
+        contentWidth = page.Width.Point - PdfMargin * 2;
         y = PdfMargin;
-      }
-
-      void EnsureSpace(double needed)
-      {
-        if (y + needed > pageHeight - PdfMargin)
-          NewPage();
       }
 
       List<string> WrapText(string text, XFont font, double maxWidth)
@@ -206,12 +234,30 @@ namespace Bcfier.ReportTable
           var line = new StringBuilder();
           foreach (string word in paragraph.Split(' '))
           {
-            string candidate = line.Length == 0 ? word : line + " " + word;
+            // Слово шире колонки рубим посимвольно, иначе текст вылезет за рамку.
+            string piece = word;
+            while (gfx.MeasureString(piece, font).Width > maxWidth && piece.Length > 1)
+            {
+              int fit = piece.Length;
+              while (fit > 1 && gfx.MeasureString(piece.Substring(0, fit), font).Width > maxWidth)
+                fit--;
+
+              if (line.Length > 0)
+              {
+                result.Add(line.ToString());
+                line.Clear();
+              }
+
+              result.Add(piece.Substring(0, fit));
+              piece = piece.Substring(fit);
+            }
+
+            string candidate = line.Length == 0 ? piece : line + " " + piece;
             if (line.Length > 0 && gfx.MeasureString(candidate, font).Width > maxWidth)
             {
               result.Add(line.ToString());
               line.Clear();
-              line.Append(word);
+              line.Append(piece);
             }
             else
             {
@@ -226,101 +272,285 @@ namespace Bcfier.ReportTable
         return result;
       }
 
-      void DrawField(string label, string value)
+      XSize MeasureImage(string imagePath, double maxWidth)
       {
-        if (string.IsNullOrWhiteSpace(value))
-          return;
-
-        List<string> lines = WrapText(value, textFont, contentWidth - 10);
-        EnsureSpace(PdfLineHeight + lines.Count * PdfLineHeight);
-        gfx.DrawString(label + ":", labelFont, XBrushes.Black, new XRect(PdfMargin, y, contentWidth, PdfLineHeight), XStringFormats.TopLeft);
-        y += PdfLineHeight;
-        foreach (string line in lines)
+        try
         {
-          EnsureSpace(PdfLineHeight);
-          gfx.DrawString(line, textFont, XBrushes.Black, new XRect(PdfMargin + 10, y, contentWidth - 10, PdfLineHeight), XStringFormats.TopLeft);
-          y += PdfLineHeight;
+          using (XImage image = XImage.FromFile(imagePath))
+          {
+            double ratio = Math.Min(
+              Math.Min(maxWidth / image.PixelWidth, PdfImageMaxHeight / image.PixelHeight),
+              1.0);
+            return new XSize(image.PixelWidth * ratio, image.PixelHeight * ratio);
+          }
+        }
+        catch
+        {
+          return new XSize(0, 0);
+        }
+      }
+
+      // Одна строка таблицы: измеряем все ячейки, при нехватке места переносим на новую страницу.
+      void DrawGridRow(IList<PdfTableCell> cells, IList<double> widths, bool isHeader, Action repeatHeader)
+      {
+        XFont font = isHeader ? headFont : textFont;
+        var cellLines = new List<List<string>>();
+        var cellImages = new List<XSize>();
+        double rowHeight = PdfCellPadding * 2;
+
+        for (int i = 0; i < cells.Count; i++)
+        {
+          double inner = widths[i] - PdfCellPadding * 2;
+          List<string> lines = WrapText(cells[i].Text, font, inner);
+          XSize imageSize = string.IsNullOrEmpty(cells[i].ImagePath)
+            ? new XSize(0, 0)
+            : MeasureImage(cells[i].ImagePath, inner);
+
+          cellLines.Add(lines);
+          cellImages.Add(imageSize);
+
+          double height = PdfCellPadding * 2 + lines.Count * PdfLineHeight;
+          if (imageSize.Height > 0)
+            height += imageSize.Height + (lines.Count > 0 ? 4 : 0);
+          rowHeight = Math.Max(rowHeight, height);
         }
 
-        y += 3;
+        double usable = pageHeight - PdfMargin * 2;
+        if (rowHeight > usable)
+          rowHeight = usable;
+
+        if (y + rowHeight > pageHeight - PdfMargin)
+        {
+          NewPage();
+          repeatHeader?.Invoke();
+        }
+
+        double x = PdfMargin;
+        for (int i = 0; i < cells.Count; i++)
+        {
+          gfx.DrawRectangle(XPens.Black, x, y, widths[i], rowHeight);
+          if (isHeader)
+            gfx.DrawRectangle(headerFill, x + 0.5, y + 0.5, widths[i] - 1, rowHeight - 1);
+
+          double textY = y + PdfCellPadding;
+          double inner = widths[i] - PdfCellPadding * 2;
+          XStringFormat format = cells[i].Align == ReportTableTextAlign.Center
+            ? XStringFormats.TopCenter
+            : cells[i].Align == ReportTableTextAlign.Right
+              ? XStringFormats.TopRight
+              : XStringFormats.TopLeft;
+
+          foreach (string line in cellLines[i])
+          {
+            if (textY + PdfLineHeight > y + rowHeight - PdfCellPadding + 1)
+              break;
+            gfx.DrawString(line, font, XBrushes.Black,
+              new XRect(x + PdfCellPadding, textY, inner, PdfLineHeight), format);
+            textY += PdfLineHeight;
+          }
+
+          if (cellImages[i].Height > 0 && textY + cellImages[i].Height <= y + rowHeight)
+          {
+            try
+            {
+              using (XImage image = XImage.FromFile(cells[i].ImagePath))
+              {
+                gfx.DrawImage(image, x + PdfCellPadding, textY + 2,
+                  cellImages[i].Width, cellImages[i].Height);
+              }
+            }
+            catch
+            {
+              // Битый снимок не должен прерывать экспорт
+            }
+          }
+
+          x += widths[i];
+        }
+
+        y += rowHeight;
+      }
+
+      void DrawCenteredLine(string text, XFont font)
+      {
+        if (string.IsNullOrWhiteSpace(text))
+          return;
+
+        foreach (string line in WrapText(text, font, contentWidth))
+        {
+          if (y + 16 > pageHeight - PdfMargin)
+            NewPage();
+          gfx.DrawString(line, font, XBrushes.Black,
+            new XRect(PdfMargin, y, contentWidth, 16), XStringFormats.TopCenter);
+          y += 16;
+        }
       }
 
       NewPage();
-      gfx.DrawString(reportTitle ?? "BCF", titleFont, XBrushes.Black, new XRect(PdfMargin, y, contentWidth, 24), XStringFormats.TopLeft);
-      y += 30;
 
-      foreach (ReportTableRow row in rows ?? Array.Empty<ReportTableRow>())
+      DrawCenteredLine(context.Title, titleFont);
+      DrawCenteredLine(context.Subtitle, titleFont);
+      y += 10;
+
+      foreach (ReportDocumentBlock block in context.Blocks)
       {
-        List<string> headingLines = WrapText(
-          row.RowNumber + ". " + row.GetText(ReportTableColumnKind.Title),
-          headingFont,
-          contentWidth);
-        foreach (string line in headingLines)
+        if (!string.IsNullOrWhiteSpace(block.Heading))
         {
-          EnsureSpace(18);
-          gfx.DrawString(line, headingFont, XBrushes.Black, new XRect(PdfMargin, y, contentWidth, 18), XStringFormats.TopLeft);
+          if (y + 18 > pageHeight - PdfMargin)
+            NewPage();
+          gfx.DrawString(block.Heading, sectionFont, XBrushes.Black,
+            new XRect(PdfMargin, y, contentWidth, 16), XStringFormats.TopLeft);
           y += 18;
         }
 
-        y += 4;
-
-        string imagePath = null;
-        foreach (ReportTableColumnConfig config in visibleColumns)
+        var metaWidths = new[] { contentWidth * 0.34, contentWidth * 0.66 };
+        foreach (ReportDocumentField field in block.Fields)
         {
-          switch (config.Kind)
-          {
-            case ReportTableColumnKind.Title:
-              break; // уже вынесен в заголовок блока
-            case ReportTableColumnKind.Snapshot:
-              if (!string.IsNullOrWhiteSpace(row.SnapshotPath) && File.Exists(row.SnapshotPath))
-                imagePath = row.SnapshotPath;
-              break;
-            case ReportTableColumnKind.DescriptionAndSnapshot:
-              DrawField(Loc.Description, row.Description);
-              if (!string.IsNullOrWhiteSpace(row.SnapshotPath) && File.Exists(row.SnapshotPath))
-                imagePath = row.SnapshotPath;
-              break;
-            case ReportTableColumnKind.TitleAndSnapshot:
-              if (!string.IsNullOrWhiteSpace(row.SnapshotPath) && File.Exists(row.SnapshotPath))
-                imagePath = row.SnapshotPath;
-              break;
-            case ReportTableColumnKind.Comments:
-              DrawField(config.EffectiveHeader, ReportTableCommentHelper.FormatForColumn(row.Issue, config, groups));
-              break;
-            default:
-              DrawField(config.EffectiveHeader, row.GetText(config.Kind));
-              break;
-          }
-        }
-
-        if (imagePath != null)
-        {
-          try
-          {
-            using (XImage image = XImage.FromFile(imagePath))
+          DrawGridRow(
+            new[]
             {
-              double ratio = Math.Min(PdfImageMaxWidth / image.PixelWidth, PdfImageMaxHeight / image.PixelHeight);
-              double w = image.PixelWidth * ratio;
-              double h = image.PixelHeight * ratio;
-              EnsureSpace(h + 6);
-              gfx.DrawImage(image, PdfMargin, y, w, h);
-              y += h + 6;
-            }
-          }
-          catch
-          {
-            // Битый/недоступный файл снимка не должен прерывать экспорт
-          }
+              new PdfTableCell { Text = field.Label, Align = ReportTableTextAlign.Left },
+              new PdfTableCell { Text = field.Value, Align = ReportTableTextAlign.Left }
+            },
+            metaWidths,
+            false,
+            null);
         }
 
-        y += 6;
-        EnsureSpace(1);
-        gfx.DrawLine(XPens.LightGray, PdfMargin, y, pageWidth - PdfMargin, y);
-        y += 10;
+        y += 8;
+      }
+
+      double[] columnWidths = BuildPdfColumnWidths(visibleColumns, contentWidth, context.ShowRowNumbers);
+
+      List<PdfTableCell> BuildHeaderCells()
+      {
+        var cells = new List<PdfTableCell>();
+        if (context.ShowRowNumbers)
+          cells.Add(new PdfTableCell { Text = Loc.TableRowNumberHeader, Align = ReportTableTextAlign.Center });
+        foreach (ReportTableColumnConfig col in visibleColumns)
+          cells.Add(new PdfTableCell { Text = col.EffectiveHeader, Align = ReportTableTextAlign.Center });
+        return cells;
+      }
+
+      void DrawHeader() => DrawGridRow(BuildHeaderCells(), columnWidths, true, null);
+
+      DrawHeader();
+
+      foreach (ReportTableRow row in rows ?? Array.Empty<ReportTableRow>())
+      {
+        var cells = new List<PdfTableCell>();
+        if (context.ShowRowNumbers)
+        {
+          cells.Add(new PdfTableCell
+          {
+            Text = row.RowNumber.ToString(),
+            Align = ReportTableTextAlign.Center
+          });
+        }
+
+        foreach (ReportTableColumnConfig col in visibleColumns)
+          cells.Add(BuildPdfCell(row, col, commentGroups));
+
+        DrawGridRow(cells, columnWidths, false, DrawHeader);
       }
 
       document.Save(path);
       gfx?.Dispose();
+    }
+
+    private static PdfTableCell BuildPdfCell(
+      ReportTableRow row,
+      ReportTableColumnConfig config,
+      IList<ReportTableUserGroup> groups)
+    {
+      var cell = new PdfTableCell { Align = config.TextAlign };
+      string snapshot = !string.IsNullOrWhiteSpace(row.SnapshotPath) && File.Exists(row.SnapshotPath)
+        ? row.SnapshotPath
+        : null;
+
+      switch (config.Kind)
+      {
+        case ReportTableColumnKind.Snapshot:
+          cell.ImagePath = snapshot;
+          break;
+        case ReportTableColumnKind.DescriptionAndSnapshot:
+          cell.Text = row.Description ?? string.Empty;
+          cell.ImagePath = snapshot;
+          break;
+        case ReportTableColumnKind.TitleAndSnapshot:
+          cell.Text = row.GetText(ReportTableColumnKind.Title);
+          cell.ImagePath = snapshot;
+          break;
+        case ReportTableColumnKind.Comments:
+          cell.Text = ReportTableCommentHelper.FormatForColumn(row.Issue, config, groups);
+          break;
+        default:
+          cell.Text = row.GetText(config.Kind);
+          break;
+      }
+
+      return cell;
+    }
+
+    /// <summary>Ширины колонок PDF: текстовым колонкам больше места, датам/статусам меньше.</summary>
+    private static double[] BuildPdfColumnWidths(
+      IList<ReportTableColumnConfig> visibleColumns,
+      double contentWidth,
+      bool showRowNumbers)
+    {
+      double numberWidth = showRowNumbers ? 28 : 0;
+      double rest = contentWidth - numberWidth;
+
+      var weights = new List<double>();
+      foreach (ReportTableColumnConfig col in visibleColumns)
+        weights.Add(PdfColumnWeight(col.Kind));
+
+      double total = 0;
+      foreach (double w in weights)
+        total += w;
+      if (total <= 0)
+        total = 1;
+
+      var widths = new List<double>();
+      if (showRowNumbers)
+        widths.Add(numberWidth);
+      foreach (double w in weights)
+        widths.Add(rest * w / total);
+
+      return widths.ToArray();
+    }
+
+    private static double PdfColumnWeight(ReportTableColumnKind kind)
+    {
+      switch (kind)
+      {
+        case ReportTableColumnKind.Title:
+        case ReportTableColumnKind.Description:
+        case ReportTableColumnKind.TitleAndSnapshot:
+        case ReportTableColumnKind.DescriptionAndSnapshot:
+        case ReportTableColumnKind.Comments:
+          return 3.0;
+        case ReportTableColumnKind.Snapshot:
+          return 2.0;
+        case ReportTableColumnKind.AssignedTo:
+        case ReportTableColumnKind.Labels:
+        case ReportTableColumnKind.CreationAuthor:
+        case ReportTableColumnKind.ModifiedAuthor:
+        case ReportTableColumnKind.Guid:
+          return 1.5;
+        default:
+          return 1.1;
+      }
+    }
+
+    /// <summary>Ячейка таблицы PDF.</summary>
+    private sealed class PdfTableCell
+    {
+      public string Text { get; set; } = string.Empty;
+
+      public string ImagePath { get; set; }
+
+      public ReportTableTextAlign Align { get; set; } = ReportTableTextAlign.Left;
     }
 
     private static void WriteHeader(IXLWorksheet sheet, IList<ReportTableColumnConfig> visibleColumns)

@@ -48,7 +48,7 @@
       </Style>
       <Style x:Key="CompactTextBoxStyle" TargetType="themes:TextPlaceholder" BasedOn="{StaticResource {x:Type themes:TextPlaceholder}}">
         <Setter Property="MinHeight" Value="30" />
-        <Setter Property="Padding" Value="7,3" />
+        <Setter Property="Padding" Value="0,3" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
       </Style>
     </ResourceDictionary>
@@ -67,16 +67,9 @@
         <RowDefinition Height="*" />
         <RowDefinition Height="auto" />
       </Grid.RowDefinitions>
-      <!-- Компактная строка: + и поиск -->
+      <!-- Компактная строка: поиск (+ пакетное добавление, если доступно) -->
       <Border Grid.Row="1" Style="{StaticResource SpSettingsToolBar}">
         <DockPanel LastChildFill="True">
-          <themes:ButtonIcon
-            x:Name="AddIssueBtn"
-            DockPanel.Dock="Left"
-            Style="{StaticResource IssueListAddButton}"
-            Command="data:Commands.AddIssue"
-            IconPath="{StaticResource IconAdd}"
-            ToolTip="{x:Static loc:Loc.AddIssue}" />
           <themes:ButtonIcon
             x:Name="AddIssuesBtn"
             DockPanel.Dock="Left"
@@ -90,34 +83,49 @@
             x:Name="SearchBox"
             MinHeight="30"
             Height="30"
-            Padding="7,3"
+            Padding="0,3"
             VerticalAlignment="Center"
             VerticalContentAlignment="Center"
+            Style="{StaticResource SpBoxedTextPlaceholder}"
+            PlaceholderColor="{StaticResource SpBrush.Muted}"
             KeyDown="SearchBox_OnKeyDown"
             Placeholder="{x:Static loc:Loc.SearchIssues}"
             Text="{Binding TextSearch, UpdateSourceTrigger=PropertyChanged}"
             ToolTip="{x:Static loc:Loc.SearchIssuesTip}" />
         </DockPanel>
       </Border>
-      <ListView
-        x:Name="IssueList"
+      <!-- Список + «+ замечание»: под последней карточкой или закреплена снизу при скролле -->
+      <Border
+        x:Name="IssueListHost"
         Grid.Row="2"
-        Margin="0"
-        Padding="0"
-        Style="{StaticResource ListViewTheme}"
         Background="Transparent"
-        BorderThickness="0"
-        AlternationCount="2"
-        IsSynchronizedWithCurrentItem="True"
-        ItemContainerStyle="{StaticResource IssueListStyle}"
-        ItemsSource="{Binding View}"
-        ScrollViewer.HorizontalScrollBarVisibility="Disabled"
-        SelectedIndex="0"
-        SelectedItem="{Binding SelectedIssue}"
-        SelectionMode="Extended"
-        dd:DragDrop.IsDragSource="True"
-        dd:DragDrop.IsDropTarget="True"
-        >
+        SizeChanged="IssueListHost_SizeChanged">
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition x:Name="IssueListContentRow" Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition x:Name="IssueListFillerRow" Height="0" />
+          </Grid.RowDefinitions>
+          <ListView
+            x:Name="IssueList"
+            Grid.Row="0"
+            Margin="0"
+            Padding="0"
+            Style="{StaticResource ListViewTheme}"
+            Background="Transparent"
+            BorderThickness="0"
+            AlternationCount="2"
+            VerticalAlignment="Top"
+            IsSynchronizedWithCurrentItem="True"
+            ItemContainerStyle="{StaticResource IssueListStyle}"
+            ItemsSource="{Binding View}"
+            ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+            SelectedIndex="0"
+            SelectedItem="{Binding SelectedIssue}"
+            SelectionMode="Extended"
+            dd:DragDrop.IsDragSource="True"
+            dd:DragDrop.IsDropTarget="True"
+            >
         <ListView.ItemTemplate>
           <DataTemplate>
             <Grid>
@@ -248,6 +256,15 @@
           </DataTemplate>
         </ListView.ItemTemplate>
       </ListView>
+          <Button
+            x:Name="AddIssueBtn"
+            Grid.Row="1"
+            Style="{StaticResource TableAddIssueLink}"
+            Content="{x:Static loc:Loc.TableAddIssueLink}"
+            ToolTip="{x:Static loc:Loc.AddIssue}"
+            Command="data:Commands.AddIssue" />
+        </Grid>
+      </Border>
       <!-- Фильтры списка (без кнопок добавить/удалить — они у поиска и на карточках) -->
       <Border Grid.Row="0" Style="{StaticResource SpSettingsToolBar}">
       <StackPanel
@@ -336,10 +353,17 @@
         <RowDefinition Height="Auto" />
         <RowDefinition Height="*" />
       </Grid.RowDefinitions>
-      <!--  ISSUE INFO: автор и ответственный с видимыми подписями  -->
-      <Grid
+      <!--  ISSUE INFO: сгруппировано в Card; единый вертикальный ритм SpSpace.FieldGap -->
+      <Border
         Grid.Row="0"
-        Margin="{StaticResource SpSpace.ContentInsetTop}">
+        Margin="{StaticResource SpSpace.ContentInsetTop}"
+        Padding="{StaticResource SpSpace.ContentInset}"
+        Background="{StaticResource SpBrush.Card}"
+        BorderBrush="{StaticResource SpBrush.Border}"
+        BorderThickness="1"
+        CornerRadius="{StaticResource SpRadius.Card}"
+        SnapsToDevicePixels="True">
+      <Grid>
         <Grid.RowDefinitions>
           <RowDefinition Height="Auto" />
           <RowDefinition Height="Auto" />
@@ -353,9 +377,9 @@
         <themes:TextPlaceholder
           x:Name="TextBox_Title"
           Grid.Row="0"
-          Margin="0"
+          Margin="{StaticResource SpSpace.FieldGap}"
           Style="{StaticResource CompactTextBoxStyle}"
-          VerticalAlignment="Bottom"
+          VerticalAlignment="Center"
           FontSize="14"
           FontWeight="Bold"
           Binding.SourceUpdated="TextBox_OnTextChanged"
@@ -365,17 +389,17 @@
         <!-- Автор создания — только текст -->
         <DockPanel
           Grid.Row="2"
-          Margin="{StaticResource SpSpace.RowGap}"
+          Margin="{StaticResource SpSpace.FieldGap}"
           LastChildFill="True">
           <TextBlock
             DockPanel.Dock="Left"
             Margin="0,0,6,0"
             VerticalAlignment="Center"
-            Style="{StaticResource SpSettingsMutedText}"
+            Style="{StaticResource SpSettingsBodyText}"
             Text="{x:Static loc:Loc.CreationAuthor}" />
           <TextBlock
             VerticalAlignment="Center"
-            Foreground="{StaticResource SpBrush.Muted}"
+            Foreground="{StaticResource SpBrush.Foreground}"
             TextTrimming="CharacterEllipsis"
             ToolTip="{x:Static loc:Loc.CreationAuthor}">
             <TextBlock.Text>
@@ -390,13 +414,13 @@
         <!-- Ответственный — одна строка, без других контролов -->
         <DockPanel
           Grid.Row="3"
-          Margin="{StaticResource SpSpace.RowGap}"
+          Margin="{StaticResource SpSpace.FieldGap}"
           LastChildFill="True">
           <TextBlock
             DockPanel.Dock="Left"
             Margin="0,0,6,0"
             VerticalAlignment="Center"
-            Style="{StaticResource SpSettingsMutedText}"
+            Style="{StaticResource SpSettingsBodyText}"
             Text="{x:Static loc:Loc.AssignedTo}" />
           <ComboBox
             VerticalAlignment="Center"
@@ -404,7 +428,6 @@
             StaysOpenOnEdit="True"
             IsTextSearchEnabled="False"
             Style="{StaticResource CompactComboBoxStyle}"
-            Tag="{x:Static loc:Loc.AssignedTo}"
             ItemsSource="{Binding Topic.AssigneesCollection}"
             Text="{Binding Topic.AssignedTo, Mode=TwoWay, UpdateSourceTrigger=LostFocus}" />
         </DockPanel>
@@ -412,7 +435,7 @@
         <!-- Статус, тип, приоритет, дата — ниже ответственного -->
         <Grid
           Grid.Row="4"
-          Margin="{StaticResource SpSpace.RowGap}">
+          Margin="{StaticResource SpSpace.FieldGap}">
           <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*" MinWidth="100" />
             <ColumnDefinition Width="1.2*" MinWidth="120" />
@@ -445,16 +468,46 @@
             Grid.Column="1"
             Margin="0,0,6,0"
             Style="{StaticResource CompactComboBoxStyle}"
-            Tag="{x:Static loc:Loc.TopicTypes}"
+            Tag="{x:Static loc:Loc.TopicType}"
             ItemsSource="{Binding Topic.TopicTypesCollection}"
-            SelectedItem="{Binding Topic.TopicType, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}" />
+            SelectedItem="{Binding Topic.TopicType, NotifyOnSourceUpdated=True, NotifyOnTargetUpdated=True, UpdateSourceTrigger=PropertyChanged, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal">
+                  <Border
+                    Width="10"
+                    Height="10"
+                    Margin="0,0,6,0"
+                    VerticalAlignment="Center"
+                    Background="{Binding Converter={StaticResource StatusToBrushConverter}, ConverterParameter=type}"
+                    CornerRadius="2" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
           <ComboBox
             Grid.Column="2"
             Margin="0,0,6,0"
             Style="{StaticResource CompactComboBoxStyle}"
             Tag="{x:Static loc:Loc.Priority}"
             ItemsSource="{Binding Topic.PrioritiesCollection}"
-            SelectedItem="{Binding Topic.Priority, Mode=TwoWay}" />
+            SelectedItem="{Binding Topic.Priority, Mode=TwoWay}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate>
+                <StackPanel Orientation="Horizontal">
+                  <Border
+                    Width="10"
+                    Height="10"
+                    Margin="0,0,6,0"
+                    VerticalAlignment="Center"
+                    Background="{Binding Converter={StaticResource StatusToBrushConverter}, ConverterParameter=priority}"
+                    CornerRadius="2" />
+                  <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+                </StackPanel>
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
           <DatePicker
             x:Name="DueDatePicker"
             Grid.Column="3"
@@ -468,8 +521,8 @@
 
         <StackPanel
           Grid.Row="1"
-          Margin="{StaticResource SpSpace.RowGap}">
-          <DockPanel LastChildFill="False" Margin="0,0,0,6">
+          Margin="{StaticResource SpSpace.FieldGap}">
+          <DockPanel LastChildFill="False">
             <Button
               MinHeight="30"
               Padding="8,3"
@@ -479,6 +532,7 @@
           </DockPanel>
           <local:CustomFieldsDisplay
             x:Name="CustomFieldsBlock"
+            Margin="{StaticResource SpSpace.RowGap}"
             BcfFile="{Binding DataContext, RelativeSource={RelativeSource AncestorType=UserControl}}"
             FieldsChanged="CustomFieldsBlock_FieldsChanged" />
         </StackPanel>
@@ -486,17 +540,32 @@
         <ComboBox
           x:Name="LabelsCombo"
           Grid.Row="5"
-          Margin="{StaticResource SpSpace.RowGap}"
+          Margin="{StaticResource SpSpace.FieldGap}"
           Style="{StaticResource CompactComboBoxStyle}"
           Tag="{x:Static loc:Loc.Labels}"
           ItemsSource="{Binding Topic.LabelsCollection}"
-          SelectionChanged="LabelsCombo_SelectionChanged" />
+          SelectionChanged="LabelsCombo_SelectionChanged">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <StackPanel Orientation="Horizontal">
+                <Border
+                  Width="10"
+                  Height="10"
+                  Margin="0,0,6,0"
+                  VerticalAlignment="Center"
+                  Background="{Binding Converter={StaticResource StatusToBrushConverter}, ConverterParameter=label}"
+                  CornerRadius="2" />
+                <TextBlock VerticalAlignment="Center" Text="{Binding}" />
+              </StackPanel>
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
         <themes:TextPlaceholder
           Grid.Row="6"
           Style="{StaticResource CompactTextBoxStyle}"
           MinHeight="30"
           MaxHeight="56"
-          Margin="0,4,0,4"
+          Margin="{StaticResource SpSpace.FieldGap}"
           AcceptsReturn="True"
           Binding.SourceUpdated="TextBox_OnTextChanged"
           Placeholder="{x:Static loc:Loc.Description}"
@@ -507,6 +576,7 @@
           Grid.Row="7"
           MinHeight="30"
           MinWidth="140"
+          Margin="0"
           Padding="8,3"
           HorizontalAlignment="Left"
           Style="{StaticResource AddViewCommentStyle}"
@@ -516,6 +586,7 @@
           IconColor="{StaticResource SpBrush.Primary}"
           IconPath="{StaticResource IconAdd}" />
       </Grid>
+      </Border>
       <!-- <StackPanel Orientation="Horizontal" Grid.Row="1"  >
 
         <Button Margin="5" Cursor="Hand" ToolTip="Click to open Snapshot"
@@ -534,7 +605,7 @@
       <ListView
         Name="ViewCommList"
         Grid.Row="1"
-        Margin="14,4,14,4"
+        Margin="{StaticResource SpSpace.ContentInset}"
         HorizontalContentAlignment="Stretch"
         Style="{StaticResource ListViewTheme}"
         Background="Transparent"

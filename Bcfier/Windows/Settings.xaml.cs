@@ -17,7 +17,7 @@ using Bcfier.Themes;
 namespace Bcfier.Windows
 {
     /// <summary>
-    /// Окно настроек: автор, списки topic, язык UI, версия BCF и подключение к SP-Service.
+    /// Окно настроек: приложение, справочники замечаний, Revit, подключение к SP-Service.
     /// </summary>
     public partial class Settings : Window
     {
@@ -31,14 +31,21 @@ namespace Bcfier.Windows
 
         private readonly ObservableCollection<TopicStatusEntry> _statusRows =
             new ObservableCollection<TopicStatusEntry>();
+        private readonly ObservableCollection<TopicStatusEntry> _typeRows =
+            new ObservableCollection<TopicStatusEntry>();
+        private readonly ObservableCollection<TopicStatusEntry> _priorityRows =
+            new ObservableCollection<TopicStatusEntry>();
+        private readonly ObservableCollection<TopicStatusEntry> _labelRows =
+            new ObservableCollection<TopicStatusEntry>();
 
         private readonly ObservableCollection<CustomFieldDefinition> _customFieldDefs =
             new ObservableCollection<CustomFieldDefinition>();
 
         private string _editingLanguage;
         private bool _suppressLanguageChange;
-        private bool _suppressProjectChange;
         private bool _savedDuringSession;
+
+        private bool _canModerateGoogleSheets;
 
         public Settings()
         {
@@ -47,19 +54,21 @@ namespace Bcfier.Windows
             Title = Loc.SettingsTitle;
             if (HeaderTitle != null)
                 HeaderTitle.Text = Loc.SettingsTitle;
+            if (CustomFieldsCatalogHintText != null)
+                CustomFieldsCatalogHintText.Text = Loc.CustomFieldsCatalogHint;
 
             _controlsToSave = new List<Control>
             {
                 BCFusername, editSnap, useDefPhoto, alwaysNewView
             };
 
-            // Статусы редактируются в таблице, остальные списки — в TextPlaceholder
-            _topicListControls["Types"] = Types;
-            _topicListControls["Priorities"] = Priorities;
-            _topicListControls["Labels"] = Labels;
+            // Цветные списки — в DataGrid; ответственные по-прежнему CSV в TextPlaceholder
             _topicListControls["Assignees"] = Assignees;
 
             StatusesGrid.ItemsSource = _statusRows;
+            TypesGrid.ItemsSource = _typeRows;
+            PrioritiesGrid.ItemsSource = _priorityRows;
+            LabelsGrid.ItemsSource = _labelRows;
 
             foreach (CustomFieldDefinition def in CustomFieldDefinitionsStore.Load())
                 _customFieldDefs.Add(def);
@@ -91,6 +100,7 @@ namespace Bcfier.Windows
             SelectBcfWriteVersion(UserSettings.Get(Bcfier.Bcf.BcfVersionReader.WriteVersionSettingKey));
             LoadTopicListsForLanguage(_editingLanguage);
             LoadServerSettings();
+            UpdateGoogleSheetsTabVisibility();
         }
 
         private void LoadServerSettings()
@@ -100,20 +110,6 @@ namespace Bcfier.Windows
             SpServiceLoginBox.Text = stored.Login ?? string.Empty;
             SpServicePasswordBox.Password = stored.Password ?? string.Empty;
             SpServiceSyncIntervalBox.Text = stored.SyncIntervalSeconds.ToString(CultureInfo.InvariantCulture);
-
-            SpServiceProjectCombo.Items.Clear();
-
-            if (Guid.TryParse(stored.ProjectId, out Guid projectId))
-            {
-                SpServiceProjectCombo.Items.Add(new SpBcfServiceClient.ProjectItem
-                {
-                    Id = projectId,
-                    Name = Loc.Get("SpServiceSavedProject")
-                });
-                _suppressProjectChange = true;
-                SpServiceProjectCombo.SelectedIndex = 0;
-                _suppressProjectChange = false;
-            }
         }
 
         private void Settings_OnLoaded(object sender, RoutedEventArgs e)
@@ -199,8 +195,10 @@ namespace Bcfier.Windows
             foreach (var pair in _topicListControls)
                 draft[pair.Key] = pair.Value.Text ?? string.Empty;
 
-            // Статусы — JSON с цветами
             draft["Stauses"] = TopicStatusListCodec.Serialize(_statusRows);
+            draft["Types"] = TopicStatusListCodec.Serialize(_typeRows);
+            draft["Priorities"] = TopicStatusListCodec.Serialize(_priorityRows);
+            draft["Labels"] = TopicStatusListCodec.Serialize(_labelRows);
         }
 
         private void LoadTopicListsForLanguage(string language)
@@ -217,25 +215,34 @@ namespace Bcfier.Windows
                 pair.Value.Text = text ?? string.Empty;
             }
 
-            if (!draft.TryGetValue("Stauses", out string statusRaw))
-            {
-                statusRaw = UserSettings.GetLanguageBound("Stauses", language);
-                draft["Stauses"] = statusRaw;
-            }
-
-            LoadStatusRows(statusRaw);
+            LoadNamedColorRows("Stauses", language, _statusRows);
+            LoadNamedColorRows("Types", language, _typeRows);
+            LoadNamedColorRows("Priorities", language, _priorityRows);
+            LoadNamedColorRows("Labels", language, _labelRows);
         }
 
-        private void LoadStatusRows(string raw)
+        /// <summary>Загружает цветной список из черновика или настроек; пустой — дефолты языка.</summary>
+        private void LoadNamedColorRows(
+            string settingsKey,
+            string language,
+            ObservableCollection<TopicStatusEntry> target)
         {
-            _statusRows.Clear();
-            foreach (var entry in TopicStatusListCodec.Parse(raw))
-                _statusRows.Add(entry);
-
-            if (_statusRows.Count == 0)
+            var draft = GetOrCreateDraft(language);
+            if (!draft.TryGetValue(settingsKey, out string raw))
             {
-                foreach (var entry in TopicStatusListCodec.GetDefaults(_editingLanguage))
-                    _statusRows.Add(entry);
+                raw = UserSettings.GetLanguageBound(settingsKey, language);
+                draft[settingsKey] = raw;
+            }
+
+            target.Clear();
+            foreach (var entry in TopicStatusListCodec.Parse(raw))
+                target.Add(entry);
+
+            if (target.Count == 0)
+            {
+                foreach (var entry in TopicStatusListCodec.Parse(
+                             UserSettings.GetDefaultTopicList(settingsKey, language)))
+                    target.Add(entry);
             }
         }
 
@@ -251,26 +258,55 @@ namespace Bcfier.Windows
             return draft;
         }
 
-        private void AddStatus_Click(object sender, RoutedEventArgs e)
+        private void AddStatus_Click(object sender, RoutedEventArgs e) =>
+            AddNamedColorRow(_statusRows, StatusesGrid, Loc.NewStatusName);
+
+        private void RemoveStatus_Click(object sender, RoutedEventArgs e) =>
+            RemoveNamedColorRow(_statusRows, StatusesGrid);
+
+        private void AddType_Click(object sender, RoutedEventArgs e) =>
+            AddNamedColorRow(_typeRows, TypesGrid, Loc.NewTypeName);
+
+        private void RemoveType_Click(object sender, RoutedEventArgs e) =>
+            RemoveNamedColorRow(_typeRows, TypesGrid);
+
+        private void AddPriority_Click(object sender, RoutedEventArgs e) =>
+            AddNamedColorRow(_priorityRows, PrioritiesGrid, Loc.NewPriorityName);
+
+        private void RemovePriority_Click(object sender, RoutedEventArgs e) =>
+            RemoveNamedColorRow(_priorityRows, PrioritiesGrid);
+
+        private void AddLabel_Click(object sender, RoutedEventArgs e) =>
+            AddNamedColorRow(_labelRows, LabelsGrid, Loc.NewLabelName);
+
+        private void RemoveLabel_Click(object sender, RoutedEventArgs e) =>
+            RemoveNamedColorRow(_labelRows, LabelsGrid);
+
+        private static void AddNamedColorRow(
+            ObservableCollection<TopicStatusEntry> rows,
+            DataGrid grid,
+            string defaultName)
         {
             var entry = new TopicStatusEntry(
-                Loc.Get("NewStatusName"),
-                TopicStatusListCodec.ColorForIndex(_statusRows.Count));
-            _statusRows.Add(entry);
-            StatusesGrid.SelectedItem = entry;
-            StatusesGrid.ScrollIntoView(entry);
+                defaultName,
+                TopicStatusListCodec.ColorForIndex(rows.Count));
+            rows.Add(entry);
+            grid.SelectedItem = entry;
+            grid.ScrollIntoView(entry);
         }
 
-        private void RemoveStatus_Click(object sender, RoutedEventArgs e)
+        private static void RemoveNamedColorRow(
+            ObservableCollection<TopicStatusEntry> rows,
+            DataGrid grid)
         {
-            if (StatusesGrid.SelectedItem is TopicStatusEntry selected)
-                _statusRows.Remove(selected);
-            else if (_statusRows.Count > 0)
-                _statusRows.RemoveAt(_statusRows.Count - 1);
+            if (grid.SelectedItem is TopicStatusEntry selected)
+                rows.Remove(selected);
+            else if (rows.Count > 0)
+                rows.RemoveAt(rows.Count - 1);
         }
 
-        /// <summary>Выбор цвета статуса через системную палитру Windows.</summary>
-        private void StatusColor_Click(object sender, RoutedEventArgs e)
+        /// <summary>Выбор цвета через системную палитру Windows (статусы/типы/приоритеты/метки).</summary>
+        private void NamedColor_Click(object sender, RoutedEventArgs e)
         {
             if (!(sender is FrameworkElement element) || !(element.DataContext is TopicStatusEntry entry))
                 return;
@@ -296,8 +332,6 @@ namespace Bcfier.Windows
                     }
 
                     dialog.Color = System.Drawing.Color.FromArgb(current.R, current.G, current.B);
-
-                    // Кастомные цвета из палитры статусов — быстрый доступ
                     dialog.CustomColors = TopicStatusListCodec.Palette
                         .Select(HexToOleColor)
                         .Take(16)
@@ -375,34 +409,11 @@ namespace Bcfier.Windows
                 string displayName = await client.LoginAsync(SpServiceLoginBox.Text, SpServicePasswordBox.Password)
                     .ConfigureAwait(true);
 
-                IReadOnlyList<SpBcfServiceClient.BcfApiProject> bcfProjects =
-                    await client.GetBcfApiProjectsAsync().ConfigureAwait(true);
+                IReadOnlyList<SpBcfServiceClient.ProjectItem> projects =
+                    await client.GetProjectsAsync().ConfigureAwait(true);
 
-                Guid selectedId = Guid.Empty;
-                if (SpServiceProjectCombo.SelectedItem is SpBcfServiceClient.ProjectItem cur)
-                    selectedId = cur.Id;
-                else if (Guid.TryParse(UserSettings.Get(SpBcfServiceSettings.ProjectIdKey), out Guid saved))
-                    selectedId = saved;
-
-                _suppressProjectChange = true;
-                SpServiceProjectCombo.Items.Clear();
-                foreach (var p in bcfProjects)
-                {
-                    if (p.ParsedId == null)
-                        continue;
-                    SpServiceProjectCombo.Items.Add(new SpBcfServiceClient.ProjectItem
-                    {
-                        Id = p.ParsedId.Value,
-                        Name = p.Name ?? p.ProjectId
-                    });
-                }
-                SpServiceProjectCombo.SelectedItem = SpServiceProjectCombo.Items
-                    .OfType<SpBcfServiceClient.ProjectItem>()
-                    .FirstOrDefault(p => p.Id == selectedId)
-                    ?? SpServiceProjectCombo.Items.OfType<SpBcfServiceClient.ProjectItem>().FirstOrDefault();
-                _suppressProjectChange = false;
-
-                SpServiceStatusText.Text = Loc.Format("SpServiceTestOk", displayName, bcfProjects.Count);
+                SpServiceStatusText.Text = Loc.Format("SpServiceTestOk", displayName, projects.Count);
+                await RefreshGoogleSheetsAccessAsync().ConfigureAwait(true);
             }
             catch (Exception ex)
             {
@@ -410,17 +421,164 @@ namespace Bcfier.Windows
             }
         }
 
-        private void SpServiceProjectCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private Guid? GetSelectedProjectId()
         {
-            if (_suppressProjectChange)
+            if (Guid.TryParse(UserSettings.Get(SpBcfServiceSettings.ProjectIdKey), out Guid saved))
+                return saved;
+            return null;
+        }
+
+        private void UpdateGoogleSheetsTabVisibility()
+        {
+            if (GoogleSheetsGroup != null)
+                GoogleSheetsGroup.Visibility = _canModerateGoogleSheets ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private async Task RefreshGoogleSheetsAccessAsync()
+        {
+            _canModerateGoogleSheets = false;
+            UpdateGoogleSheetsTabVisibility();
+            Guid? projectId = GetSelectedProjectId();
+            if (projectId == null)
                 return;
+
+            try
+            {
+                string baseUrl = SpBcfServiceSettings.NormalizeBaseUrl(SpServiceBaseUrlBox.Text);
+                using var client = new SpBcfServiceClient(baseUrl);
+                await client.LoginAsync(SpServiceLoginBox.Text, SpServicePasswordBox.Password).ConfigureAwait(true);
+                SpBcfServiceClient.ProjectMyRole role = await client.GetMyRoleAsync(projectId.Value).ConfigureAwait(true);
+                _canModerateGoogleSheets = role != null && role.CanModerate;
+                UpdateGoogleSheetsTabVisibility();
+                if (_canModerateGoogleSheets)
+                    await LoadGoogleSheetsSettingsAsync(client, projectId.Value).ConfigureAwait(true);
+            }
+            catch
+            {
+                _canModerateGoogleSheets = false;
+                UpdateGoogleSheetsTabVisibility();
+            }
+        }
+
+        private async Task LoadGoogleSheetsSettingsAsync(SpBcfServiceClient client, Guid projectId)
+        {
+            SpBcfServiceClient.GoogleSheetsSettings settings =
+                await client.GetGoogleSheetsSettingsAsync(projectId).ConfigureAwait(true);
+            GoogleSheetsEnabledBox.IsChecked = settings.Enabled;
+            if (settings.Configured && !string.IsNullOrWhiteSpace(settings.ClientEmail))
+                GoogleSheetsEmailText.Text = Loc.Format("GoogleSheetsConfiguredAs", settings.ClientEmail);
+            else
+                GoogleSheetsEmailText.Text = Loc.GoogleSheetsNotConfigured;
+            GoogleSheetsStatusText.Text = string.Empty;
+        }
+
+        private async void GoogleSheetsLoad_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Guid? projectId = GetSelectedProjectId();
+                if (projectId == null)
+                {
+                    GoogleSheetsStatusText.Text = Loc.GoogleSheetsNeedProject;
+                    return;
+                }
+
+                string baseUrl = SpBcfServiceSettings.NormalizeBaseUrl(SpServiceBaseUrlBox.Text);
+                using var client = new SpBcfServiceClient(baseUrl);
+                await client.LoginAsync(SpServiceLoginBox.Text, SpServicePasswordBox.Password).ConfigureAwait(true);
+                SpBcfServiceClient.ProjectMyRole role = await client.GetMyRoleAsync(projectId.Value).ConfigureAwait(true);
+                _canModerateGoogleSheets = role != null && role.CanModerate;
+                UpdateGoogleSheetsTabVisibility();
+                if (!_canModerateGoogleSheets)
+                {
+                    GoogleSheetsStatusText.Text = Loc.GoogleSheetsExportNeedModerator;
+                    return;
+                }
+
+                await LoadGoogleSheetsSettingsAsync(client, projectId.Value).ConfigureAwait(true);
+            }
+            catch (Exception ex)
+            {
+                GoogleSheetsStatusText.Text = Loc.Format("SpServiceTestError", ex.Message);
+            }
+        }
+
+        private async void GoogleSheetsTest_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Guid? projectId = GetSelectedProjectId();
+                if (projectId == null)
+                {
+                    GoogleSheetsStatusText.Text = Loc.GoogleSheetsNeedProject;
+                    return;
+                }
+
+                string baseUrl = SpBcfServiceSettings.NormalizeBaseUrl(SpServiceBaseUrlBox.Text);
+                using var client = new SpBcfServiceClient(baseUrl);
+                await client.LoginAsync(SpServiceLoginBox.Text, SpServicePasswordBox.Password).ConfigureAwait(true);
+                SpBcfServiceClient.GoogleSheetsTestResult result =
+                    await client.TestGoogleSheetsAsync(projectId.Value).ConfigureAwait(true);
+                GoogleSheetsStatusText.Text = result.Ok
+                    ? Loc.Format("GoogleSheetsConfiguredAs", result.ClientEmail ?? "")
+                    : Loc.Format("SpServiceTestError", result.Error ?? "failed");
+            }
+            catch (Exception ex)
+            {
+                GoogleSheetsStatusText.Text = Loc.Format("SpServiceTestError", ex.Message);
+            }
+        }
+
+        private async void GoogleSheetsSave_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                Guid? projectId = GetSelectedProjectId();
+                if (projectId == null)
+                {
+                    GoogleSheetsStatusText.Text = Loc.GoogleSheetsNeedProject;
+                    return;
+                }
+
+                string baseUrl = SpBcfServiceSettings.NormalizeBaseUrl(SpServiceBaseUrlBox.Text);
+                using var client = new SpBcfServiceClient(baseUrl);
+                await client.LoginAsync(SpServiceLoginBox.Text, SpServicePasswordBox.Password).ConfigureAwait(true);
+
+                string json = string.IsNullOrWhiteSpace(GoogleSheetsJsonBox.Text)
+                    ? null
+                    : GoogleSheetsJsonBox.Text.Trim();
+                SpBcfServiceClient.GoogleSheetsSettings saved = await client.PutGoogleSheetsSettingsAsync(
+                    projectId.Value, json, GoogleSheetsEnabledBox.IsChecked == true).ConfigureAwait(true);
+
+                GoogleSheetsJsonBox.Clear();
+                if (saved.Configured && !string.IsNullOrWhiteSpace(saved.ClientEmail))
+                    GoogleSheetsEmailText.Text = Loc.Format("GoogleSheetsConfiguredAs", saved.ClientEmail);
+                else
+                    GoogleSheetsEmailText.Text = Loc.GoogleSheetsNotConfigured;
+                GoogleSheetsEnabledBox.IsChecked = saved.Enabled;
+                GoogleSheetsStatusText.Text = Loc.Get("SpServiceSyncOk");
+            }
+            catch (Exception ex)
+            {
+                GoogleSheetsStatusText.Text = Loc.Format("SpServiceTestError", ex.Message);
+            }
+        }
+
+        private void CommitNamedColorGrids()
+        {
+            foreach (DataGrid grid in new[] { StatusesGrid, TypesGrid, PrioritiesGrid, LabelsGrid })
+            {
+                if (grid == null)
+                    continue;
+                grid.CommitEdit(DataGridEditingUnit.Cell, true);
+                grid.CommitEdit(DataGridEditingUnit.Row, true);
+            }
         }
 
         private void SaveBtnClick(object sender, RoutedEventArgs e)
         {
-            // Завершить редактирование ячейки DataGrid перед сохранением
-            StatusesGrid.CommitEdit(DataGridEditingUnit.Cell, true);
-            StatusesGrid.CommitEdit(DataGridEditingUnit.Row, true);
+            // Завершить редактирование ячеек DataGrid перед сохранением
+            CommitNamedColorGrids();
 
             foreach (var control in _controlsToSave)
                 UserSettings.SaveControlSettings(control);
@@ -483,19 +641,11 @@ namespace Bcfier.Windows
 
         private void SaveServerSettings()
         {
-            int interval = SpBcfServiceSettings.ParseSyncInterval(SpServiceSyncIntervalBox.Text);
-            SpBcfServiceSettings previous = SpBcfServiceSettingsStore.Load();
-            var settings = new SpBcfServiceSettings
-            {
-                BaseUrl = SpServiceBaseUrlBox.Text,
-                Login = SpServiceLoginBox.Text,
-                Password = SpServicePasswordBox.Password,
-                ProjectId = (SpServiceProjectCombo.SelectedItem as SpBcfServiceClient.ProjectItem)?.Id.ToString("D")
-                            ?? string.Empty,
-                // Модель не выбирается вручную: при экспорте назначается по имени модели ФХ.
-                ModelId = previous.ModelId ?? string.Empty,
-                SyncIntervalSeconds = interval
-            };
+            SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
+            settings.BaseUrl = SpServiceBaseUrlBox.Text;
+            settings.Login = SpServiceLoginBox.Text;
+            settings.Password = SpServicePasswordBox.Password;
+            settings.SyncIntervalSeconds = SpBcfServiceSettings.ParseSyncInterval(SpServiceSyncIntervalBox.Text);
             SpBcfServiceSettingsStore.Save(settings);
         }
 

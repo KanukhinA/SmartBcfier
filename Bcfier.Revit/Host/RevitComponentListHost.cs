@@ -39,6 +39,7 @@ namespace Bcfier.Revit.Host
             ComponentListHost.ResolveElementId = ResolveElementId;
             ComponentListHost.RunWithRevitContext = ScheduleRefreshComponentLinks;
             ComponentListHost.TryGetCachedElementId = TryGetCachedElementId;
+            ComponentListHost.GetActiveDocumentInfo = GetActiveDocumentInfo;
 
             ComponentListHost.CreateWindow = (components, editMode) =>
             {
@@ -48,6 +49,21 @@ namespace Bcfier.Revit.Host
                     editMode ? selected => ApplySelection(components, selected) : null,
                     ids => SelectInModel(ids, false));
             };
+        }
+
+        private static (string Title, string PathName) GetActiveDocumentInfo()
+        {
+            try
+            {
+                Document doc = _uiApp?.ActiveUIDocument?.Document;
+                if (doc == null)
+                    return (string.Empty, string.Empty);
+                return (doc.Title ?? string.Empty, doc.PathName ?? string.Empty);
+            }
+            catch
+            {
+                return (string.Empty, string.Empty);
+            }
         }
 
         /// <summary>

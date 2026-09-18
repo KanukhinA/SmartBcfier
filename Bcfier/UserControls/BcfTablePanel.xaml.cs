@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
+using System.Windows.Threading;
 using Bcfier.Bcf;
 using Bcfier.Bcf.Bcf2;
 using Bcfier.CustomFields;
@@ -14,6 +15,7 @@ using Bcfier.Data;
 using Bcfier.Data.Utils;
 using Bcfier.Localization;
 using Bcfier.ReportTable;
+using Bcfier.SpService;
 using Bcfier.Windows;
 using Microsoft.Win32;
 
@@ -39,6 +41,8 @@ namespace Bcfier.UserControls
     private List<ReportTableUserGroup> _groups = ReportTableUserGroups.Load();
     private BcfContainer _container;
     private BcfFile _subscribedFile;
+    private bool _tableLayoutScheduled;
+    private bool _updatingTableLayout;
 
     public BcfTablePanel()
     {
@@ -47,6 +51,7 @@ namespace Bcfier.UserControls
       _columns = ReportTableSettings.LoadColumns();
       AddHandler(TableCommentCell.CommentsChangedEvent, new RoutedEventHandler(OnTableCommentsChanged));
       RebuildColumns();
+      Loaded += (_, __) => ScheduleTableAddIssueLayout();
     }
 
     /// <summary>Привязывает контейнер открытых BCF и подписывается на смену отчёта.</summary>
@@ -113,6 +118,7 @@ namespace Bcfier.UserControls
         EmptyHint.Visibility = Visibility.Visible;
         IssuesGrid.Visibility = Visibility.Collapsed;
         SyncCustomFieldsPanel();
+        ScheduleTableAddIssueLayout();
         return;
       }
 
@@ -123,6 +129,98 @@ namespace Bcfier.UserControls
         _rows.Add(row);
 
       SyncCustomFieldsPanel();
+      ScheduleTableAddIssueLayout();
+    }
+
+    private void TableHost_SizeChanged(object sender, SizeChangedEventArgs e) => ScheduleTableAddIssueLayout();
+
+    private void IssuesGrid_LoadingRow(object sender, DataGridRowEventArgs e) => ScheduleTableAddIssueLayout();
+
+    private void ScheduleTableAddIssueLayout()
+    {
+      if (_tableLayoutScheduled)
+        return;
+      _tableLayoutScheduled = true;
+      Dispatcher.BeginInvoke(DispatcherPriority.Loaded, new Action(() =>
+      {
+        _tableLayoutScheduled = false;
+        UpdateTableAddIssueLayout();
+      }));
+    }
+
+    /// <summary>
+    /// Короткая таблица: «+ замечание» сразу под последней строкой.
+    /// Длинная: кнопка снизу области, сетка со скроллом.
+    /// </summary>
+    private void UpdateTableAddIssueLayout()
+    {
+      if (_updatingTableLayout || TableHost == null || IssuesContentRow == null || TableFillerRow == null)
+        return;
+      if (TableHost.ActualHeight <= 0)
+        return;
+
+      _updatingTableLayout = true;
+      try
+      {
+        AddIssueBtn.Measure(new Size(TableHost.ActualWidth, double.PositiveInfinity));
+        double buttonH = Math.Max(AddIssueBtn.DesiredSize.Height, AddIssueBtn.ActualHeight);
+        if (buttonH <= 0)
+          buttonH = 32;
+
+        double available = TableHost.ActualHeight;
+        double maxGridH = Math.Max(0, available - buttonH);
+        double contentH = MeasureIssuesGridContentHeight();
+
+        if (contentH <= maxGridH + 0.5)
+        {
+          IssuesContentRow.Height = new GridLength(Math.Max(contentH, 1));
+          TableFillerRow.Height = new GridLength(1, GridUnitType.Star);
+        }
+        else
+        {
+          IssuesContentRow.Height = new GridLength(1, GridUnitType.Star);
+          TableFillerRow.Height = new GridLength(0);
+        }
+      }
+      finally
+      {
+        _updatingTableLayout = false;
+      }
+    }
+
+    private double MeasureIssuesGridContentHeight()
+    {
+      if (EmptyHint.Visibility == Visibility.Visible || IssuesGrid.Visibility != Visibility.Visible)
+        return Math.Min(140, Math.Max(80, TableHost.ActualHeight * 0.25));
+
+      double header = IssuesGrid.ColumnHeaderHeight;
+      if (double.IsNaN(header) || header <= 0)
+        header = 36;
+
+      double minRow = IssuesGrid.MinRowHeight;
+      if (double.IsNaN(minRow) || minRow <= 0)
+        minRow = 36;
+
+      if (_rows.Count == 0)
+        return header + minRow;
+
+      double measuredSum = 0;
+      int measuredCount = 0;
+      for (int i = 0; i < _rows.Count; i++)
+      {
+        if (IssuesGrid.ItemContainerGenerator.ContainerFromIndex(i) is DataGridRow row
+            && row.ActualHeight > 0)
+        {
+          measuredSum += row.ActualHeight;
+          measuredCount++;
+        }
+      }
+
+      double avg = measuredCount > 0 ? measuredSum / measuredCount : minRow;
+      if (avg < minRow)
+        avg = minRow;
+
+      return header + avg * _rows.Count + 2;
     }
 
     private BcfFile GetSelectedFile()
@@ -177,6 +275,43 @@ namespace Bcfier.UserControls
       SyncCustomFieldsPanel();
     }
 
+    private void DocumentBtn_Click(object sender, RoutedEventArgs e)
+    {
+      BcfFile file = GetSelectedFile();
+      if (file == null)
+        return;
+
+      var window = new ReportDocumentWindow(file.DocumentSettings, file.ReportLevelCustomFields)
+      {
+        Owner = Window.GetWindow(this)
+      };
+
+      if (window.ShowDialog() != true)
+        return;
+
+      file.DocumentSettings.CopyFrom(window.ResultDocument);
+
+      file.ReportLevelCustomFields.Clear();
+      foreach (CustomFieldValue field in window.ResultFields ?? new List<CustomFieldValue>())
+        file.ReportLevelCustomFields.Add(field);
+
+      file.HasBeenSaved = false;
+      file.HasCustomFields = file.ReportLevelCustomFields.Count > 0;
+
+      try
+      {
+        CustomFieldsXmlStore.SaveCanonical(
+          file.TempPath,
+          file.ReportLevelCustomFields,
+          file.DocumentSettings);
+      }
+      catch
+      {
+      }
+
+      SyncCustomFieldsPanel();
+    }
+
     private void AddCustomFieldsBtn_Click(object sender, RoutedEventArgs e)
     {
       BcfFile selectedFile = GetSelectedFile();
@@ -195,7 +330,10 @@ namespace Bcfier.UserControls
         file.CustomFieldsVisible = true;
         try
         {
-          CustomFieldsXmlStore.SaveCanonical(file.TempPath, file.ReportLevelCustomFields);
+          CustomFieldsXmlStore.SaveCanonical(
+            file.TempPath,
+            file.ReportLevelCustomFields,
+            file.DocumentSettings);
         }
         catch
         {
@@ -213,7 +351,10 @@ namespace Bcfier.UserControls
       file.HasBeenSaved = false;
       try
       {
-        CustomFieldsXmlStore.SaveCanonical(file.TempPath, file.ReportLevelCustomFields);
+        CustomFieldsXmlStore.SaveCanonical(
+          file.TempPath,
+          file.ReportLevelCustomFields,
+          file.DocumentSettings);
       }
       catch
       {
@@ -333,6 +474,113 @@ namespace Bcfier.UserControls
       Export(ExportFormat.Excel);
     }
 
+    private async void ExportGoogleSheetsBtn_Click(object sender, RoutedEventArgs e)
+    {
+      try
+      {
+        BcfFile file = GetSelectedFile();
+        if (file == null || _rows.Count == 0)
+        {
+          MessageBox.Show(
+            Loc.TableExportEmpty,
+            Loc.Warning,
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+          return;
+        }
+
+        if (!file.IsFromServer || file.ServerBcfFileId == null)
+        {
+          MessageBox.Show(
+            Loc.GoogleSheetsExportNeedServer,
+            Loc.Warning,
+            MessageBoxButton.OK,
+            MessageBoxImage.Information);
+          return;
+        }
+
+        var dialog = new GoogleSheetsExportWindow { Owner = Window.GetWindow(this) };
+        if (dialog.ShowDialog() != true)
+          return;
+
+        SyncAllRowTexts();
+        List<ReportTableColumnConfig> visible = GetVisibleColumns()
+          .Where(c => c.Kind != ReportTableColumnKind.Snapshot
+                      && c.Kind != ReportTableColumnKind.Comments
+                      && c.Kind != ReportTableColumnKind.DescriptionAndSnapshot
+                      && c.Kind != ReportTableColumnKind.TitleAndSnapshot)
+          .ToList();
+
+        bool hasGuid = visible.Any(c => c.Kind == ReportTableColumnKind.Guid);
+        if (!hasGuid)
+        {
+          visible.Add(new ReportTableColumnConfig
+          {
+            Kind = ReportTableColumnKind.Guid,
+            Visible = true,
+            Order = int.MaxValue
+          });
+        }
+
+        var headers = new List<string>();
+        var kinds = new List<string>();
+        foreach (ReportTableColumnConfig config in visible)
+        {
+          headers.Add(config.EffectiveHeader);
+          kinds.Add(config.Kind.ToString());
+        }
+
+        var rows = new List<List<string>>();
+        foreach (ReportTableRow row in _rows)
+        {
+          var cells = new List<string>();
+          foreach (ReportTableColumnConfig config in visible)
+            cells.Add(row.GetText(config.Kind) ?? string.Empty);
+          rows.Add(cells);
+        }
+
+        SpBcfServiceSettings settings = SpBcfServiceSettingsStore.Load();
+        using var client = new SpBcfServiceClient(settings.BaseUrl);
+        await client.LoginAsync(settings.Login, settings.Password).ConfigureAwait(true);
+
+        if (Guid.TryParse(settings.ProjectId, out Guid projectId))
+        {
+          SpBcfServiceClient.ProjectMyRole role = await client.GetMyRoleAsync(projectId).ConfigureAwait(true);
+          if (role == null || !role.CanModerate)
+          {
+            MessageBox.Show(
+              Loc.GoogleSheetsExportNeedModerator,
+              Loc.Warning,
+              MessageBoxButton.OK,
+              MessageBoxImage.Warning);
+            return;
+          }
+        }
+
+        var request = new SpBcfServiceClient.GoogleSheetsExportRequest
+        {
+          SpreadsheetId = string.IsNullOrWhiteSpace(dialog.SpreadsheetId) ? null : dialog.SpreadsheetId,
+          SheetName = dialog.SheetName,
+          Headers = headers,
+          ColumnKinds = kinds,
+          Rows = rows
+        };
+
+        SpBcfServiceClient.GoogleSheetsExportResult result =
+          await client.ExportGoogleSheetsAsync(file.ServerBcfFileId.Value, request).ConfigureAwait(true);
+
+        MessageBox.Show(
+          Loc.Format("GoogleSheetsExportOk", result.SpreadsheetUrl ?? result.SpreadsheetId),
+          Loc.GoogleSheetsExportTitle,
+          MessageBoxButton.OK,
+          MessageBoxImage.Information);
+      }
+      catch (Exception ex)
+      {
+        ExceptionUi.Show(ex);
+      }
+    }
+
     private void ExportHtmlBtn_Click(object sender, RoutedEventArgs e)
     {
       Export(ExportFormat.Html);
@@ -390,16 +638,24 @@ namespace Bcfier.UserControls
           return;
 
         List<ReportTableColumnConfig> visible = GetVisibleColumns();
+        var context = new ReportExportContext(
+          file.Filename,
+          file.DocumentSettings,
+          file.ReportLevelCustomFields,
+          _groups);
+
         switch (format)
         {
           case ExportFormat.Excel:
             ReportTableExporter.ExportExcel(dialog.FileName, _rows.ToList(), visible, _groups);
             break;
           case ExportFormat.Pdf:
-            ReportTableExporter.ExportPdf(dialog.FileName, _rows.ToList(), visible, file.Filename, _groups);
+            ReportTableExporter.ExportPdf(
+              dialog.FileName, _rows.ToList(), visible, file.Filename, _groups, context);
             break;
           default:
-            ReportTableExporter.ExportHtml(dialog.FileName, _rows.ToList(), visible, file.Filename, _groups);
+            ReportTableExporter.ExportHtml(
+              dialog.FileName, _rows.ToList(), visible, file.Filename, _groups, context);
             break;
         }
       }
@@ -780,6 +1036,68 @@ namespace Bcfier.UserControls
           file.HasBeenSaved = false;
 
         RefreshRows();
+      }
+      catch (Exception ex)
+      {
+        ExceptionUi.Show(ex);
+      }
+    }
+
+    /// <summary>Замечание, которому принадлежит вид — у ViewPoint нет обратной ссылки.</summary>
+    private Markup FindIssueForViewpoint(ViewPoint view)
+    {
+      if (view == null)
+        return null;
+
+      foreach (ReportTableRow row in _rows)
+      {
+        if (row?.Issue?.Viewpoints == null)
+          continue;
+        if (row.Issue.Viewpoints.Contains(view))
+          return row.Issue;
+      }
+
+      return null;
+    }
+
+    private void ExecuteViewCommand(System.Windows.Input.RoutedCommand command, object sender)
+    {
+      var view = (sender as FrameworkElement)?.DataContext as ViewPoint;
+      Markup issue = FindIssueForViewpoint(view);
+      if (view == null || issue == null)
+        return;
+
+      Window owner = Window.GetWindow(this);
+      IInputElement target = owner ?? (IInputElement)this;
+      // OnEditView/OnDeleteView ждут пару [вид, замечание]
+      var parameter = new object[] { view, issue };
+      if (command.CanExecute(parameter, target))
+        command.Execute(parameter, target);
+
+      BcfFile file = GetSelectedFile();
+      if (file != null)
+        file.HasBeenSaved = false;
+
+      RefreshRows();
+    }
+
+    private void EditViewMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+      try
+      {
+        ExecuteViewCommand(Commands.EditView, sender);
+      }
+      catch (Exception ex)
+      {
+        ExceptionUi.Show(ex);
+      }
+    }
+
+    private void DeleteViewMenuItem_Click(object sender, RoutedEventArgs e)
+    {
+      try
+      {
+        ExecuteViewCommand(Commands.DeleteViews, sender);
       }
       catch (Exception ex)
       {

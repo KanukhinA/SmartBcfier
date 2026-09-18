@@ -114,7 +114,8 @@ namespace Bcfier.Bcf
 
             Bcfier.CustomFields.CustomFieldsXmlStore.SaveCanonical(
                 bcffile.TempPath,
-                bcffile.ReportLevelCustomFields);
+                bcffile.ReportLevelCustomFields,
+                bcffile.DocumentSettings);
 
             ZipFile.CreateFromDirectory(
                 bcffile.TempPath,

@@ -59,6 +59,10 @@ namespace Bcfier.Bcf
     public ObservableCollection<Bcfier.CustomFields.CustomFieldValue> ReportLevelCustomFields { get; } =
       new ObservableCollection<Bcfier.CustomFields.CustomFieldValue>();
 
+    /// <summary>Оформление протокола при экспорте (название документа, состав шапки).</summary>
+    public Bcfier.ReportTable.ReportDocumentSettings DocumentSettings { get; } =
+      new Bcfier.ReportTable.ReportDocumentSettings();
+
     private string _filename;
     private bool _hasBeenSaved;
     private bool _hasCustomFields;

@@ -29,5 +29,10 @@ namespace Bcfier.Data
         /// Передаёт короткий статус загрузки в UI, если его поддерживает хост.
         /// </summary>
         public static Action<string> ReportProgress { get; set; }
+
+        /// <summary>
+        /// Активный документ Revit: Title и PathName. Null, если хост без модели.
+        /// </summary>
+        public static Func<(string Title, string PathName)> GetActiveDocumentInfo { get; set; }
     }
 }

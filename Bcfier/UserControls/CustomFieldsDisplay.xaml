@@ -4,6 +4,47 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:loc="clr-namespace:Bcfier.Localization"
   FontFamily="{DynamicResource SpFont.Ui}">
+  <UserControl.Resources>
+    <!-- Строка label+value: chrome поля при наведении на всю строку (включая лейбл) -->
+    <Style x:Key="CustomFieldRow" TargetType="Border">
+      <Setter Property="Padding" Value="4,2" />
+      <Setter Property="Margin" Value="0,0,0,2" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="{StaticResource SpRadius.Control}" />
+      <Setter Property="SnapsToDevicePixels" Value="True" />
+      <Style.Triggers>
+        <Trigger Property="IsMouseOver" Value="True">
+          <Setter Property="Background" Value="{StaticResource SpBrush.Card}" />
+          <Setter Property="BorderBrush" Value="{StaticResource SpBrush.Focus}" />
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+    <Style x:Key="CustomFieldValueBox" TargetType="TextBox" BasedOn="{StaticResource SpTextBox}">
+      <Setter Property="MinHeight" Value="28" />
+      <Setter Property="Padding" Value="0,3" />
+      <Setter Property="FontWeight" Value="Normal" />
+      <Setter Property="VerticalContentAlignment" Value="Center" />
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="TextBox">
+            <Border
+              x:Name="Bd"
+              Padding="{TemplateBinding Padding}"
+              Background="Transparent"
+              BorderThickness="0"
+              SnapsToDevicePixels="True">
+              <ScrollViewer x:Name="PART_ContentHost" Margin="0" />
+            </Border>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+  </UserControl.Resources>
   <Border
     x:Name="FieldsFrame"
     Padding="10,8"
@@ -23,7 +64,8 @@
       <ItemsControl x:Name="ReportFieldsList">
         <ItemsControl.ItemTemplate>
           <DataTemplate>
-            <DockPanel Margin="0,0,0,4" LastChildFill="True">
+            <Border Style="{StaticResource CustomFieldRow}">
+              <DockPanel LastChildFill="True">
               <TextBlock
                 DockPanel.Dock="Left"
                 MinWidth="100"
@@ -31,17 +73,14 @@
                 VerticalAlignment="Center"
                 FontSize="12"
                 FontWeight="Normal"
-                Foreground="{StaticResource SpBrush.Muted}"
+                Foreground="{StaticResource SpBrush.Foreground}"
                 Text="{Binding DisplayName}" />
-              <TextBox
-                MinHeight="30"
-                Height="30"
-                Padding="6,3"
-                FontWeight="Normal"
-                VerticalContentAlignment="Center"
-                Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
-                LostFocus="ReportValue_LostFocus" />
-            </DockPanel>
+                <TextBox
+                  Style="{StaticResource CustomFieldValueBox}"
+                  Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=LostFocus}"
+                  LostFocus="ReportValue_LostFocus" />
+              </DockPanel>
+            </Border>
           </DataTemplate>
         </ItemsControl.ItemTemplate>
       </ItemsControl>

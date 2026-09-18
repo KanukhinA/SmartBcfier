@@ -1,0 +1,84 @@
+<Window
+  x:Class="Bcfier.Windows.GoogleSheetsExportWindow"
+  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:loc="clr-namespace:Bcfier.Localization"
+  Title="{x:Static loc:Loc.GoogleSheetsExportTitle}"
+  Width="480"
+  Height="220"
+  WindowStartupLocation="CenterOwner"
+  ResizeMode="NoResize"
+  FontFamily="{DynamicResource SpFont.Ui}">
+  <Window.Resources>
+    <ResourceDictionary>
+      <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/SpTheme.xaml" />
+        <ResourceDictionary Source="pack://application:,,,/Bcfier;component/Themes/ButtonStyles.xaml" />
+      </ResourceDictionary.MergedDictionaries>
+    </ResourceDictionary>
+  </Window.Resources>
+  <Grid Margin="16">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="160" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+
+    <TextBlock
+      Grid.Row="0"
+      Grid.Column="0"
+      VerticalAlignment="Center"
+      Text="{x:Static loc:Loc.GoogleSheetsSpreadsheetId}"
+      TextWrapping="Wrap" />
+    <TextBox
+      x:Name="SpreadsheetIdBox"
+      Grid.Row="0"
+      Grid.Column="1"
+      MinHeight="28"
+      Margin="8,4"
+      Style="{StaticResource SpSettingsTextBox}" />
+
+    <TextBlock
+      Grid.Row="1"
+      Grid.Column="0"
+      VerticalAlignment="Center"
+      Text="{x:Static loc:Loc.GoogleSheetsSheetName}" />
+    <TextBox
+      x:Name="SheetNameBox"
+      Grid.Row="1"
+      Grid.Column="1"
+      MinHeight="28"
+      Margin="8,4"
+      Style="{StaticResource SpSettingsTextBox}"
+      Text="BCF" />
+
+    <StackPanel
+      Grid.Row="3"
+      Grid.Column="0"
+      Grid.ColumnSpan="2"
+      Orientation="Horizontal"
+      HorizontalAlignment="Right"
+      Margin="0,12,0,0">
+      <Button
+        MinWidth="100"
+        Margin="0,0,8,0"
+        Padding="10,4"
+        Style="{StaticResource SpAccentButton}"
+        IsDefault="True"
+        Click="Ok_Click"
+        Content="{x:Static loc:Loc.Save}" />
+      <Button
+        MinWidth="100"
+        Padding="10,4"
+        Style="{StaticResource SpSecondaryButton}"
+        IsCancel="True"
+        Click="Cancel_Click"
+        Content="{x:Static loc:Loc.Cancel}" />
+    </StackPanel>
+  </Grid>
+</Window>

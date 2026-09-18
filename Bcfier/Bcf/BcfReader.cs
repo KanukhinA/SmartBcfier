@@ -367,6 +367,7 @@ namespace Bcfier.Bcf
                 foreach (CustomFields.CustomFieldValue field in loaded.ReportLevel)
                     bcffile.ReportLevelCustomFields.Add(field);
 
+                bcffile.DocumentSettings.CopyFrom(loaded.Document);
                 bcffile.HasCustomFields = loaded.HasAny;
                 bcffile.CustomFieldsVisible = false;
             }

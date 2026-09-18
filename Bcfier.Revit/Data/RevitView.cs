@@ -65,6 +65,14 @@ namespace Bcfier.Revit.Data
                         TopLeft = new Point { X = topLeft.X, Y = topLeft.Y, Z = topLeft.Z },
                         BottomRight = new Point { X = bottomRight.X, Y = bottomRight.Y, Z = bottomRight.Z }
                     };
+
+                    // Модельные виды: дополнительно OrthogonalCamera + ClippingPlanes для BimCollab / другой модели.
+                    ModelViewClipping.TryApplyInteropCamera(
+                      doc,
+                      uidoc.ActiveView,
+                      topLeft,
+                      bottomRight,
+                      v);
                 }
                 else
                 {
