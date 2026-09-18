@@ -206,4 +206,15 @@ tests/Bcfier.Tests/TopicSnapshotDiffTests.cs
 # Сгенерированный InnoSetup-скрипт (исходник — SP-BCFier.iss)
 InnoSetup/*.generated.iss
 
+# MSBuild binary logs
+*.binlog
+
+# OS / IDE junk
+Thumbs.db
+Desktop.ini
+.DS_Store
+.idea/
+.claude/
+.cursor/
+
 # dist/ — релизные артефакты (Setup.exe, ZIP, DLL) публикуются в репозитории
